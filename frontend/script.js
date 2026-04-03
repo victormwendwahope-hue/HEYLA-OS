@@ -31,27 +31,49 @@ function checkAuth() {
 
 // Login function
 async function login(email, password) {
-    try {
-        const response = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': API_KEY
-            },
-            body: JSON.stringify({ email, password })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            window.location.href = 'dashboard.html';
-        } else {
-            showNotification(data.error || 'Login failed', 'error');
+    // Dummy login accounts
+    const dummyUsers = [
+        {
+            email: 'admin@heylaos.com',
+            password: 'admin123',
+            full_name: 'Admin User',
+            first_name: 'Admin',
+            last_name: 'User',
+            role: 'Admin',
+            avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=667eea&color=fff',
+            company: true
+        },
+        {
+            email: 'employee@heylaos.com', 
+            password: 'emp123',
+            full_name: 'Jane Doe',
+            first_name: 'Jane',
+            last_name: 'Doe',
+            role: 'HR Manager',
+            avatar: 'https://ui-avatars.com/api/?name=Jane+Doe&background=28a745&color=fff',
+            company: false
+        },
+        {
+            email: 'freelancer@heylaos.com',
+            password: 'free123',
+            full_name: 'John Smith',
+            first_name: 'John',
+            last_name: 'Smith',
+            role: 'Freelancer',
+            avatar: 'https://ui-avatars.com/api/?name=John+Smith&background=ff6b6b&color=fff',
+            company: false
         }
-    } catch (error) {
-        showNotification('Network error. Please try again.', 'error');
+    ];
+    
+    const user = dummyUsers.find(u => u.email === email && u.password === password);
+    
+    if (user) {
+        localStorage.setItem('token', 'dummy-jwt-token');
+        localStorage.setItem('user', JSON.stringify(user));
+        showNotification(`Welcome ${user.full_name}!`, 'success');
+        window.location.href = 'dashboard.html';
+    } else {
+        showNotification('Invalid email or password', 'error');
     }
 }
 
