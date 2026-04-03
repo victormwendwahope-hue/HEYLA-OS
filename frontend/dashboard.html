@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEYLA OS - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-cube"></i>
+                <span>HEYLA OS</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="crm.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>CRM</span>
+                </a>
+                <a href="hr.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>HR</span>
+                </a>
+                <a href="accounting.html" class="nav-item">
+                    <i class="fas fa-book"></i>
+                    <span>Accounting</span>
+                </a>
+                <a href="networking.html" class="nav-item">
+                    <i class="fas fa-network-wired"></i>
+                    <span>Networking</span>
+                </a>
+                <a href="marketplace.html" class="nav-item">
+                    <i class="fas fa-store"></i>
+                    <span>Marketplace</span>
+                </a>
+                <a href="inventory.html" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventory</span>
+                </a>
+                <a href="equipments.html" class="nav-item">
+                    <i class="fas fa-tools"></i>
+                    <span>Equipments</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <img id="userAvatar" src="" alt="">
+                    <div>
+                        <p id="userName"></p>
+                        <small id="userRole"></small>
+                    </div>
+                </div>
+                <button onclick="logout()" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1>Dashboard</h1>
+                <div class="header-actions">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search...">
+                    </div>
+                    <button class="icon-btn">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <button class="icon-btn">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalLeads">0</h3>
+                        <p>Total Leads</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalEmployees">0</h3>
+                        <p>Employees</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalRevenue">KES 0</h3>
+                        <p>Revenue</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalInvoices">0</h3>
+                        <p>Invoices</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon cyan">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalConnections">0</h3>
+                        <p>Connections</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon pink">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalMessages">0</h3>
+                        <p>Messages</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Section -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3>Revenue Overview</h3>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Lead Pipeline</h3>
+                    <canvas id="pipelineChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="activity-section">
+                <h3>Recent Activity</h3>
+                <div class="activity-list" id="activityList">
+                    <!-- Activity items will be loaded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

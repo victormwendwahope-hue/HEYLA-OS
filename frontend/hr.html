@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEYLA OS - HR Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-cube"></i>
+                <span>HEYLA OS</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="crm.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>CRM</span>
+                </a>
+                <a href="hr.html" class="nav-item active">
+                    <i class="fas fa-users"></i>
+                    <span>HR</span>
+                </a>
+                <a href="accounting.html" class="nav-item">
+                    <i class="fas fa-book"></i>
+                    <span>Accounting</span>
+                </a>
+                <a href="networking.html" class="nav-item">
+                    <i class="fas fa-network-wired"></i>
+                    <span>Networking</span>
+                </a>
+                <a href="marketplace.html" class="nav-item">
+                    <i class="fas fa-store"></i>
+                    <span>Marketplace</span>
+                </a>
+                <a href="inventory.html" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventory</span>
+                </a>
+                <a href="equipments.html" class="nav-item">
+                    <i class="fas fa-tools"></i>
+                    <span>Equipments</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <img id="userAvatar" src="" alt="">
+                    <div>
+                        <p id="userName"></p>
+                        <small id="userRole"></small>
+                    </div>
+                </div>
+                <button onclick="logout()" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+        
+        <main class="main-content">
+            <header class="top-bar">
+                <h1>Human Resources Management</h1>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="showEmployeeModal()">
+                        <i class="fas fa-plus"></i> Add Employee
+                    </button>
+                    <button class="btn-secondary" onclick="processPayroll()">
+                        <i class="fas fa-calculator"></i> Process Payroll
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="activeEmployees">0</h3>
+                        <p>Active Employees</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="monthlyPayroll">KES 0</h3>
+                        <p>Monthly Payroll</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="attendanceRate">0%</h3>
+                        <p>Attendance Rate</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Employees Table -->
+            <div class="section-card">
+                <h3>Employee Directory</h3>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Employee #</th>
+                                <th>Name</th>
+                                <th>Position</th>
+                                <th>Department</th>
+                                <th>Basic Salary</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeesTableBody">
+                            <!-- Employees will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Employee Modal -->
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Employee</h3>
+                <span class="close" onclick="closeEmployeeModal()">&times;</span>
+            </div>
+            <form id="employeeForm">
+                <input type="text" id="empNumber" placeholder="Employee Number" required>
+                <input type="text" id="empNationalId" placeholder="National ID" required>
+                <input type="text" id="empKraPin" placeholder="KRA PIN">
+                <input type="text" id="empNssf" placeholder="NSSF Number">
+                <input type="text" id="empPosition" placeholder="Position" required>
+                <input type="text" id="empDepartment" placeholder="Department">
+                <input type="number" id="empSalary" placeholder="Basic Salary" required>
+                <input type="number" id="empHousing" placeholder="Housing Allowance">
+                <input type="number" id="empTransport" placeholder="Transport Allowance">
+                <input type="date" id="empEmploymentDate" placeholder="Employment Date">
+                <button type="submit" class="btn-primary">Save Employee</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

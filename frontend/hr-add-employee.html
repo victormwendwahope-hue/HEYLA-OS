@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEYLA OS - Add Employee</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .employee-form-container { max-width: 800px; margin: 0 auto; }
+        .form-section { background: white; border-radius: 15px; padding: 30px; margin-bottom: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .form-section h3 { margin-bottom: 20px; color: #333; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; transition: border-color 0.3s ease; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        .salary-calculator { background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .total-salary { font-size: 24px; font-weight: bold; color: #28a745; text-align: center; margin-top: 10px; }
+        .action-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-cube"></i>
+                <span>HEYLA OS</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="crm.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>CRM</span>
+                </a>
+                <a href="hr.html" class="nav-item active has-submenu">
+                    <i class="fas fa-users"></i>
+                    <span>HR <i class="fas fa-chevron-down submenu-toggle" onclick="toggleHRSubmenu()"></i></span>
+                </a>
+                <div class="submenu" id="hr-submenu" style="display: block;">
+                    <a href="hr-directory.html" class="nav-item submenu-item">
+                        <i class="fas fa-list"></i>
+                        <span>Directory</span>
+                    </a>
+                    <a href="hr-add-employee.html" class="nav-item submenu-item active">
+                        <i class="fas fa-plus"></i>
+                        <span>Add Employee</span>
+                    </a>
+                    <a href="hr-payroll.html" class="nav-item submenu-item">
+                        <i class="fas fa-calculator"></i>
+                        <span>Payroll</span>
+                    </a>
+                    <a href="hr-attendance.html" class="nav-item submenu-item">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Attendance</span>
+                    </a>
+                </div>
+                <!-- Other nav items... -->
+                <a href="accounting.html" class="nav-item">
+                    <i class="fas fa-book"></i>
+                    <span>Accounting</span>
+                </a>
+                <a href="networking.html" class="nav-item">
+                    <i class="fas fa-network-wired"></i>
+                    <span>Networking</span>
+                </a>
+                <a href="marketplace.html" class="nav-item">
+                    <i class="fas fa-store"></i>
+                    <span>Marketplace</span>
+                </a>
+                <a href="inventory.html" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventory</span>
+                </a>
+                <a href="equipments.html" class="nav-item">
+                    <i class="fas fa-tools"></i>
+                    <span>Equipments</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <img id="userAvatar" src="" alt="">
+                    <div>
+                        <p id="userName"></p>
+                        <small id="userRole"></small>
+                    </div>
+                </div>
+                <button onclick="logout()" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+        
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="breadcrumb">
+                    <a href="hr.html">HR</a> > <span>Add Employee</span>
+                </div>
+                <h1>Add New Employee</h1>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="window.location.href='hr-directory.html'">
+                        <i class="fas fa-arrow-left"></i> Back to Directory
+                    </button>
+                </div>
+            </header>
+            
+            <div class="employee-form-container">
+                <form id="addEmployeeForm">
+                    <!-- Personal Information -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-user"></i> Personal Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>First Name *</label>
+                                <input type="text" id="firstName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Middle Name</label>
+                                <input type="text" id="middleName">
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name *</label>
+                                <input type="text" id="lastName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="date" id="dob">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Email Address</label>
+                                <input type="email" id="email">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number *</label>
+                                <input type="tel" id="phone" required>
+                            </div>
+                            <div class="form-group">
+                                <label>ID Number *</label>
+                                <input type="text" id="nationalId" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Employment Details -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-briefcase"></i> Employment Details</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Employee Number *</label>
+                                <input type="text" id="employeeNumber" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Department *</label>
+                                <select id="department" required>
+                                    <option value="">Select Department</option>
+                                    <option value="IT">IT</option>
+                                    <option value="HR">HR</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Sales">Sales</option>
+                                    <option value="Operations">Operations</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Position/Job Title *</label>
+                                <input type="text" id="position" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Joining Date *</label>
+                                <input type="date" id="joiningDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Employment Type</label>
+                                <select id="employmentType">
+                                    <option value="permanent">Permanent</option>
+                                    <option value="contract">Contract</option>
+                                    <option value="intern">Intern</option>
+                                    <option value="part-time">Part-time</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Reporting Manager</label>
+                                <input type="text" id="reportingManager">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Compensation -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-dollar-sign"></i> Compensation & Benefits</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Basic Salary (KES) *</label>
+                                <input type="number" id="basicSalary" step="100" min="0" required onchange="calculateTotalSalary()">
+                            </div>
+                            <div class="form-group">
+                                <label>Housing Allowance (KES)</label>
+                                <input type="number" id="housingAllowance" step="100" min="0" onchange="calculateTotalSalary()">
+                            </div>
+                            <div class="form-group">
+                                <label>Transport Allowance (KES)</label>
+                                <input type="number" id="transportAllowance" step="100" min="0" onchange="calculateTotalSalary()">
+                            </div>
+                            <div class="form-group">
+                                <label>Medical Allowance (KES)</label>
+                                <input type="number" id="medicalAllowance" step="100" min="0" onchange="calculateTotalSalary()">
+                            </div>
+                            <div class="form-group full-width salary-calculator">
+                                <h4>Monthly Total Salary: <span id="totalSalary" class="total-salary">KES 0</span></h4>
+                            </div>
+                            <div class="form-group">
+                                <label>Bank Account Number</label>
+                                <input type="text" id="bankAccount">
+                            </div>
+                            <div class="form-group">
+                                <label>Bank Name</label>
+                                <input type="text" id="bankName">
+                            </div>
+                            <div class="form-group">
+                                <label>Branch</label>
+                                <input type="text" id="bankBranch">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Government IDs -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-id-card"></i> Government IDs</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>KRA PIN *</label>
+                                <input type="text" id="kraPin" required>
+                            </div>
+                            <div class="form-group">
+                                <label>NSSF Number</label>
+                                <input type="text" id="nssfNumber">
+                            </div>
+                            <div class="form-group">
+                                <label>NHIF Number</label>
+                                <input type="text" id="nhifNumber">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Address</label>
+                                <textarea id="address" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Emergency Contact -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-phone-square"></i> Emergency Contact</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Emergency Contact Name</label>
+                                <input type="text" id="emergencyName">
+                            </div>
+                            <div class="form-group">
+                                <label>Relationship</label>
+                                <input type="text" id="emergencyRelationship">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number *</label>
+                                <input type="tel" id="emergencyPhone" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button type="button" class="btn-secondary" onclick="resetForm()">Reset Form</button>
+                        <button type="submit" class="btn-primary">Create Employee <i class="fas fa-user-plus"></i></button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            calculateTotalSalary();
+        });
+        
+        function calculateTotalSalary() {
+            const basic = parseFloat(document.getElementById('basicSalary').value) || 0;
+            const housing = parseFloat(document.getElementById('housingAllowance').value) || 0;
+            const transport = parseFloat(document.getElementById('transportAllowance').value) || 0;
+            const medical = parseFloat(document.getElementById('medicalAllowance').value) || 0;
+            
+            const total = basic + housing + transport + medical;
+            document.getElementById('totalSalary').textContent = `KES ${total.toLocaleString()}`;
+        }
+        
+        document.getElementById('addEmployeeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const employeeData = {
+                first_name: document.getElementById('firstName').value,
+                middle_name: document.getElementById('middleName').value,
+                last_name: document.getElementById('lastName').value,
+                dob: document.getElementById('dob').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                national_id: document.getElementById('nationalId').value,
+                employee_number: document.getElementById('employeeNumber').value,
+                department: document.getElementById('department').value,
+                position: document.getElementById('position').value,
+                joining_date: document.getElementById('joiningDate').value,
+                employment_type: document.getElementById('employmentType').value,
+                reporting_manager: document.getElementById('reportingManager').value,
+                basic_salary: parseFloat(document.getElementById('basicSalary').value),
+                housing_allowance: parseFloat(document.getElementById('housingAllowance').value),
+                transport_allowance: parseFloat(document.getElementById('transportAllowance').value),
+                medical_allowance: parseFloat(document.getElementById('medicalAllowance').value),
+                bank_account: document.getElementById('bankAccount').value,
+                bank_name: document.getElementById('bankName').value,
+                bank_branch: document.getElementById('bankBranch').value,
+                kra_pin: document.getElementById('kraPin').value,
+                nssf_number: document.getElementById('nssfNumber').value,
+                nhif_number: document.getElementById('nhifNumber').value,
+                address: document.getElementById('address').value,
+                emergency_name: document.getElementById('emergencyName').value,
+                emergency_relationship: document.getElementById('emergencyRelationship').value,
+                emergency_phone: document.getElementById('emergencyPhone').value
+            };
+            
+            showNotification('Employee created successfully!', 'success');
+            // TODO: Actual API call
+        });
+        
+        function resetForm() {
+            document.getElementById('addEmployeeForm').reset();
+            calculateTotalSalary();
+            showNotification('Form reset', 'info');
+        }
+        
+        function toggleHRSubmenu() {
+            const submenu = document.getElementById('hr-submenu');
+            submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+        }
+    </script>
+</body>
+</html>
