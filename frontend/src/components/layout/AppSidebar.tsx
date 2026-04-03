@@ -3,7 +3,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, TrendingUp, DollarSign, Package, Globe, ShoppingBag,
-  ChevronLeft, LogOut, Settings, Zap,
+  ChevronLeft, LogOut, Settings, 
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -12,19 +12,9 @@ import {
 
 const mainNav = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'HR & People', icon: Users, items: [
-    { title: 'Employee List', url: '/hr' },
-    { title: 'Add Employee', url: '/hr/add' },
-    { title: 'Attendance', url: '/hr/attendance' },
-    { title: 'Leave Management', url: '/hr/leave' },
-    { title: 'Performance', url: '/hr/performance' },
-    { title: 'Blacklist', url: '/hr/blacklist' },
-  ] },
+  { title: 'HR & People', url: '/hr', icon: Users },
   { title: 'CRM', url: '/crm', icon: TrendingUp },
-  { title: 'Accounting', url: '/accounting', icon: DollarSign, items: [
-    { title: 'Ledger', url: '/accounting' },
-    { title: 'Payroll', url: '/accounting/payroll' },
-  ] },
+  { title: 'Accounting', url: '/accounting', icon: DollarSign },
   { title: 'Inventory', url: '/inventory', icon: Package },
   { title: 'Networking', url: '/networking', icon: Globe },
   { title: 'Marketplace', url: '/marketplace', icon: ShoppingBag },
@@ -38,19 +28,19 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-        <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border">
-          <img src="/logo.png" alt="HEYLA" className="w-8 h-8 rounded-lg shrink-0" />
-          {!collapsed && (
-            <span className="text-lg font-bold text-sidebar-primary-foreground tracking-tight">
-              HEYLA<span className="text-sidebar-primary"> OS</span>
-            </span>
-          )}
-          {!collapsed && (
-            <button onClick={toggleSidebar} className="ml-auto text-sidebar-foreground hover:text-sidebar-primary-foreground transition-colors">
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+      <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border">
+        <img src="/logo.png" alt="HEYLA" className="w-8 h-8 rounded-lg shrink-0" />
+        {!collapsed && (
+          <span className="text-lg font-bold text-sidebar-primary-foreground tracking-tight">
+            HEYLA<span className="text-sidebar-primary"> OS</span>
+          </span>
+        )}
+        {!collapsed && (
+          <button onClick={toggleSidebar} className="ml-auto text-sidebar-foreground hover:text-sidebar-primary-foreground transition-colors">
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        )}
+      </div>
 
       <SidebarContent className="px-2 py-4">
         <SidebarGroup>
@@ -63,16 +53,14 @@ export function AppSidebar() {
                 const active = location.pathname.startsWith(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
-SidebarCollapsible>
-                <SidebarCollapsibleTrigger asChild>
-                  <NavLink
+                    <SidebarMenuButton asChild>
+                      <NavLink
                         to={item.url}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                           active
                             ? 'gradient-primary text-primary-foreground shadow-md'
                             : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                         }`}
-                        activeClassName=""
                       >
                         <item.icon className="w-5 h-5 shrink-0" />
                         {!collapsed && <span>{item.title}</span>}
