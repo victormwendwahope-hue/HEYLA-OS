@@ -1,112 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HEYLA OS - Login</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-</head>
-<body class="bg-gradient">
-    <div class="container">
-        <div class="auth-container">
-            <div class="auth-card">
-                <div class="logo">
-                    <i class="fas fa-cube"></i>
-                    <span>HEYLA OS</span>
-                </div>
-                <h2>Welcome Back</h2>
-                <p class="subtitle">Sign in to your account</p>
-                
-                <form id="loginForm">
-                    <div class="input-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="email" placeholder="Email address" required>
-                    </div>
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="password" placeholder="Password" required>
-                    </div>
-                    <button type="submit" class="btn-primary">Sign In</button>
-                </form>
-                
-                <p class="auth-footer">
-                    Don't have an account? <a href="#" onclick="showRegister()">Sign up</a>
-                </p>
-            </div>
-            
-            <div class="auth-card" id="registerCard" style="display: none;">
-                <div class="logo">
-                    <i class="fas fa-cube"></i>
-                    <span>HEYLA OS</span>
-                </div>
-                <h2>Create Account</h2>
-                <p class="subtitle">Join the future of work</p>
-                
-                <div class="account-type-toggle">
-                    <div class="toggle-switch" onclick="toggleRegisterType()">
-                        <div class="toggle-slider"></div>
-                    </div>
-                    <span id="registerTypeLabel">Individual</span>
-                </div>
-                <form id="registerForm">
-                    <!-- Individual Fields -->
-                    <div id="individualFields">
-                        <div class="input-group">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="regFirstName" placeholder="First Name" required>
-                        </div>
-                        <div class="input-group">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="regLastName" placeholder="Last Name" required>
-                        </div>
-                    </div>
-                    <!-- Company Fields -->
-                    <div id="companyFields" style="display: none;">
-                        <div class="input-group">
-                            <i class="fas fa-building"></i>
-                            <input type="text" id="regCompanyName" placeholder="Company Name" required>
-                        </div>
-                        <div class="input-group">
-                            <i class="fas fa-id-card"></i>
-                            <input type="text" id="regCompanyRegNo" placeholder="Registration Number">
-                        </div>
-                        <div class="input-group">
-                            <i class="fas fa-receipt"></i>
-                            <input type="text" id="regCompanyTaxId" placeholder="KRA PIN / Tax ID">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="regEmail" placeholder="Email address" required>
-                    </div>
-                    <div class="input-group">
-                        <i class="fas fa-phone"></i>
-                        <input type="tel" id="regPhone" placeholder="Phone number">
-                    </div>
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="regPassword" placeholder="Password" required>
-                    </div>
-                    <div class="input-group">
-                        <i class="fas fa-user-tag"></i>
-                        <select id="regRole">
-                            <option value="freelancer">Freelancer (Individual)</option>
-                            <option value="client">Client (Individual)</option>
-                            <option value="agency">Agency/Company</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn-primary">Create Account</button>
-                </form>
-                
-                <p class="auth-footer">
-                    Already have an account? <a href="#" onclick="showLogin()">Sign in</a>
-                </p>
-            </div>
-        </div>
-    </div>
-    
-    <script src="script.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- TODO: Set the document title to the name of your application -->
+    <title>HEYLA OS — Global Business Management</title>
+    <meta name="description" content="Modern business operating system for SMEs. HR, CRM, Accounting, Inventory — Kenya to global." />
+    <meta name="author" content="HEYLA" />
+
+    <meta property="og:title" content="HEYLA OS — Global Business Management" />
+    <meta property="og:description" content="Modern business operating system for SMEs. HR, CRM, Accounting, Inventory — Kenya to global." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://heyla-os.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@HEYLA OS" />
+    <meta name="twitter:image" content="https://heyla-os.dev/opengraph-image-p98pqg.png" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
