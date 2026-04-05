@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useLeadStore } from '@/store/leadStore';
 import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
 import { formatCurrency } from '@/utils/countries';
-import { Plus, Search, GripVertical } from 'lucide-react';
+import { Plus, Search, GripVertical, X, Trash2, Edit2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Lead } from '@/types';
 
 const statusOrder = ['New', 'Contacted', 'Qualified', 'Proposal', 'Won', 'Lost'] as const;
 const statusVariant = (s: string) => {
@@ -12,17 +14,38 @@ const statusVariant = (s: string) => {
   return map[s] || 'default';
 };
 
+const emptyForm = { name: '', email: '', phone: '', company: '', status: 'New' as Lead['status'], value: 0, source: '', assignedTo: '', notes: '' };
+
 export default function CRMPage() {
-  const leads = useLeadStore((s) => s.leads);
+  const { leads, addLead, updateLead } = useLeadStore();
   const [view, setView] = useState<'table' | 'kanban'>('kanban');
   const [search, setSearch] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyForm);
 
   const filtered = leads.filter((l) => `${l.name} ${l.company} ${l.email}`.toLowerCase().includes(search.toLowerCase()));
+
+  const openAdd = () => { setForm(emptyForm); setEditId(null); setShowForm(true); };
+  const openEdit = (lead: Lead) => { setForm({ name: lead.name, email: lead.email, phone: lead.phone, company: lead.company, status: lead.status, value: lead.value, source: lead.source, assignedTo: lead.assignedTo, notes: lead.notes }); setEditId(lead.id); setShowForm(true); };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.company) { toast.error('Name and company required'); return; }
+    if (editId) {
+      updateLead(editId, form);
+      toast.success('Lead updated');
+    } else {
+      addLead({ ...form, id: Date.now().toString(), createdAt: new Date().toISOString().split('T')[0] });
+      toast.success('Lead added');
+    }
+    setShowForm(false);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="CRM" description={`${leads.length} leads in pipeline — ${formatCurrency(leads.reduce((s, l) => s + l.value, 0))} total value`}>
-        <button className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
+        <button onClick={openAdd} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
           <Plus className="w-4 h-4" /> Add Lead
         </button>
       </PageHeader>
@@ -55,7 +78,7 @@ export default function CRMPage() {
                 </div>
                 <div className="space-y-2">
                   {items.map((l) => (
-                    <div key={l.id} className="glass rounded-lg p-3 hover:shadow-elevated transition-shadow cursor-grab">
+                    <div key={l.id} onClick={() => openEdit(l)} className="glass rounded-lg p-3 hover:shadow-elevated transition-shadow cursor-pointer">
                       <div className="flex items-start gap-2">
                         <GripVertical className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
                         <div className="min-w-0">
@@ -77,7 +100,7 @@ export default function CRMPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  {['Lead', 'Company', 'Status', 'Value', 'Source', 'Assigned'].map((h) => (
+                  {['Lead', 'Company', 'Status', 'Value', 'Source', 'Action'].map((h) => (
                     <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
                   ))}
                 </tr>
@@ -90,11 +113,65 @@ export default function CRMPage() {
                     <td className="px-4 py-3"><StatusBadge status={l.status} variant={statusVariant(l.status)} /></td>
                     <td className="px-4 py-3 font-medium">{formatCurrency(l.value)}</td>
                     <td className="px-4 py-3 text-muted-foreground">{l.source}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{l.assignedTo}</td>
+                    <td className="px-4 py-3">
+                      <button onClick={() => openEdit(l)} className="text-primary text-xs font-medium hover:underline flex items-center gap-1">
+                        <Edit2 className="w-3 h-3" /> Edit
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-lg m-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-border sticky top-0 bg-card rounded-t-2xl z-10">
+              <h2 className="text-lg font-bold">{editId ? 'Edit Lead' : 'Add Lead'}</h2>
+              <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-5 space-y-4">
+              {[
+                { label: 'Contact Name*', field: 'name' },
+                { label: 'Email', field: 'email', type: 'email' },
+                { label: 'Phone', field: 'phone' },
+                { label: 'Company*', field: 'company' },
+                { label: 'Source', field: 'source' },
+                { label: 'Assigned To', field: 'assignedTo' },
+              ].map((f) => (
+                <div key={f.field}>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">{f.label}</label>
+                  <input type={f.type || 'text'} value={(form as any)[f.field]} onChange={(e) => setForm({ ...form, [f.field]: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+              ))}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Value (KES)</label>
+                  <input type="number" value={form.value} onChange={(e) => setForm({ ...form, value: +e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
+                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as Lead['status'] })}
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                    {statusOrder.map((s) => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Notes</label>
+                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
+                <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">{editId ? 'Update' : 'Add Lead'}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
