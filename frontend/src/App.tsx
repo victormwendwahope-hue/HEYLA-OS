@@ -22,6 +22,9 @@ import InventoryPage from "@/pages/inventory/InventoryPage";
 import NetworkingPage from "@/pages/networking/NetworkingPage";
 import MarketplacePage from "@/pages/marketplace/MarketplacePage";
 import SettingsPage from "@/pages/settings/SettingsPage";
+import TransportPage from "@/pages/transport/TransportPage";
+import FuelPage from "@/pages/fuel/FuelPage";
+import JobsPage from "@/pages/jobs/JobsPage";
 import NotFound from "@/pages/NotFound";
 import CountrySelectPage from "@/components/landing-pages/CountrySelectPage";
 import { lazy, Suspense } from "react";
@@ -105,10 +108,13 @@ const App = () => (
               <Route path="/hr/performance" element={<PerformancePage />} />
               <Route path="/hr/blacklist" element={<BlacklistPage />} />
               <Route path="/hr/documents" element={<DocumentsPage />} />
+              <Route path="/jobs" element={<JobsPage />} />
               <Route path="/crm" element={<CRMPage />} />
               <Route path="/accounting" element={<AccountingPage />} />
               <Route path="/accounting/payroll" element={<PayrollPage />} />
               <Route path="/inventory" element={<InventoryPage />} />
+              <Route path="/transport" element={<TransportPage />} />
+              <Route path="/fuel" element={<FuelPage />} />
               <Route path="/networking" element={<NetworkingPage />} />
               <Route path="/marketplace" element={<MarketplacePage />} />
               <Route path="/settings" element={<SettingsPage />} />
