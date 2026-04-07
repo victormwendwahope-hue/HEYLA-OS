@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, TrendingUp, DollarSign, Package, Globe, ShoppingBag,
   ChevronLeft, LogOut, Settings, ChevronDown, FileText, Calendar, Award, ShieldBan, FolderOpen, Receipt,
-  Truck, Fuel, Briefcase, Moon, Sun,
+  Truck, Fuel, Briefcase, Moon, Sun, HeartPulse, Shield,
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -19,6 +19,8 @@ const mainNav = [
     { title: 'Attendance', url: '/hr/attendance', icon: Calendar },
     { title: 'Leave Management', url: '/hr/leave', icon: FileText },
     { title: 'Performance', url: '/hr/performance', icon: Award },
+    { title: 'WIBA Benefits', url: '/hr/wiba', icon: Shield },
+    { title: 'Injury Management', url: '/hr/injuries', icon: HeartPulse },
     { title: 'Blacklist', url: '/hr/blacklist', icon: ShieldBan },
     { title: 'Documents', url: '/hr/documents', icon: FolderOpen },
   ] },
@@ -29,8 +31,10 @@ const mainNav = [
     { title: 'Payroll', url: '/accounting/payroll', icon: Receipt },
   ] },
   { title: 'Inventory', url: '/inventory', icon: Package },
-  { title: 'Transport', url: '/transport', icon: Truck },
-  { title: 'Fuel Tracking', url: '/fuel', icon: Fuel },
+  { title: 'Transport & Fuel', url: '/transport', icon: Truck, items: [
+    { title: 'Overview', url: '/transport', icon: Truck },
+    { title: 'Fuel Tracking', url: '/fuel', icon: Fuel },
+  ] },
   { title: 'Networking', url: '/networking', icon: Globe },
   { title: 'Marketplace', url: '/marketplace', icon: ShoppingBag },
 ];
@@ -80,7 +84,7 @@ export function AppSidebar() {
               {mainNav.map((item) => {
                 const active = isGroupActive(item);
                 const hasItems = item.items && item.items.length > 0;
-                const isExpanded = expanded === item.title || (active && hasItems);
+                const isExp = expanded === item.title || (active && hasItems);
 
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -88,7 +92,7 @@ export function AppSidebar() {
                       <button
                         onClick={() => {
                           if (hasItems && !collapsed) {
-                            setExpanded(isExpanded ? null : item.title);
+                            setExpanded(isExp ? null : item.title);
                           } else {
                             navigate(item.url);
                           }
@@ -102,12 +106,12 @@ export function AppSidebar() {
                         <item.icon className="w-5 h-5 shrink-0" />
                         {!collapsed && <span className="flex-1 text-left">{item.title}</span>}
                         {!collapsed && hasItems && (
-                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExp ? 'rotate-180' : ''}`} />
                         )}
                       </button>
                     </SidebarMenuButton>
 
-                    {!collapsed && hasItems && isExpanded && (
+                    {!collapsed && hasItems && isExp && (
                       <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-sidebar-border pl-3">
                         {item.items!.map((sub) => (
                           <NavLink

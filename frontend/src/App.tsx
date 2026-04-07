@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuthStore } from "@/store/authStore";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HeyleyBot } from "@/components/chat/HeyleyBot";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import DashboardPage from "@/pages/dashboard/DashboardPage";
@@ -15,6 +16,8 @@ import LeavePage from "@/pages/hr/LeavePage";
 import PerformancePage from "@/pages/hr/PerformancePage";
 import BlacklistPage from "@/pages/hr/BlacklistPage";
 import DocumentsPage from "@/pages/hr/DocumentsPage";
+import WIBAPage from "@/pages/hr/WIBAPage";
+import InjuryPage from "@/pages/hr/InjuryPage";
 import CRMPage from "@/pages/crm/CRMPage";
 import AccountingPage from "@/pages/accounting/AccountingPage";
 import PayrollPage from "@/pages/accounting/PayrollPage";
@@ -25,6 +28,7 @@ import SettingsPage from "@/pages/settings/SettingsPage";
 import TransportPage from "@/pages/transport/TransportPage";
 import FuelPage from "@/pages/fuel/FuelPage";
 import JobsPage from "@/pages/jobs/JobsPage";
+import CareersPage from "@/pages/careers/CareersPage";
 import NotFound from "@/pages/NotFound";
 import CountrySelectPage from "@/components/landing-pages/CountrySelectPage";
 import { lazy, Suspense } from "react";
@@ -57,6 +61,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
+function AppLayoutWithBot() {
+  return (
+    <>
+      <AppLayout />
+      <HeyleyBot />
+    </>
+  );
+}
+
 const CountryFallback = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -74,6 +87,7 @@ const App = () => (
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/" element={<CountrySelectPage />} />
+            <Route path="/careers" element={<CareersPage />} />
             
             {/* Country Landing Pages */}
             <Route path="/country/ke" element={<KenyaLanding />} />
@@ -99,13 +113,15 @@ const App = () => (
             <Route path="/countries" element={<CountrySelectPage />} />
 
             {/* Protected App Routes */}
-            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route element={<ProtectedRoute><AppLayoutWithBot /></ProtectedRoute>}>
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/hr" element={<HRPage />} />
               <Route path="/hr/employee/:id" element={<EmployeeProfilePage />} />
               <Route path="/hr/attendance" element={<AttendancePage />} />
               <Route path="/hr/leave" element={<LeavePage />} />
               <Route path="/hr/performance" element={<PerformancePage />} />
+              <Route path="/hr/wiba" element={<WIBAPage />} />
+              <Route path="/hr/injuries" element={<InjuryPage />} />
               <Route path="/hr/blacklist" element={<BlacklistPage />} />
               <Route path="/hr/documents" element={<DocumentsPage />} />
               <Route path="/jobs" element={<JobsPage />} />
