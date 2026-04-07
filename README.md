@@ -1,189 +1,140 @@
-# 🚀 HEYLA OS - Complete Business Management Suite
+# 🚀 HEYLA OS - Modern Full-Stack Business ERP Dashboard
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Demo](https://img.shields.io/badge/Demo-Live-green)](https://heyla-os-demo.vercel.app)
+[![GitHub](https://img.shields.io/badge/GitHub-Repo-black?logo=github)](https://github.com/victormwendwahope-hue/HEYLA-OS)
+[![Demo](https://img.shields.io/badge/Demo-Live-brightgreen)](https://heyla-os.onrender.com)
 
-**HEYLA OS** is a modern, comprehensive business operating system designed for Kenyan SMEs. Single dashboard managing **HR, CRM, Accounting, Inventory, Equipments, Networking & Marketplace** - all in one responsive, mobile-first interface.
+**HEYLA OS** is a production-ready full-stack ERP/CRM dashboard for SMEs worldwide (Africa focus: Kenya, Nigeria, Ghana...). **Frontend**: React 18 TS SPA with shadcn/ui – HR (full CRUD/attendance/payroll), CRM, Accounting, Inventory, Transport/Fuel, Networking, Marketplace, Jobs, Dashboard analytics, HeyleyBot AI chat, 20+ country landings. **Backend**: Flask Python with PostgreSQL models ready.
+
+Mobile-first, responsive, mock-data functional (Zustand stores).
 
 ## ✨ Features Overview
 
 ```
-🧑‍💼 HR Management          📈 CRM & Sales  
-├─ Employee Directory       ├─ Lead Tracking
-├─ Add/Edit Employees       ├─ Deal Pipeline
-├─ Payroll Calculator       └─ Performance Analytics
-├─ Attendance Tracking
+🧑‍💼 HR (Full)     📈 CRM & Leads
+├─ Employee CRUD    ├─ Pipeline/Deals
+├─ Attendance       ├─ Analytics
+├─ Leave/Perf       └─ Contacts
+├─ Payroll Calc     📦 Inventory/Stock
+├─ Blacklist/Docs   ├─ CRUD/Tracking
+└─ WIBA/Injuries    └─ Fuel/Transport Logs
 
-💰 Accounting               📦 Inventory & Equipments
-├─ Invoicing/Payments       ├─ Products CRUD
-├─ Revenue Tracking         ├─ Equipment Management
-├─ Financial Dashboards     └─ Maintenance Tracking
+🌐 Networking     🛒 Marketplace/Jobs
+├─ Feed/Messaging  ├─ Postings
+└─ Connections     └─ Proposals
 
-🌐 Networking              🛒 Marketplace
-├─ Professional Feed        ├─ Job Postings
-├─ Connections/Messaging    ├─ Proposals System
-└─ Real-time Interactions   └─ Freelancer Matching
-
-⚙️ Admin & Profile
-├─ Company/Individual Reg
-├─ Full Profile Settings
-└─ Role-based Security
+💰 Accounting     ⚙️ Dashboard/Settings
+├─ Payroll/Fin     ├─ Charts (Recharts)
+└─ Revenue         └─ Auth/Profile
 ```
+
++ Country landings (ke, ng, za, us, gb...) + HeyleyBot.
 
 ## 🏗️ Tech Stack
 
-| Frontend | Backend Ready |
-|----------|---------------|
-| ✅ HTML5/CSS3/JS (Vanilla) | PostgreSQL Schema |
-| ✅ Responsive Design | Flask/FastAPI Ready |
-| ✅ Font Awesome Icons | Mock APIs (Live) |
-| ✅ Chart.js Dashboards | Auth System |
-| ✅ Drag & Drop Forms | HR/C RM Models |
+### Frontend
+| Category | Tech |
+|----------|------|
+| Core | Vite, React 18 TS, React Router |
+| UI | Tailwind, shadcn/ui (50+), Lucide |
+| State/Data | Zustand stores, Tanstack Query, React Hook Form/Zod |
+| Charts/Forms | Recharts, Sonner toasts |
+| Dev | Vitest, Playwright, ESLint/TS |
+
+### Backend
+| Category | Tech |
+|----------|------|
+| Core | Flask Python |
+| DB | PostgreSQL (models/hr.py, crm.py...) |
+| Schema | database.sql ready |
 
 ## 🎮 Quick Start
 
+**Frontend (Standalone)**:
 ```bash
-# 1. Clone & Navigate
-cd HEYLA-OS-main
+cd frontend
+npm install
+npm run dev  # localhost:8080/
+```
 
-# 2. Open index.html
-# Live Server or double-click (Chrome/Firefox)
-
-# Backend (Optional - mock data works)
+**Backend**:
+```bash
 cd backend
 pip install -r requirements.txt
-python app.py  # localhost:5000
+flask run  # localhost:5000
 ```
 
-**No setup required** - fully functional frontend MVP!
+Live Demo: https://heyla-os.onrender.com
 
-## 📱 Pages & Navigation
+## 🧭 Routes (React Router)
 
+Public: `/` (Country Select), `/country/ke` (Landings), `/login`, `/register`, `/careers`.
+
+Protected (Sidebar):
 ```
-Dashboard (stats + charts) ──→ CRM ──→ Leads Pipeline
-        │
-        ├── HR ──→ Directory ──→ Add Employee ──→ Profile
-        │           ├── Payroll ──→ Attendance
-        │
-        ├── Accounting ──→ Invoices ──→ Financials
-        │
-        ├── Inventory ──→ Products ──→ Stock Mgmt
-        ├── Equipments ──→ Assets ──→ Maintenance
-        │
-        ├── Networking ──→ Posts ──→ Messages
-        └── Marketplace ──→ Jobs ──→ Proposals
-```
-
-## 🎯 HR Module (MVP Complete)
-
-**Employee CRUD:**
-```
-1. Directory: Filter/Search/Export CSV
-2. Add Employee: 40+ fields + Live Salary Calculator  
-3. Documents: Upload contracts/certificates
-4. Submenu: Attendance/Leave/Performance
+/dashboard (stats/charts)
+├── /hr (Directory) → /hr/attendance, /hr/leave, /hr/performance, /hr/employee/:id, /hr/blacklist, /hr/documents...
+├── /crm
+├── /accounting → /accounting/payroll
+├── /inventory
+├── /transport
+├── /fuel
+├── /networking
+├── /marketplace
+├── /jobs
+└── /settings
 ```
 
-**Kenyan Compliance:**
-- KRA PIN, NSSF, NHIF
-- National ID validation
-- Payroll deductions ready
-
-## 📊 Key Features Demonstrated
-
-### 1. **Responsive Design**
-Mobile-first, works on phone/tablet/desktop
-
-### 2. **Interactive Forms**
-- Live salary calculator (basic+allowances)
-- Password strength meter
-- Toggle switches (company/individual)
-- Document upload zones
-
-### 3. **Data Management**
-| CRUD | Status |
-|------|--------|
-| Create | ✅ All modules |
-| Read | ✅ Search/Filter/Charts |
-| Update | ✅ Inline edit |
-| Delete | ✅ Confirmation dialogs |
-
-### 4. **Visual Excellence**
-```
-🎨 Modern glassmorphism UI
-📈 Interactive charts (Chart.js)
-🔍 Real-time search/filtering
-📱 Submenu navigation
-💾 CSV Export functionality
-```
-
-## 🛠️ File Structure
+## 🏗️ Frontend Code Structure
 
 ```
-frontend/
-├── index.html           # Login + Registration
-├── dashboard.html       # Overview Stats
-├── hr.html              # HR Landing (submenu)
-├── hr-directory.html    # Employee List CRUD
-├── hr-add-employee.html # Full Employee Form
-├── equipments.html      # Asset Management
-├── styles.css           # Complete Styling
-└── script.js            # All Logic + Mock APIs
+frontend/src/
+├── App.tsx (QueryClient, Routes, ProtectedRoute)
+├── main.tsx
+├── components/
+│   ├── ui/ (accordion.tsx, button.tsx, table.tsx, 50+ shadcn...)
+│   ├── layout/ AppLayout.tsx, Sidebar.tsx, TopBar.tsx
+│   ├── landing-pages/ CountrySelectPage.tsx, ke/KenyaLanding.tsx (20 countries)
+│   ├── chat/ HeyleyBot.tsx
+│   ├── hr/ AddEmployeeDialog.tsx
+│   └── shared/ CommonUI.tsx
+├── pages/
+│   ├── dashboard/ DashboardPage.tsx
+│   ├── hr/ HRPage.tsx, AttendancePage.tsx, LeavePage.tsx...
+│   ├── accounting/ AccountingPage.tsx, PayrollPage.tsx
+│   ├── crm/ CRMPage.tsx
+│   ├── inventory/ InventoryPage.tsx
+│   ├── fuel/ FuelPage.tsx
+│   ├── transport/ TransportPage.tsx
+│   ├── networking/ NetworkingPage.tsx
+│   ├── marketplace/ MarketplacePage.tsx
+│   ├── jobs/ JobsPage.tsx
+│   ├── auth/ Login/Register
+│   └── settings/ SettingsPage.tsx
+├── store/ authStore.ts, employeeStore.ts, fuelStore.ts... (Zustand)
+├── hooks/ use-toast.ts, use-mobile.tsx
+└── lib/utils.ts
 ```
 
-## 🚀 Live Demo Features
+Backend: `backend/app/models/` (user.py, hr.py...) + database.sql.
 
-**No Backend Required:**
-```
-✅ 100% Functional Mock Data
-✅ Real-time Search/Filter
-✅ Form Validation  
-✅ Salary Calculations
-✅ CSV Export
-✅ Responsive Breakpoints
-✅ Notification System
-✅ Modal Management
-✅ Toggle Animations
-✅ Charts & Stats
-```
+## 🚀 Features (Live)
 
-## 🔮 Future Roadmap
+- HR CRUD w/ dialogs/forms
+- Responsive sidebar/table/charts
+- Country-localized marketing
+- Mock data, forms validation
+- Toasts/modals/tooltips
 
-```
-Phase 2 [Q1]: Backend Integration
-├── PostgreSQL + Flask/FastAPI
-├── Authentication APIs
-├── HR Database Operations
-└── Real-time WebSockets
+## 🔮 Roadmap
 
-Phase 3 [Q2]: Mobile App
-├── React Native/PWA
-├── Offline Mode
-└── Push Notifications
-
-Phase 4 [Q3]: Enterprise
-├── Multi-tenant SaaS
-├── Advanced Analytics
-├── API Marketplace
-└── Enterprise Compliance
-```
+Phase 2: Backend API integration.
+Phase 3: PWA/mobile.
+Phase 4: SaaS/multi-tenant.
 
 ## 🤝 Contributing
 
-1. Fork repository
-2. Create feature branch (`git checkout -b feature/hr-payroll`)
-3. Commit changes (`git commit -m 'Add payroll module'`)
-4. Push to branch (`git push origin feature/hr-payroll`)
-5. Open Pull Request
+Fork → branch → PR.
 
-## 📄 License
+MIT License.
 
-MIT License - Free for commercial/personal use.
-
-## 🙏 Credits
-
-Built with ❤️ for Kenyan SMEs. Questions? [Contact](mailto:support@heylaos.com)
-
----
-**HEYLA OS - Your Business, One Dashboard** ✨
-
+Live: https://heyla-os.onrender.com | GitHub: https://github.com/victormwendwahope-hue/HEYLA-OS
