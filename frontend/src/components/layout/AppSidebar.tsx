@@ -4,7 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, TrendingUp, DollarSign, Package, Globe, ShoppingBag,
   ChevronLeft, LogOut, Settings, ChevronDown, FileText, Calendar, Award, ShieldBan, FolderOpen, Receipt,
-  Truck, Fuel, Briefcase, Moon, Sun, HeartPulse, Shield,
+  Truck, Fuel, Briefcase, Moon, Sun, HeartPulse, Shield, HardHat, ShieldCheck,
+  AlertTriangle, ClipboardCheck, Bell, Building2, FileSignature, Scale, Banknote, Gavel, ShieldAlert,
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -23,6 +24,21 @@ const mainNav = [
     { title: 'Injury Management', url: '/hr/injuries', icon: HeartPulse },
     { title: 'Blacklist', url: '/hr/blacklist', icon: ShieldBan },
     { title: 'Documents', url: '/hr/documents', icon: FolderOpen },
+  ] },
+  { title: 'EHS', url: '/ehs', icon: ShieldCheck, items: [
+    { title: 'Dashboard', url: '/ehs', icon: ShieldCheck },
+    { title: 'Incidents', url: '/ehs', icon: AlertTriangle },
+    { title: 'Compliance', url: '/ehs', icon: ClipboardCheck },
+    { title: 'Inspections', url: '/ehs', icon: ClipboardCheck },
+    { title: 'Alerts', url: '/ehs', icon: Bell },
+  ] },
+  { title: 'Engineering', url: '/engineering', icon: HardHat, items: [
+    { title: 'Dashboard', url: '/engineering', icon: Building2 },
+    { title: 'Contracts', url: '/engineering', icon: FileSignature },
+    { title: 'Claims', url: '/engineering', icon: Scale },
+    { title: 'Payments', url: '/engineering', icon: Banknote },
+    { title: 'Disputes', url: '/engineering', icon: Gavel },
+    { title: 'Early Warnings', url: '/engineering', icon: ShieldAlert },
   ] },
   { title: 'Jobs & Recruitment', url: '/jobs', icon: Briefcase },
   { title: 'CRM', url: '/crm', icon: TrendingUp },

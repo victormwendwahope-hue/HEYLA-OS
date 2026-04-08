@@ -29,6 +29,8 @@ import TransportPage from "@/pages/transport/TransportPage";
 import FuelPage from "@/pages/fuel/FuelPage";
 import JobsPage from "@/pages/jobs/JobsPage";
 import CareersPage from "@/pages/careers/CareersPage";
+import EHSPage from "@/pages/ehs/EHSPage";
+import EngineeringPage from "@/pages/engineering/EngineeringPage";
 import NotFound from "@/pages/NotFound";
 import CountrySelectPage from "@/components/landing-pages/CountrySelectPage";
 import { lazy, Suspense } from "react";
@@ -125,6 +127,8 @@ const App = () => (
               <Route path="/hr/blacklist" element={<BlacklistPage />} />
               <Route path="/hr/documents" element={<DocumentsPage />} />
               <Route path="/jobs" element={<JobsPage />} />
+              <Route path="/ehs" element={<EHSPage />} />
+              <Route path="/engineering" element={<EngineeringPage />} />
               <Route path="/crm" element={<CRMPage />} />
               <Route path="/accounting" element={<AccountingPage />} />
               <Route path="/accounting/payroll" element={<PayrollPage />} />
