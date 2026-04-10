@@ -1,10 +1,16 @@
+import { useEffect } from 'react';
 import { PageHeader, StatCard } from '@/components/shared/CommonUI';
 import { useEmployeeStore } from '@/store/employeeStore';
 import { formatCurrency } from '@/utils/countries';
 import { DollarSign, Users, Calculator, Download } from 'lucide-react';
 
 export default function PayrollPage() {
-  const employees = useEmployeeStore((s) => s.employees);
+  const { employees, fetchEmployees } = useEmployeeStore();
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
+
   const activeEmployees = employees.filter((e) => e.status === 'Active');
 
   const payrollData = activeEmployees.map((e) => {

@@ -1,7 +1,8 @@
 import { PageHeader } from '@/components/shared/CommonUI';
-import { useEmployeeStore } from '@/store/employeeStore';
+import { useEmployees } from '@/store/employeeStore';
 import { useState } from 'react';
 import { Star, TrendingUp, Target, Award } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Review {
   employeeId: string;
@@ -15,11 +16,10 @@ const mockReviews: Review[] = [
   { employeeId: '1', quarter: 'Q4 2024', rating: 4.5, goals: [{ title: 'Ship M-Pesa integration', progress: 100 }, { title: 'Mentor 2 juniors', progress: 80 }, { title: 'Reduce API latency by 20%', progress: 60 }], feedback: 'Exceptional work on payment systems.' },
   { employeeId: '2', quarter: 'Q4 2024', rating: 4.2, goals: [{ title: 'Close 5 enterprise deals', progress: 100 }, { title: 'Grow pipeline by 30%', progress: 90 }], feedback: 'Consistently exceeds targets.' },
   { employeeId: '3', quarter: 'Q4 2024', rating: 3.8, goals: [{ title: 'Automate monthly reports', progress: 70 }, { title: 'Implement new tax compliance', progress: 50 }], feedback: 'Good progress, needs to complete automation.' },
-  { employeeId: '5', quarter: 'Q4 2024', rating: 4.7, goals: [{ title: 'Revamp onboarding process', progress: 100 }, { title: 'Reduce time-to-hire by 25%', progress: 85 }], feedback: 'Outstanding HR leadership.' },
 ];
 
 export default function PerformancePage() {
-  const employees = useEmployeeStore((s) => s.employees);
+  const { data: employees = [] } = useEmployees();
   const [reviews] = useState<Review[]>(mockReviews);
 
   const avgRating = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;

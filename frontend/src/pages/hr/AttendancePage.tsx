@@ -1,38 +1,23 @@
 import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
-import { useEmployeeStore } from '@/store/employeeStore';
+import { useEmployees } from '@/store/employeeStore';
 import { useState } from 'react';
 import { Clock, CheckCircle2, XCircle, Coffee, Calendar } from 'lucide-react';
-import { toast } from 'sonner';
-
-interface AttendanceRecord {
-  employeeId: string;
-  date: string;
-  checkIn: string;
-  checkOut: string;
-  status: 'Present' | 'Absent' | 'Late' | 'Half Day' | 'On Leave';
-}
+import { useToast } from '@/components/ui/use-toast';
+import { AttendanceRecord } from '@/types'; // Assume type added or inline
 
 const today = new Date().toISOString().split('T')[0];
 
-const mockAttendance: AttendanceRecord[] = [
-  { employeeId: '1', date: today, checkIn: '08:15', checkOut: '17:30', status: 'Present' },
-  { employeeId: '2', date: today, checkIn: '09:45', checkOut: '17:00', status: 'Late' },
-  { employeeId: '3', date: today, checkIn: '08:00', checkOut: '13:00', status: 'Half Day' },
-  { employeeId: '4', date: today, checkIn: '', checkOut: '', status: 'On Leave' },
-  { employeeId: '5', date: today, checkIn: '07:50', checkOut: '17:15', status: 'Present' },
-];
-
 export default function AttendancePage() {
-  const employees = useEmployeeStore((s) => s.employees);
-  const [records, setRecords] = useState<AttendanceRecord[]>(mockAttendance);
+  const { data: employees = [] } = useEmployees();
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [selectedDate, setSelectedDate] = useState(today);
+  const { toast } = useToast();
 
-  const statusVariant = (s: string) => {
-    const m: Record<string, 'success' | 'warning' | 'destructive' | 'info' | 'default'> = {
-      Present: 'success', Late: 'warning', Absent: 'destructive', 'Half Day': 'info', 'On Leave': 'default',
-    };
-    return m[s] || 'default';
+  const statusVariantMap: Record<string, 'success' | 'warning' | 'destructive' | 'info' | 'default'> = {
+    Present: 'success', Late: 'warning', Absent: 'destructive', 'Half Day': 'info', 'On Leave': 'default',
   };
+
+  const statusVariant = (s: string) => statusVariantMap[s] || 'default';
 
   const markAttendance = (employeeId: string, status: AttendanceRecord['status']) => {
     const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -43,12 +28,12 @@ export default function AttendancePage() {
       }
       return [...prev, { employeeId, date: selectedDate, checkIn: status !== 'Absent' ? now : '', checkOut: '', status }];
     });
-    toast.success('Attendance updated');
+    toast({ title: 'Success', description: 'Attendance updated' });
   };
 
   const present = records.filter((r) => r.date === selectedDate && r.status === 'Present').length;
   const late = records.filter((r) => r.date === selectedDate && r.status === 'Late').length;
-  const absent = records.filter((r) => r.date === selectedDate && (r.status === 'Absent')).length;
+  const absent = records.filter((r) => r.date === selectedDate && r.status === 'Absent').length;
   const onLeave = records.filter((r) => r.date === selectedDate && r.status === 'On Leave').length;
 
   return (
@@ -108,10 +93,10 @@ export default function AttendancePage() {
                       <StatusBadge status={record?.status || 'Not Marked'} variant={record ? statusVariant(record.status) : 'default'} />
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1">
-                        {(['Present', 'Late', 'Absent'] as const).map((s) => (
+                      <div className="flex items-center justify-center gap-1 flex-wrap">
+                        {(['Present', 'Late', 'Absent', 'Half Day', 'On Leave'] as const).map((s) => (
                           <button key={s} onClick={() => markAttendance(emp.id, s)}
-                            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                            className={`px-2 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
                               record?.status === s ? 'gradient-primary text-primary-foreground' : 'bg-muted hover:bg-accent text-muted-foreground'
                             }`}>{s}</button>
                         ))}

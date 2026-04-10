@@ -1,17 +1,38 @@
-import { useParams, Link } from 'react-router-dom';
-import { useEmployeeStore } from '@/store/employeeStore';
+import { useEffect, useState } from 'react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useEmployees } from '@/store/employeeStore';
 import { StatusBadge } from '@/components/shared/CommonUI';
 import { formatCurrency } from '@/utils/countries';
 import { ArrowLeft, Mail, Phone, MapPin, Building2, Calendar } from 'lucide-react';
-import { useState } from 'react';
+import { Employee } from '@/types';
 
 export default function EmployeeProfilePage() {
-  const { id } = useParams();
-  const employee = useEmployeeStore((s) => s.employees.find((e) => e.id === id));
+  const params = useParams();
+  const id = params.id as string;
+  const { data: employees = [], isLoading } = useEmployees();
   const [tab, setTab] = useState('overview');
+  const navigate = useNavigate();
 
+  const employee = employees.find((e: Employee) => e.id === id);
+
+  useEffect(() => {
+    if (id && !employees.length && !isLoading) {
+      // Query auto-fetches
+    }
+  }, [id, employees.length, isLoading]);
+
+  if (isLoading) return <div className="flex items-center justify-center h-96 text-muted-foreground">Loading...</div>;
   if (!employee) return (
-    <div className="flex items-center justify-center h-96 text-muted-foreground">Employee not found.</div>
+    <div className="flex items-center justify-center h-96">
+      <div className="text-center">
+        <Building2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+        <h2 className="text-xl font-bold mb-2">Employee Not Found</h2>
+        <p className="text-muted-foreground mb-4">The employee profile you're looking for doesn't exist.</p>
+        <button onClick={() => navigate('/hr')} className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
+          Back to Employees
+        </button>
+      </div>
+    </div>
   );
 
   const gross = employee.baseSalary + employee.housingAllowance + employee.transportAllowance + employee.medicalAllowance + employee.otherAllowances;
@@ -70,7 +91,7 @@ export default function EmployeeProfilePage() {
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{label}</span>
-                <span className="font-medium">{value}</span>
+                <span className="font-medium">{String(value)}</span>
               </div>
             ))}
           </div>
@@ -84,7 +105,7 @@ export default function EmployeeProfilePage() {
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{label}</span>
-                <span className="font-medium">{value}</span>
+                <span className="font-medium">{String(value)}</span>
               </div>
             ))}
           </div>
@@ -102,14 +123,14 @@ export default function EmployeeProfilePage() {
               ['Medical Allowance', employee.medicalAllowance],
               ['Other Allowances', employee.otherAllowances],
             ].map(([label, value]) => (
-              <div key={label as string} className="flex justify-between text-sm py-2 border-b border-border last:border-0">
-                <span className="text-muted-foreground">{label as string}</span>
-                <span className="font-medium">{formatCurrency(value as number)}</span>
+              <div key={label} className="flex justify-between text-sm py-2 border-b border-border last:border-0">
+                <span className="text-muted-foreground">{label}</span>
+                <span className="font-medium">{formatCurrency(Number(value), employee.country)}</span>
               </div>
             ))}
             <div className="flex justify-between text-sm pt-3 border-t-2 border-primary/20">
               <span className="font-bold">Gross Salary</span>
-              <span className="font-bold text-primary">{formatCurrency(gross)}</span>
+              <span className="font-bold text-primary">{formatCurrency(gross, employee.country)}</span>
             </div>
           </div>
         </div>
@@ -118,14 +139,14 @@ export default function EmployeeProfilePage() {
       {tab === 'attendance' && (
         <div className="glass rounded-xl p-5 text-center py-16">
           <Building2 className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">Attendance tracking coming soon</p>
+          <p className="text-muted-foreground">Attendance tracking integrated in Attendance page.</p>
         </div>
       )}
 
       {tab === 'documents' && (
         <div className="glass rounded-xl p-5 text-center py-16">
           <Building2 className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">Document management coming soon</p>
+          <p className="text-muted-foreground">Document management coming soon.</p>
         </div>
       )}
     </div>
