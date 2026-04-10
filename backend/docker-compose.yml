@@ -30,8 +30,7 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
-command: >
-      sh -c "flask db upgrade && python seed.py && gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 run:app"
+command: sh -c "flask db upgrade && python seed.py && ./docker-entrypoint.sh"
 
 volumes:
   pgdata:

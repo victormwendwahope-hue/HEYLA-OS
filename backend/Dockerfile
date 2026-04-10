@@ -11,10 +11,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+COPY docker-entrypoint.sh .
+RUN chmod +x docker-entrypoint.sh
 
-EXPOSE ${PORT:-5000}
+EXPOSE 5000
 
 ENV FLASK_ENV=production
 
-CMD ["gunicorn", "--bind", "0.0.0.0:${PORT:-5000}", "--workers", "1", "--timeout", "120", "run:app"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
 
