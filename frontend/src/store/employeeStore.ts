@@ -44,3 +44,39 @@ export function useDeleteEmployee() {
   });
 }
 
+import { create } from 'zustand';
+import api from '@/lib/api';
+import type { Employee } from '@/types';
+
+interface EmployeeStore {
+  employees: Employee[];
+  loading: boolean;
+  error: string | null;
+  fetchEmployees: () => Promise<void>;
+}
+
+export const useEmployeeStore = create<EmployeeStore>((set, get) => ({
+  employees: [],
+  loading: false,
+  error: null,
+  fetchEmployees: async () => {
+    const { fetchEmployees: prevFetch } = get();
+    if (get().loading) return prevFetch(); // Avoid duplicate calls
+
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get('/hr/employees');
+      set({ 
+        employees: res.data.data || [], 
+        loading: false 
+      });
+    } catch (err: any) {
+      console.error('Failed to fetch employees:', err);
+      set({ 
+        error: err.response?.data?.message || 'Failed to fetch employees', 
+        loading: false 
+      });
+    }
+  },
+}));
+

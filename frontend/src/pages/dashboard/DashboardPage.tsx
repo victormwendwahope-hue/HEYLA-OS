@@ -64,18 +64,18 @@ const resources = [
 ];
 
 export default function DashboardPage() {
-  const employees = useEmployeeStore((s) => s.employees);
-  const leads = useLeadStore((s) => s.leads);
-  const products = useInventoryStore((s) => s.products);
+  const { employees, fetchEmployees } = useEmployeeStore();
+  const { leads, fetchLeads } = useLeadStore();
+  const { products, fetchProducts } = useInventoryStore();
   const [resourceSearch, setResourceSearch] = useState('');
   const [showResources, setShowResources] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => { if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowResources(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+    fetchEmployees();
+    fetchLeads();
+    fetchProducts();
+  }, [fetchEmployees, fetchLeads, fetchProducts]);
 
   const totalSalary = employees.reduce((s, e) => s + e.baseSalary + e.housingAllowance + e.transportAllowance + e.medicalAllowance + e.otherAllowances, 0);
   const activeLeads = leads.filter((l) => !['Won', 'Lost'].includes(l.status)).length;
