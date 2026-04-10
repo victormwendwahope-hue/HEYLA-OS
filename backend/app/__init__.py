@@ -12,7 +12,7 @@ def create_app(config_name="default"):
     migrate.init_app(app, db)
     jwt.init_app(app)
     bcrypt.init_app(app)
-    cors.init_app(app, resources={r"/api/*": {"origins": app.config["CORS_ORIGINS"]}})
+    cors.init_app(app, resources={r"/*": {"origins": app.config["CORS_ORIGINS"]}})
 
     # Register error handlers
     from app.utils.errors import register_error_handlers
