@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { User } from '@/types';
+import { toast } from '@/components/ui/use-toast';
+import api from '@/lib/api';
 
 interface AuthState {
   user: User | null;
@@ -15,34 +17,32 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: !!localStorage.getItem('heyla_token'),
   isLoading: false,
 
-  login: async (email, _password) => {
+  login: async (email, password) => {
     set({ isLoading: true });
-    await new Promise((r) => setTimeout(r, 800));
-    const user: User = {
-      id: '1',
-      email,
-      name: 'John Kamau',
-      company: 'Heyla Corp',
-      role: 'admin',
-    };
-    localStorage.setItem('heyla_token', 'mock-jwt-token');
-    localStorage.setItem('heyla_user', JSON.stringify(user));
-    set({ user, isAuthenticated: true, isLoading: false });
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      const { access_token, user } = response.data.data;
+      localStorage.setItem('heyla_token', access_token);
+      localStorage.setItem('heyla_user', JSON.stringify(user));
+      set({ user, isAuthenticated: true, isLoading: false });
+    } catch (error) {
+      toast.error('Login failed. Check credentials.');
+      set({ isLoading: false });
+    }
   },
 
   register: async (data) => {
     set({ isLoading: true });
-    await new Promise((r) => setTimeout(r, 1000));
-    const user: User = {
-      id: '1',
-      email: data.email,
-      name: data.name,
-      company: data.company,
-      role: 'admin',
-    };
-    localStorage.setItem('heyla_token', 'mock-jwt-token');
-    localStorage.setItem('heyla_user', JSON.stringify(user));
-    set({ user, isAuthenticated: true, isLoading: false });
+    try {
+      const response = await api.post('/auth/register', data);
+      const { access_token, user } = response.data.data;
+      localStorage.setItem('heyla_token', access_token);
+      localStorage.setItem('heyla_user', JSON.stringify(user));
+      set({ user, isAuthenticated: true, isLoading: false });
+    } catch (error) {
+      toast.error('Registration failed.');
+      set({ isLoading: false });
+    }
   },
 
   logout: () => {

@@ -12,7 +12,7 @@ class Config:
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-key")
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 3600)))
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_REFRESH_TOKEN_EXPIRES", 2592000)))
-    CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5173"]
+    CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5173", "http://localhost:8080"]
 
 
 class DevelopmentConfig(Config):

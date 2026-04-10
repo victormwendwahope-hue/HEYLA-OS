@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useEmployeeStore } from '@/store/employeeStore';
+import { useEmployees, useDeleteEmployee } from '@/store/employeeStore';
+
 import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
 import { Search, Plus, Download, Filter, Eye } from 'lucide-react';
 import { formatCurrency } from '@/utils/countries';
@@ -7,7 +8,8 @@ import { Link } from 'react-router-dom';
 import AddEmployeeDialog from '@/components/hr/AddEmployeeDialog';
 
 export default function HRPage() {
-  const employees = useEmployeeStore((s) => s.employees);
+  const { data: employees = [], isLoading } = useEmployees();
+
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
   const [showAdd, setShowAdd] = useState(false);
