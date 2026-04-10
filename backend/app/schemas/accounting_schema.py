@@ -1,0 +1,73 @@
+from marshmallow import Schema, fields, validate
+
+
+class InvoiceSchema(Schema):
+    id = fields.Int(dump_only=True)
+    organization_id = fields.Int(dump_only=True)
+    invoice_number = fields.Str(load_default=None)
+    client_name = fields.Str(required=True)
+    client_email = fields.Email(load_default=None, allow_none=True)
+    client_address = fields.Str(load_default=None)
+    issue_date = fields.Date(required=True)
+    due_date = fields.Date(required=True)
+    status = fields.Str(load_default="draft", validate=validate.OneOf(["draft", "sent", "paid", "overdue", "cancelled"]))
+    subtotal = fields.Decimal(load_default=0, as_string=True)
+    tax_rate = fields.Decimal(load_default=0, as_string=True)
+    tax_amount = fields.Decimal(load_default=0, as_string=True)
+    discount = fields.Decimal(load_default=0, as_string=True)
+    total = fields.Decimal(load_default=0, as_string=True)
+    currency = fields.Str(load_default="USD")
+    notes = fields.Str(load_default=None)
+    items = fields.List(fields.Dict(), load_default=list)
+    created_by = fields.Int(dump_only=True)
+    created_at = fields.DateTime(dump_only=True)
+    updated_at = fields.DateTime(dump_only=True)
+
+
+class PaymentSchema(Schema):
+    id = fields.Int(dump_only=True)
+    organization_id = fields.Int(dump_only=True)
+    invoice_id = fields.Int(load_default=None, allow_none=True)
+    amount = fields.Decimal(required=True, as_string=True)
+    currency = fields.Str(load_default="USD")
+    payment_date = fields.Date(required=True)
+    method = fields.Str(load_default=None)
+    reference = fields.Str(load_default=None)
+    notes = fields.Str(load_default=None)
+    created_at = fields.DateTime(dump_only=True)
+
+
+class ExpenseSchema(Schema):
+    id = fields.Int(dump_only=True)
+    organization_id = fields.Int(dump_only=True)
+    category = fields.Str(required=True)
+    description = fields.Str(required=True)
+    amount = fields.Decimal(required=True, as_string=True)
+    currency = fields.Str(load_default="USD")
+    expense_date = fields.Date(required=True)
+    vendor = fields.Str(load_default=None)
+    receipt_url = fields.Str(load_default=None)
+    status = fields.Str(load_default="pending")
+    submitted_by = fields.Int(dump_only=True)
+    approved_by = fields.Int(dump_only=True)
+    created_at = fields.DateTime(dump_only=True)
+    updated_at = fields.DateTime(dump_only=True)
+
+
+class PayrollSchema(Schema):
+    id = fields.Int(dump_only=True)
+    organization_id = fields.Int(dump_only=True)
+    employee_id = fields.Int(required=True)
+    period_start = fields.Date(required=True)
+    period_end = fields.Date(required=True)
+    basic_salary = fields.Decimal(required=True, as_string=True)
+    allowances = fields.Decimal(load_default=0, as_string=True)
+    overtime = fields.Decimal(load_default=0, as_string=True)
+    deductions = fields.Decimal(load_default=0, as_string=True)
+    tax = fields.Decimal(load_default=0, as_string=True)
+    net_pay = fields.Decimal(dump_only=True, as_string=True)
+    currency = fields.Str(load_default="USD")
+    status = fields.Str(load_default="draft")
+    payment_date = fields.Date(load_default=None, allow_none=True)
+    notes = fields.Str(load_default=None)
+    created_at = fields.DateTime(dump_only=True)
