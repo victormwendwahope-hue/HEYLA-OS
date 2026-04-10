@@ -14,6 +14,14 @@ def create_app(config_name="default"):
     bcrypt.init_app(app)
     cors.init_app(app, resources={r"/api/*": {"origins": app.config["CORS_ORIGINS"]}})
 
+    # Register error handlers
+    from app.utils.errors import register_error_handlers
+    register_error_handlers(app)
+
+    # Register JWT callbacks
+    from app.utils.jwt_callbacks import register_jwt_callbacks
+    register_jwt_callbacks(app)
+
     # Register blueprints
     from app.routes.auth import auth_bp
     from app.routes.users import users_bp
@@ -43,15 +51,22 @@ def create_app(config_name="default"):
     app.register_blueprint(chat_bp, url_prefix="/api/v1/chat")
     app.register_blueprint(dashboard_bp, url_prefix="/api/v1/dashboard")
 
-    # Import all models so Alembic sees them
+    # Import all models so Alembic detects every table
     from app.models import (
         user, organization, country,
         hr, crm, accounting, inventory,
-        transport, fuel, networking, marketplace
+        transport, fuel, networking, marketplace,
+        settings,
     )
 
     @app.route("/api/v1/health")
     def health():
-        return {"status": "ok", "version": "1.0.0"}
+        from sqlalchemy import text
+        try:
+            db.session.execute(text("SELECT 1"))
+            db_status = "ok"
+        except Exception:
+            db_status = "error"
+        return {"status": "ok", "version": "1.0.0", "database": db_status}
 
     return app

@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from flask_jwt_extended import (
     create_access_token, create_refresh_token,
-    jwt_required, get_jwt_identity
+    jwt_required, get_jwt_identity, get_jwt
 )
 from marshmallow import ValidationError
 from app.extensions import db, bcrypt
@@ -9,6 +9,7 @@ from app.models.user import User, Role, UserRole
 from app.models.organization import Organization
 from app.schemas.auth_schema import RegisterSchema, LoginSchema, ChangePasswordSchema, UserOutputSchema, InviteUserSchema
 from app.utils.helpers import success_response, error_response, get_current_user
+from app.utils.jwt_callbacks import add_token_to_blocklist
 import re
 from datetime import datetime
 
@@ -196,3 +197,19 @@ def invite_user():
         "user": user_out_schema.dump(user),
         "temp_password": temp_password,
     }, "User invited successfully", 201)
+
+
+@auth_bp.route("/logout", methods=["DELETE"])
+@jwt_required()
+def logout():
+    jti = get_jwt()["jti"]
+    add_token_to_blocklist(jti)
+    return success_response(message="Successfully logged out")
+
+
+@auth_bp.route("/logout/refresh", methods=["DELETE"])
+@jwt_required(refresh=True)
+def logout_refresh():
+    jti = get_jwt()["jti"]
+    add_token_to_blocklist(jti)
+    return success_response(message="Refresh token revoked")

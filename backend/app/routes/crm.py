@@ -212,3 +212,19 @@ def complete_activity(act_id, org_id, current_user):
     activity.completed_at = datetime.utcnow()
     db.session.commit()
     return success_response(activity_schema.dump(activity), "Activity completed")
+
+
+# ─── ANALYTICS ────────────────────────────────────────────────────────────────
+
+@crm_bp.route("/analytics/conversion", methods=["GET"])
+@tenant_required
+def conversion_analytics(org_id, current_user):
+    from app.services.crm_service import conversion_stats
+    return success_response(conversion_stats(org_id))
+
+
+@crm_bp.route("/analytics/pipeline", methods=["GET"])
+@tenant_required
+def pipeline_analytics(org_id, current_user):
+    from app.services.crm_service import get_pipeline_summary
+    return success_response(get_pipeline_summary(org_id))

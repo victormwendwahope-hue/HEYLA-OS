@@ -168,3 +168,26 @@ def create_maintenance(org_id, current_user):
             eq.next_maintenance_date = data["next_maintenance_date"]
     db.session.commit()
     return success_response(log_schema.dump(log), "Maintenance log created", 201)
+
+
+# ─── ALERTS & VALUATION ───────────────────────────────────────────────────────
+
+@inventory_bp.route("/alerts/low-stock", methods=["GET"])
+@tenant_required
+def low_stock_alert(org_id, current_user):
+    from app.services.inventory_service import get_low_stock_products
+    return success_response(get_low_stock_products(org_id))
+
+
+@inventory_bp.route("/valuation", methods=["GET"])
+@tenant_required
+def inventory_valuation(org_id, current_user):
+    from app.services.inventory_service import get_inventory_valuation
+    return success_response(get_inventory_valuation(org_id))
+
+
+@inventory_bp.route("/alerts/maintenance-due", methods=["GET"])
+@tenant_required
+def maintenance_due_alert(org_id, current_user):
+    from app.services.inventory_service import get_equipment_due_maintenance
+    return success_response(get_equipment_due_maintenance(org_id))

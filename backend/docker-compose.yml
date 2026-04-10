@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: heyla_os
+      POSTGRES_USER: heyla
+      POSTGRES_PASSWORD: heyla_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U heyla -d heyla_os"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: postgresql://heyla:heyla_secret@db:5432/heyla_os
+      JWT_SECRET_KEY: change_this_in_production_please
+      FLASK_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    command: >
+      sh -c "flask db upgrade && python seed.py && gunicorn --bind 0.0.0.0:5000 --workers 2 --reload run:app"
+
+volumes:
+  pgdata:

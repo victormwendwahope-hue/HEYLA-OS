@@ -242,6 +242,36 @@ def update_payroll(pay_id, org_id, current_user):
 
 # ─── FINANCIAL SUMMARY ────────────────────────────────────────────────────────
 
+@accounting_bp.route("/payroll/bulk", methods=["POST"])
+@tenant_required
+def bulk_payroll(org_id, current_user):
+    """Auto-generate payroll for all active employees in the organization."""
+    if not current_user.has_role("admin") and not current_user.has_role("manager"):
+        return error_response("Insufficient permissions", 403)
+
+    data = request.json or {}
+    period_start = data.get("period_start")
+    period_end = data.get("period_end")
+    if not period_start or not period_end:
+        return error_response("period_start and period_end are required", 400)
+
+    from datetime import date as date_type
+    import datetime
+    try:
+        ps = datetime.date.fromisoformat(period_start)
+        pe = datetime.date.fromisoformat(period_end)
+    except ValueError:
+        return error_response("Dates must be in YYYY-MM-DD format", 400)
+
+    from app.services.payroll_service import bulk_process_payroll
+    created = bulk_process_payroll(org_id, ps, pe, current_user.id)
+    return success_response(
+        payrolls_schema.dump(created),
+        f"Bulk payroll processed: {len(created)} records created",
+        201,
+    )
+
+
 @accounting_bp.route("/summary", methods=["GET"])
 @tenant_required
 def financial_summary(org_id, current_user):

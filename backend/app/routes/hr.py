@@ -334,3 +334,33 @@ def delete_document(doc_id, org_id, current_user):
     db.session.delete(doc)
     db.session.commit()
     return success_response(message="Document deleted")
+
+
+# ─── EMPLOYEE SUMMARY & COMPLIANCE ───────────────────────────────────────────
+
+@hr_bp.route("/employees/<int:emp_id>/summary", methods=["GET"])
+@tenant_required
+def employee_summary(emp_id, org_id, current_user):
+    from app.services.employee_service import get_employee_summary
+    summary = get_employee_summary(emp_id, org_id)
+    if not summary:
+        return error_response("Employee not found", 404)
+    return success_response(summary)
+
+
+@hr_bp.route("/compliance/expiring-documents", methods=["GET"])
+@tenant_required
+def expiring_documents(org_id, current_user):
+    from app.services.employee_service import check_expiring_documents
+    days = request.args.get("days", 30, type=int)
+    result = check_expiring_documents(org_id, days)
+    return success_response(result, f"Documents expiring within {days} days")
+
+
+@hr_bp.route("/compliance/expiring-permits", methods=["GET"])
+@tenant_required
+def expiring_permits(org_id, current_user):
+    from app.services.employee_service import check_expiring_work_permits
+    days = request.args.get("days", 30, type=int)
+    result = check_expiring_work_permits(org_id, days)
+    return success_response(result, f"Work permits expiring within {days} days")
