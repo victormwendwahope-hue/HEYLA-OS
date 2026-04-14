@@ -47,14 +47,11 @@ Output:
 3. **Root Directory:** `frontend`
 4. Build: `bun install && bun build` (or `npm run build`)
 5. Publish: `dist`
-6. **Environment Variables (CRITICAL for CORS):**
+
    ```
    VITE_API_URL=https
 
-## 5. Test Deployment
-```bash
-# Test superadmin login
-curl -X POST https://heyla-os-backend.onrender.com/api/v1/auth/login \\
+
   -H 'Content-Type: application/json' \\
   -d '{"email":"heyla@gmail.com","password":"Heyla@123"}'
 ```

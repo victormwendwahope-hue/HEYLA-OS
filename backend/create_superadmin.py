@@ -30,8 +30,7 @@ with app.app_context():
         print(\"❌ US country not found. Run migrations/seed first.\")
         sys.exit(1)
     
-    # Check if superadmin exists
-    superadmin = User.query.filter_by(email=\"heyla@gmail.com\").first()
+
     if superadmin:
         print(\"✅ Superadmin already exists: heyla@gmail.com\")
         sys.exit(0)

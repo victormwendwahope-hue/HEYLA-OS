@@ -1,0 +1,10 @@
+
+import { create } from 'zustand';
+
+export const useLeadStore = create((set) => ({
+  leads: [],
+  loading: false,
+  error: null,
+  addLead: async () => {},
+}));
+

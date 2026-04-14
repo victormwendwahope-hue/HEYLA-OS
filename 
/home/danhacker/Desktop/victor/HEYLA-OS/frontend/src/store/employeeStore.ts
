@@ -1,0 +1,12 @@
+
+import { create } from 'zustand';
+
+export const useEmployeeStore = create((set) => ({
+  employees: [],
+  loading: false,
+  error: null,
+  addEmployee: async () => {},
+  updateEmployee: async () => {},
+  deleteEmployee: async () => {},
+}));
+

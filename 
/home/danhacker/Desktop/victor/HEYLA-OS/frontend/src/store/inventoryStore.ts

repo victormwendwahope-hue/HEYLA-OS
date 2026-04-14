@@ -1,0 +1,10 @@
+
+import { create } from 'zustand';
+
+export const useInventoryStore = create((set) => ({
+  inventory: [],
+  loading: false,
+  error: null,
+  addProduct: async () => {},
+}));
+
