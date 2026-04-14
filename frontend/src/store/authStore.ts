@@ -26,7 +26,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('heyla_user', JSON.stringify(user));
       set({ user, isAuthenticated: true, isLoading: false });
     } catch (error) {
-      toast.error('Login failed. Check credentials.');
+      toast({
+        description: 'Login failed. Check credentials.',
+      });
       set({ isLoading: false });
     }
   },
@@ -40,7 +42,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('heyla_user', JSON.stringify(user));
       set({ user, isAuthenticated: true, isLoading: false });
     } catch (error) {
-      toast.error('Registration failed.');
+      toast({
+        description: 'Registration failed.',
+      });
       set({ isLoading: false });
     }
   },

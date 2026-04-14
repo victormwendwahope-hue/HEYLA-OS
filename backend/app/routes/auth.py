@@ -104,23 +104,31 @@ def login():
     except ValidationError as e:
         return error_response("Validation failed", 422, e.messages)
 
-    user = User.query.filter_by(email=data["email"]).first()
-    if not user or not bcrypt.check_password_hash(user.password_hash, data["password"]):
-        return error_response("Invalid email or password", 401)
-    if not user.is_active:
-        return error_response("Account is deactivated", 403)
+    try:
+        user = User.query.filter_by(email=data["email"]).first()
+        if not user or not bcrypt.check_password_hash(user.password_hash, data["password"]):
+            return error_response("Invalid email or password", 401)
+        if not user.is_active:
+            return error_response("Account is deactivated", 403)
 
-    user.last_login = datetime.utcnow()
-    db.session.commit()
+        user.last_login = datetime.utcnow()
+        db.session.commit()
 
-    access_token = create_access_token(identity=user.id)
-    refresh_token = create_refresh_token(identity=user.id)
-    return success_response({
-        "user": user_out_schema.dump(user),
-        "organization": {"id": user.organization.id, "name": user.organization.name, "slug": user.organization.slug},
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-    }, "Login successful")
+        access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
+        org = user.organization
+        if not org:
+            return error_response("User organization missing", 500)
+        return success_response({
+            "user": user_out_schema.dump(user),
+            "organization": {"id": org.id, "name": org.name, "slug": org.slug},
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+        }, "Login successful")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return error_response(f"Login error: {str(e)}", 500)
 
 
 @auth_bp.route("/refresh", methods=["POST"])
