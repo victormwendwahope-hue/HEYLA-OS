@@ -1,21 +1,15 @@
 #!/bin/bash
 set -e
 
-# Wait for DB
-echo "Waiting for database..."
-until pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER; do
-  echo "DB not ready, waiting..."
-  sleep 2
-done
+PORT=${PORT:-5000}
+cd /app/backend
 
-# Run migrations
-echo "Running migrations..."
-flask db upgrade
+# Optional migrations (if first deploy)
+flask db stamp head || true
+flask db upgrade || true
 
-# Create superadmin if not exists
-echo "Creating superadmin..."
-python create_superadmin.py
+# Create superadmin
+python create_superadmin.py || true
 
-# Start gunicorn
-echo "Starting server on port ${PORT:-5000}..."
-exec gunicorn --bind 0.0.0.0:${PORT:-5000
+echo "Starting server on port $PORT..."
+exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --preload run:app
