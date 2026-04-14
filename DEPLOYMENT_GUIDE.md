@@ -47,10 +47,9 @@ Output:
 3. **Root Directory:** `frontend`
 4. Build: `bun install && bun build` (or `npm run build`)
 5. Publish: `dist`
-6. **Environment Variable:**
+6. **Environment Variables (CRITICAL for CORS):**
    ```
-   VITE_API_URL=https://heyla-os-backend.onrender.com/api/v1
-   ```
+   VITE_API_URL=https
 
 ## 5. Test Deployment
 ```bash
