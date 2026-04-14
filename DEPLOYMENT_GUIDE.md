@@ -1,61 +1,83 @@
-# Production Deployment Guide for HEYLA OS Enterprise v3.0
+# HEYLA OS Complete Render.com Deployment Guide
 
-## Introduction
-This guide provides comprehensive instructions for deploying HEYLA OS Enterprise v3.0 in a production environment. It covers prerequisites, deployment steps, and troubleshooting tips.
+## Overview
+Deploy frontend, backend, PostgreSQL on Render.com. Creates superadmin automatically.
 
-## Prerequisites
-1. **System Requirements:**  
-   - Minimum hardware specifications  
-   - Supported operating systems  
+**Final URLs example:**
+- Frontend: https://heyla-os.onrender.com
+- Backend: https://heyla-os-backend.onrender.com
+- Superadmin: heyla@gmail.com / Heyla@123
 
-2. **Software Dependencies:**  
-   - List of required software and tools  
-   - Version specifications  
+## 1. PostgreSQL Database (Render)
+1. Dashboard → New → PostgreSQL
+2. Name: `heyla-os-db`
+3. Plan: Free/Starter
+4. **Copy DATABASE_URL** from Info → Connect → Internal DB URL
 
-3. **Access Rights:**  
-   - Ensure appropriate access to servers and necessary credentials.
+## 2. Backend API (Web Service)
+1. Dashboard → New → Web Service
+2. Connect GitHub repo (`HEYLA-OS`)
+3. **Root Directory:** `backend`
+4. Runtime: **Docker**
+5. Port: `5000`
+6. **Environment Variables:**
+   ```
+   DATABASE_URL=postgres://... (paste from Postgres above)
+   JWT_SECRET_KEY=openssl rand -base64 32 | generate one!
+   FLASK_ENV=production
+   ```
+7. Deploy → **Connect Postgres service** (Private Networking)
 
-## Deployment Steps
-### Step 1: Environment Setup
-- Prepare the server environment according to system requirements.
-- Install necessary software dependencies.
+**Auto:** Runs `flask db upgrade` via docker-entrypoint.sh
 
-### Step 2: Codebase Setup
-- Clone the repository:  
-  `git clone https://github.com/victormwendwahope-hue/HEYLA-OS.git`
-- Checkout the version:  
-  `git checkout v3.0`
+## 3. Create Superadmin (Post-Deploy)
+**Render Shell** (Backend service → Shell):
+```bash
+cd /app/backend
+flask shell < create_superadmin.py
+```
+Output:
+```
+✅ Superadmin: heyla@gmail.com / Heyla@123 (Heyla OS org)
+```
 
-### Step 3: Configuration
-- Edit configuration files as per the deployment environment.  
-  - Example: `config.yaml`  
-  - Ensure database connections, API keys, and other environment-specific settings are correctly configured.
+## 4. Frontend (Static Site)
+1. Dashboard → New → Static Site
+2. Connect same GitHub repo
+3. **Root Directory:** `frontend`
+4. Build: `bun install && bun build` (or `npm run build`)
+5. Publish: `dist`
+6. **Environment Variable:**
+   ```
+   VITE_API_URL=https://heyla-os-backend.onrender.com/api/v1
+   ```
 
-### Step 4: Database Migration
-- Run database migrations:  
-  `./migrate.sh`
+## 5. Test Deployment
+```bash
+# Test superadmin login
+curl -X POST https://heyla-os-backend.onrender.com/api/v1/auth/login \\
+  -H 'Content-Type: application/json' \\
+  -d '{"email":"heyla@gmail.com","password":"Heyla@123"}'
+```
 
-### Step 5: Start Services
-- Start the application services:  
-  `./start_services.sh`
+**Frontend:** Visit https://heyla-os.onrender.com → Login
 
-### Step 6: Validate Deployment
-- Verify that all services are running correctly.
-- Test the application to ensure it is working as expected.
-
-## Rollback Procedure
-- Steps to roll back to the previous version in case of failure:
-  1. Stop services:  
-     `./stop_services.sh`
-  2. Checkout the previous version:  
-     `git checkout <previous-version>`
-  3. Restart services:  
-     `./start_services.sh`
+## Environment Files Created
+- `backend/.env.render.example`
+- `frontend/.env.example`
+- `backend/create_superadmin.py`
 
 ## Troubleshooting
-- Common issues and their resolutions:
-  - Issue 1 and solution.
-  - Issue 2 and solution.
+| Issue | Solution |
+|-------|----------|
+| CORS error | Check `VITE_API_URL` matches backend |
+| DB connection | Verify `DATABASE_URL` & Private Network |
+| 500 errors | Render Shell: `flask db upgrade` |
+| No superadmin | Run `create_superadmin.py` |
 
-## Conclusion
-Refer to this guide for successful deployment of HEYLA OS Enterprise v3.0 in production. Always keep this documentation updated as changes are made to the deployment process.
+## Scale Up
+- Postgres: Upgrade plan
+- Backend: Add more instances
+- CDN: Render static auto-CDN
+
+**Complete!** 🚀

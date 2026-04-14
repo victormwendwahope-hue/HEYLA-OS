@@ -388,8 +388,41 @@ GET /api/v1/hr/employees?page=1&per_page=20&q=john&department=Engineering&status
 
 ---
 
-## Production Deployment
+## Production Deployment (Render.com)
 
+### Backend (Web Service + Docker)
+1. Connect repo to Render
+2. **Environment Variables** (from `.env.render.example`):
+   ```
+   DATABASE_URL=postgres://... (from Render Postgres)
+   JWT_SECRET_KEY=openssl rand -base64 32
+   FLASK_ENV=production
+   ```
+3. Port: 5000
+
+### PostgreSQL (Render Postgres)
+- Create instance, connect to backend (Private Network)
+
+### Post-Deploy (Render Shell):
+```bash
+cd /app/backend
+flask db upgrade
+flask shell < create_superadmin.py
+```
+
+**Superadmin:** heyla@gmail.com / Heyla@123 (Heyla OS org)
+
+### Frontend (Static Site)
+- Set `VITE_API_URL=https://your-backend.onrender.com/api/v1` (from `.env.example`)
+
+### Test
+```
+curl -X POST https://your-backend/api/v1/auth/login \\
+  -H "Content-Type: application/json" \\
+  -d '{"email":"heyla@gmail.com","password":"Heyla@123"}'
+```
+
+## Local Production Simulation
 ```bash
 # Set production env
 export FLASK_ENV=production
@@ -398,6 +431,7 @@ export JWT_SECRET_KEY=very_long_random_secret_at_least_32_chars
 
 # Run migrations
 flask db upgrade
+flask shell < create_superadmin.py
 
 # Start with gunicorn
 gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 run:app
