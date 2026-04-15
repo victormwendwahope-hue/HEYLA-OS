@@ -7,12 +7,27 @@ def create_app(config_name="default"):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
 
+    # Setup logging
+    import logging
+    log_handler = logging.StreamHandler()
+    log_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    log_handler.setFormatter(formatter)
+    app.logger.addHandler(log_handler)
+    app.logger.setLevel(logging.INFO)
+
     # Init extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
     bcrypt.init_app(app)
     cors.init_app(app, resources={r"/*": {"origins": app.config["CORS_ORIGINS"]}})
+
+    @app.before_request
+    def log_requests():
+        app.logger.info(f"Request: {request.method} {request.url} - User-Agent: {request.headers.get('User-Agent', 'N/A')}")
 
     # Register error handlers
     from app.utils.errors import register_error_handlers
