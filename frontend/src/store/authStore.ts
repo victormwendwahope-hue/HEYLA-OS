@@ -7,15 +7,39 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  initAuth: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (data: { email: string; password: string; name: string; company: string }) => Promise<void>;
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: JSON.parse(localStorage.getItem('heyla_user') || 'null'),
-  isAuthenticated: !!localStorage.getItem('heyla_token'),
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: null,
+  isAuthenticated: false,
   isLoading: false,
+
+  initAuth: async () => {
+    const token = localStorage.getItem('heyla_token');
+    if (!token) {
+      set({ isLoading: false });
+      return;
+    }
+    
+    set({ isLoading: true });
+    try {
+      const response = await api.get('/auth/me');
+      set({ 
+        user: response.data.data.user, 
+        isAuthenticated: true, 
+        isLoading: false 
+      });
+      localStorage.setItem('heyla_user', JSON.stringify(response.data.data.user));
+    } catch (error) {
+      localStorage.removeItem('heyla_token');
+      localStorage.removeItem('heyla_user');
+      set({ user: null, isAuthenticated: false, isLoading: false });
+    }
+  },
 
   login: async (email, password) => {
     set({ isLoading: true });
@@ -49,13 +73,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-logout: () => {
+  logout: () => {
     localStorage.removeItem('heyla_token');
     localStorage.removeItem('heyla_user');
-    // Clear other stores if using Tanstack Query
-    if (window.queryClient) {
-      window.queryClient.clear();
-    }
     set({ user: null, isAuthenticated: false });
   },
 }));
+

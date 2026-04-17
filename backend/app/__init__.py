@@ -1,4 +1,5 @@
 from flask import Flask
+from flask import request
 from app.config import config
 from app.extensions import db, migrate, jwt, cors, bcrypt
 

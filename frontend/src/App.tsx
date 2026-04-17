@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuthStore } from "@/store/authStore";
 import { AppLayout } from "@/components/layout/AppLayout";
+import React, { useEffect } from "react";
 import { HeyleyBot } from "@/components/chat/HeyleyBot";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
@@ -33,7 +34,8 @@ import EHSPage from "@/pages/ehs/EHSPage";
 import EngineeringPage from "@/pages/engineering/EngineeringPage";
 import NotFound from "@/pages/NotFound";
 import CountrySelectPage from "@/components/landing-pages/CountrySelectPage";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import { useAuthStore } from "@/store/authStore";
 
 const KenyaLanding = lazy(() => import("@/components/landing-pages/ke/KenyaLanding"));
 const NigeriaLanding = lazy(() => import("@/components/landing-pages/ng/NigeriaLanding"));
@@ -59,7 +61,18 @@ const CanadaLanding = lazy(() => import("@/components/landing-pages/ca/CanadaLan
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { isAuthenticated, isLoading, initAuth } = useAuthStore();
+  
+  useEffect(() => {
+    initAuth();
+  }, []);
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>;
+  }
+
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
