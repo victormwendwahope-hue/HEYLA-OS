@@ -1,12 +1,8 @@
-# HEYLA-OS Fix DB & SPA Issues - Task Progress
+# HEYLA-OS Auth/Login Fix TODO
 
-## Completed (3/5)
-- [x] 1. Update backend/docker-entrypoint.sh: Add db.create_all() before superadmin
-- [x] 2. Edit backend/create_superadmin.py: Add try/except, use prod config
-- [x] 3. Edit backend/app/__init__.py: Add SPA fallback route for static serving
-- [x] 4. Local test: docker-compose up (compose YAML issue, but entrypoint fixes confirmed correct for Docker/Render), verify health/login/curl dashboard fallback
-- [ ] 5. Redeploy backend, test prod endpoints + frontend reloads
-
-## Notes
-Approved plan: Separate deploys OK, but add optional backend SPA serve + DB fixes for robustness.
-
+## Step 1: Update frontend api.ts (add prod fallback baseURL) ✅
+## Step 2: No update needed - docker-entrypoint.sh already uses gunicorn run:app correctly ✅\n## Step 3: docker-entrypoint.sh confirmed good ✅
+## Step 4: Set frontend deploy env var VITE_API_URL=https://heyla-os-backend.onrender.com/api/v1 [MANUAL]
+## Step 5: Test curl https://heyla-os-backend.onrender.com/api/v1/auth/login [MANUAL]
+## Step 6: Redeploy frontend & backend [MANUAL]
+## Step 7: Verify browser Network tab shows correct /api/v1/auth/login call [MANUAL]

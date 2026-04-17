@@ -34,8 +34,7 @@ import EHSPage from "@/pages/ehs/EHSPage";
 import EngineeringPage from "@/pages/engineering/EngineeringPage";
 import NotFound from "@/pages/NotFound";
 import CountrySelectPage from "@/components/landing-pages/CountrySelectPage";
-import { lazy, Suspense, useEffect } from "react";
-import { useAuthStore } from "@/store/authStore";
+import { lazy, Suspense } from "react";
 
 const KenyaLanding = lazy(() => import("@/components/landing-pages/ke/KenyaLanding"));
 const NigeriaLanding = lazy(() => import("@/components/landing-pages/ng/NigeriaLanding"));
