@@ -5,7 +5,7 @@ PORT=${PORT:-5000}
 
 # Optional migrations (if first deploy)
 flask db stamp head || true
-flask db upgrade || true
+# flask db upgrade || true
 
 # Create superadmin
 python create_superadmin.py || true

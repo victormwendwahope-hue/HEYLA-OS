@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-\"\"\"Safe superadmin creator for HEYLA OS production.
+"""Safe superadmin creator for HEYLA OS production.
 Run: cd backend && FLASK_APP=run.py flask shell < create_superadmin.py
 OR: cd backend && python create_superadmin.py
 Does NOT drop tables. Idempotent.
-\"\"\"
+"""
 
 import os
 import sys
