@@ -2,7 +2,6 @@
 set -e
 
 PORT=${PORT:-5000}
-cd /app/backend
 
 # Optional migrations (if first deploy)
 flask db stamp head || true
