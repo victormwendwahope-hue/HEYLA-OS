@@ -28,18 +28,25 @@ Deploy frontend, backend, PostgreSQL on Render.com. Creates superadmin automatic
    ```
 7. Deploy → **Connect Postgres service** (Private Networking)
 
-**Auto:** Runs `flask db upgrade` via docker-entrypoint.sh
+# No auto-migrations (disabled in docker-entrypoint.sh for clean deploys)
 
 ## 3. Create Superadmin (Post-Deploy)
 **Render Shell** (Backend service → Shell):
 ```bash
-cd /app/backend
-flask shell < create_superadmin.py
+cd /app
+FLASK_APP=run.py flask shell < create_superadmin.py
 ```
-Output:
+**Output example:**
 ```
-✅ Superadmin: heyla@gmail.com / Heyla@123 (Heyla OS org)
+🔍 Checking existing superadmin/org...
+✅ Heyla OS org exists: ID=1
+✅ Admin role created
+🎉 SUPERADMIN CREATED SUCCESSFULLY!
+  Email:    heyla@gmail.com
+  Password: Heyla@123
+  Org:      Heyla OS (heyla-os)
 ```
+**Note:** Script is idempotent - safe to re-run.
 
 ## 4. Frontend (Static Site)
 1. Dashboard → New → Static Site
