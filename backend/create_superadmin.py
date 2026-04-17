@@ -11,7 +11,7 @@ from datetime import datetime
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(__file__))
-os.environ.setdefault(\"FLASK_ENV\", \"development\")
+os.environ.setdefault("FLASK_ENV", "development")
 
 from app import create_app
 from app.extensions import db, bcrypt
@@ -19,13 +19,13 @@ from app.models.organization import Organization
 from app.models.user import User, Role, UserRole
 from app.models.country import Country
 
-app = create_app(\"development\")
+app = create_app("development")
 
 with app.app_context():
     print(\"🔍 Checking existing superadmin/org...\")
     
     # Find or create country (default US)
-    country = Country.query.filter_by(code=\"US\").first()
+code="US"
     if not country:
         print(\"❌ US country not found. Run migrations/seed first.\")
         sys.exit(1)
@@ -64,8 +64,8 @@ with app.app_context():
         print(\"✅ Admin role created\")
     
     # Create superadmin
-    password = \"Heyla@123\"
-    pw_hash = bcrypt.generate_password_hash(password).decode(\"utf-8\")
+password = "Heyla@123"
+.decode("utf-8")
     superadmin = User(
         organization_id=heyla_org.id,
         email=\"heyla@gmail.com\",

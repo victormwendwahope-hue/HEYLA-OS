@@ -24,7 +24,7 @@ def create_app(config_name="default"):
     migrate.init_app(app, db)
     jwt.init_app(app)
     bcrypt.init_app(app)
-cors.init_app(app, resources={r"/*": {"origins": app.config["CORS_ORIGINS"], "supports_credentials": True}})
+    cors.init_app(app, resources={r"/*": {"origins": app.config["CORS_ORIGINS"], "supports_credentials": True}})
 
     @app.before_request
     def log_requests():
