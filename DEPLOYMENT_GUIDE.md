@@ -30,23 +30,17 @@ Deploy frontend, backend, PostgreSQL on Render.com. Creates superadmin automatic
 
 # No auto-migrations (disabled in docker-entrypoint.sh for clean deploys)
 
-## 3. Create Superadmin (Post-Deploy)
-**Render Shell** (Backend service → Shell):
-```bash
-cd /app
-FLASK_APP=run.py flask shell < create_superadmin.py
+## 3. Superadmin (Auto-Created)
+✅ **Now AUTO-RUNS** on every backend deploy via `docker-entrypoint.sh`!
+
+**Credentials:**
 ```
-**Output example:**
+Email: heyla@gmail.com
+Password: Heyla@123
+Org: Heyla OS
 ```
-🔍 Checking existing superadmin/org...
-✅ Heyla OS org exists: ID=1
-✅ Admin role created
-🎉 SUPERADMIN CREATED SUCCESSFULLY!
-  Email:    heyla@gmail.com
-  Password: Heyla@123
-  Org:      Heyla OS (heyla-os)
-```
-**Note:** Script is idempotent - safe to re-run.
+
+**Verify:** Check Render Logs → "🎉 SUPERADMIN CREATED SUCCESSFULLY!"
 
 ## 4. Frontend (Static Site)
 1. Dashboard → New → Static Site
@@ -56,7 +50,7 @@ FLASK_APP=run.py flask shell < create_superadmin.py
 5. Publish: `dist`
 
    ```
-   VITE_API_URL=https
+VITE_API_URL=https://heyla-os-backend.onrender.com/api/v1
 
 
   -H 'Content-Type: application/json' \\
@@ -73,10 +67,21 @@ FLASK_APP=run.py flask shell < create_superadmin.py
 ## Troubleshooting
 | Issue | Solution |
 |-------|----------|
-| CORS error | Check `VITE_API_URL` matches backend |
-| DB connection | Verify `DATABASE_URL` & Private Network |
-| 500 errors | Render Shell: `flask db upgrade` |
-| No superadmin | Run `create_superadmin.py` |
+| 404 `/auth/login` | Frontend missing `/api/v1` → Check `.env` VITE_API_URL |
+| 401 Invalid credentials | Use superadmin: heyla@gmail.com / Heyla@123 |
+| CORS error | Origins include `*.onrender.com` ✅ |
+| DB connection | Verify DATABASE_URL & Private Network |
+| No logs | Check new LOGIN HIT logs |
+| 500 Login crash | Render logs show exact error now
+
+**Test Login:**
+```bash
+curl -X POST https://heyla-os-backend.onrender.com/api/v1/auth/login \\
+  -H 'Content-Type: application/json' \\
+  -d '{"email":"heyla@gmail.com","password":"Heyla@123"}'
+```
+Expected: `{"data":{"access_token":"eyJ...",...},"message":"Login successful"}
+
 
 ## Scale Up
 - Postgres: Upgrade plan

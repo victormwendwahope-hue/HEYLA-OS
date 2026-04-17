@@ -7,8 +7,12 @@ PORT=${PORT:-5000}
 # flask db stamp head || true
 # flask db upgrade || true
 
-# Superadmin creation disabled (run manually post-deploy)
-# python create_superadmin.py || true
+# Run superadmin creation (idempotent, safe for prod)
+python create_superadmin.py || true
 
+echo "Container ready. Running entrypoint..."
+
+echo "✅ Superadmin check complete"
 echo "Starting server on port $PORT..."
+
 exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --preload run:app

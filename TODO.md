@@ -1,14 +1,19 @@
-# HEYLA-OS Deployment Fixes - TODO
-Status: 4/5 complete
+# HEYLA-OS Backend/Frontend Login Fix
+## Progress Tracker (Auto-generated from approved plan)
 
-## Plan Breakdown (Approved)
-1. [x] Edit backend/docker-entrypoint.sh: Remove failing migration and superadmin commands.
-2. [x] Edit backend/create_superadmin.py: Fix all syntax/logic errors, make idempotent.
-3. [x] Edit DEPLOYMENT_GUIDE.md: Update instructions for manual superadmin creation.
-4. [x] Test fixes locally: py_compile, manual run.
-5. [ ] Commit/push/redeploy on Render, verify clean logs.
+### ✅ Completed
+✅ 1. Edit backend/docker-entrypoint.sh (enable superadmin seeding) **DONE**
+✅ 2. Add logging to backend/app/routes/auth.py login() **DONE**
+✅ 3. Create frontend/.env (set VITE_API_URL) **DONE**
+✅ 4. Update DEPLOYMENT_GUIDE.md (add login testing) **DONE**
+- [ ] 5. Backend redeploy & verify superadmin in logs
+- [ ] 6. Test curl login
+- [ ] 7. Frontend redeploy
+- [ ] 8. Test full login flow
 
-**Notes**: create_superadmin.py syntax OK (py_compile passed). docker-entrypoint.sh cleaned (commented failing cmds). DEPLOYMENT_GUIDE.md updated.
-
-Next step after each: Update this TODO.md with progress.
+**🚀 READY TO DEPLOY**
+1. Push changes: `git add . && git commit -m "fix: auto superadmin + login logging + docs" && git push`
+2. Render auto-deploys backend/frontend
+3. Check backend logs for "SUPERADMIN CREATED" + new LOGIN logs
+4. Run curl test from DEPLOYMENT_GUIDE.md
 

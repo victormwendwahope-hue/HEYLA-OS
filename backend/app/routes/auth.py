@@ -99,18 +99,33 @@ def register():
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info("LOGIN HIT - data received")
+    
     try:
         data = login_schema.load(request.json or {})
+        logger.info(f"LOGIN VALIDATED - email: {data['email']}")
     except ValidationError as e:
+        logger.error(f"LOGIN SCHEMA ERROR: {e.messages}")
         return error_response("Validation failed", 422, e.messages)
 
     try:
+        logger.info(f"LOGIN QUERY - checking email: {data['email']}")
         user = User.query.filter_by(email=data["email"]).first()
-        if not user or not bcrypt.check_password_hash(user.password_hash, data["password"]):
+        if not user:
+            logger.warning(f"LOGIN FAIL - user not found: {data['email']}")
             return error_response("Invalid email or password", 401)
+            
+        if not bcrypt.check_password_hash(user.password_hash, data["password"]):
+            logger.warning(f"LOGIN FAIL - wrong password for: {data['email']}")
+            return error_response("Invalid email or password", 401)
+            
         if not user.is_active:
+            logger.warning(f"LOGIN FAIL - inactive user: {data['email']}")
             return error_response("Account is deactivated", 403)
 
+        logger.info(f"LOGIN SUCCESS - user {user.id} authenticated")
         user.last_login = datetime.utcnow()
         db.session.commit()
 
@@ -118,7 +133,10 @@ def login():
         refresh_token = create_refresh_token(identity=user.id)
         org = user.organization
         if not org:
+            logger.error(f"LOGIN FAIL - no org for user {user.id}")
             return error_response("User organization missing", 500)
+            
+        logger.info(f"LOGIN COMPLETE - tokens issued for user {user.id}, org {org.id}")
         return success_response({
             "user": user_out_schema.dump(user),
             "organization": {"id": org.id, "name": org.name, "slug": org.slug},
@@ -126,6 +144,7 @@ def login():
             "refresh_token": refresh_token,
         }, "Login successful")
     except Exception as e:
+        logger.error(f"LOGIN CRASH: {str(e)}")
         import traceback
         traceback.print_exc()
         return error_response(f"Login error: {str(e)}", 500)
