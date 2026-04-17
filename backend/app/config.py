@@ -22,6 +22,8 @@ class Config:
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-key")
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 3600)))
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_REFRESH_TOKEN_EXPIRES", 2592000)))
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "your-google-client-id.googleusercontent.com")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "your-google-client-secret")
     CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5173", "http://localhost:8080", "https://heyla-os.onrender.com", "https://*.onrender.com"]
 
 
@@ -45,3 +47,4 @@ config = {
     "testing": TestingConfig,
     "default": DevelopmentConfig,
 }
+

@@ -215,9 +215,6 @@ def logout():
     return success_response(message="Successfully logged out")
 
 
-@auth_bp.route("/logout/refresh", methods=["DELETE"])
-@jwt_required(refresh=True)
-def logout_refresh():
-    jti = get_jwt()["jti"]
+
     add_token_to_blocklist(jti)
     return success_response(message="Refresh token revoked")

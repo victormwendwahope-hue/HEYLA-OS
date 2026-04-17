@@ -49,9 +49,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  logout: () => {
+logout: () => {
     localStorage.removeItem('heyla_token');
     localStorage.removeItem('heyla_user');
+    // Clear other stores if using Tanstack Query
+    if (window.queryClient) {
+      window.queryClient.clear();
+    }
     set({ user: null, isAuthenticated: false });
   },
 }));
