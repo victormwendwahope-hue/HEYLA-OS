@@ -11,7 +11,7 @@ from datetime import datetime
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(__file__))
-os.environ.setdefault("FLASK_ENV", "development")
+config_name = os.getenv("FLASK_ENV", "production")
 
 from app import create_app
 from app.extensions import db, bcrypt
@@ -19,16 +19,22 @@ from app.models.organization import Organization
 from app.models.user import User, Role, UserRole
 from app.models.country import Country
 
-app = create_app("development")
+app = create_app(config_name)
 
 with app.app_context():
     print("🔍 Checking existing superadmin/org...")
     
-    # Find US country
-    country = Country.query.filter_by(code="US").first()
+    # Find US country (safe if tables missing)
+    try:
+        country = Country.query.filter_by(code="US").first()
+    except Exception as e:
+        if "relation \"countries\" does not exist" in str(e):
+            print("⚠️ Countries table not ready, skipping superadmin (run seed.py later)")
+            sys.exit(0)
+        raise
     if not country:
-        print("❌ US country not found. Run seed.py or create countries first.")
-        sys.exit(1)
+        print("⚠️ US country not found. Run python seed.py to populate data.")
+        sys.exit(0)
     
     superadmin = User.query.filter_by(email="heyla@gmail.com").first()
     if superadmin:

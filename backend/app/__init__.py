@@ -85,4 +85,21 @@ def create_app(config_name="default"):
             db_status = "error"
         return {"status": "ok", "version": "1.0.0", "database": db_status}
 
+    # SPA Fallback for frontend routes (serves static/dist if exists, else API-only)
+    import os
+    from flask import send_from_directory, abort
+
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def catch_all(path):
+        if path.startswith('api/'):
+            abort(404)  # Let Flask handle API 404s
+        dist_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist')
+        if os.path.exists(dist_dir) and os.path.exists(os.path.join(dist_dir, 'index.html')):
+            if path and os.path.exists(os.path.join(dist_dir, path)):
+                return send_from_directory(dist_dir, path)
+            else:
+                return send_from_directory(dist_dir, 'index.html')
+        abort(404)
+
     return app
