@@ -1,24 +1,41 @@
 #!/bin/bash
 set -e
 
-PORT=${PORT:-5000}
+# Set Flask CLI environment
+export FLASK_APP=run.py
+export FLASK_ENV=${FLASK_ENV:-production}
 
-# Create tables with db.create_all() (fast init for prod)
-flask run --no-debugger run:app & 
-sleep 2
-flask shell << 'EOF'
-from run import app
-with app.app_context():
-    db.create_all()
-EOF
-pkill -f "flask run" || true
+# Render port (defaults to 10000 from logs)
+PORT=${PORT:-10000}
 
-# Run superadmin creation (idempotent, safe for prod)
-python create_superadmin.py || true
+echo "🚀 Starting HEYLA-OS Backend..."
+echo "📊 Environment: $FLASK_ENV"
+echo "🌐 Port: $PORT"
+echo "🔗 DATABASE_URL: ${DATABASE_URL:0:20}..."  # partial for security
 
-echo "Container ready. Running entrypoint..."
+# 1. Run Alembic migrations (creates/updates tables)
+echo "🔍 Running Flask-Migrate (Alembic) upgrades..."
+flask db upgrade || echo "⚠️ Migration failed - check logs"
 
-echo "✅ Superadmin check complete"
-echo "Starting server on port $PORT..."
+# 2. Seed initial data (countries, demo org/users)
+echo "🌱 Running seed.py..."
+python seed.py || echo "⚠️ Seeding warnings (may be idempotent)"
 
-exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --preload run:app
+# 3. Ensure superadmin exists (idempotent)
+echo "👑 Ensuring superadmin setup..."
+python create_superadmin.py || echo "⚠️ Superadmin already exists"
+
+echo "✅ Database setup complete!"
+echo "Container ready. Starting Gunicorn..."
+
+# 4. Production Gunicorn (optimized for Render)
+exec gunicorn --bind 0.0.0.0:${PORT} \
+    --workers 1 \
+    --threads 4 \
+    --worker-class sync \
+    --worker-tmp-dir /dev/shm \
+    --timeout 120 \
+    --preload \
+    --max-requests 1000 \
+    --max-requests-jitter 100 \
+    run:app
