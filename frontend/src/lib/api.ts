@@ -15,15 +15,23 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor for errors
+// Response interceptor for errors - NO auto-logout
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('heyla_token');
-      localStorage.removeItem('heyla_user');
-      window.location.href = '/login';
+  async (error) => {
+    const config = error.config;
+    // Retry Render cold start 502s
+    if (error.response?.status === 502 && !config._retry) {
+      config._retry = true;
+      console.log('[API] Retrying 502 cold start...');
+      return api(config);
     }
+    // Log but don't logout on 401 - handle in stores
+    console.error('[API ERROR]', {
+      status: error.response?.status,
+      url: error.config?.url,
+      message: error.message
+    });
     return Promise.reject(error);
   }
 );
