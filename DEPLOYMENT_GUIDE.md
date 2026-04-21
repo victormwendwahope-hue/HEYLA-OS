@@ -1,91 +1,41 @@
-# HEYLA OS Complete Render.com Deployment Guide
+# HEYLA-OS Render Deployment Guide
 
-## Overview
-Deploy frontend, backend, PostgreSQL on Render.com. Creates superadmin automatically.
+## Backend (Web Service)
+1. Git push → Auto-deploy.
+2. Env vars:
+   - `DATABASE_URL`: Render Postgres connection string.
+   - `FLASK_ENV=production`
+   - `SECRET_KEY`: Generate with `openssl rand -hex 32`
+3. Build command: Default.
+4. Start command: `./docker-entrypoint.sh`
 
-**Final URLs example:**
-- Frontend: https://heyla-os.onrender.com
-- Backend: https://heyla-os-backend.onrender.com
-- Superadmin: heyla@gmail.com / Heyla@123
-
-## 1. PostgreSQL Database (Render)
-1. Dashboard → New → PostgreSQL
-2. Name: `heyla-os-db`
-3. Plan: Free/Starter
-4. **Copy DATABASE_URL** from Info → Connect → Internal DB URL
-
-## 2. Backend API (Web Service)
-1. Dashboard → New → Web Service
-2. Connect GitHub repo (`HEYLA-OS`)
-3. **Root Directory:** `backend`
-4. Runtime: **Docker**
-5. Port: `5000`
-6. **Environment Variables:**
+## Frontend (Static Site)
+1. Git push → Auto-deploy.
+2. **Critical Env Var**:
    ```
-   DATABASE_URL=postgres://... (paste from Postgres above)
-   JWT_SECRET_KEY=openssl rand -base64 32 | generate one!
-   FLASK_ENV=production
+   VITE_API_URL=https://heyla-os-backend.onrender.com/api/v1
    ```
-7. Deploy → **Connect Postgres service** (Private Networking)
+3. Build settings:
+   - Build Command: `npm run build`
+   - Output Dir: `dist`
+4. vercel.json handles SPA routing.
 
-# No auto-migrations (disabled in docker-entrypoint.sh for clean deploys)
+## Database
+1. Render Postgres > Connect > Internal DB.
+2. Copy `DATABASE_URL` to Backend env.
 
-## 3. Superadmin (Auto-Created)
-✅ **Now AUTO-RUNS** on every backend deploy via `docker-entrypoint.sh`!
+## Fix 405 Login Error
+- Frontend env `VITE_API_URL` **must** include `/api/v1`.
+- Test: Open DevTools Network tab, login → URL should be `/api/v1/auth/login`.
 
-**Credentials:**
+## Local Dev
 ```
-Email: heyla@gmail.com
-Password: Heyla@123
-Org: Heyla OS
+cd backend && make dev  # Backend + DB
+cd frontend && npm run dev  # Frontend proxy /api → backend
 ```
 
-**Verify:** Check Render Logs → "🎉 SUPERADMIN CREATED SUCCESSFULLY!"
-
-## 4. Frontend (Static Site)
-1. Dashboard → New → Static Site
-2. Connect same GitHub repo
-3. **Root Directory:** `frontend`
-4. Build: `bun install && bun build` (or `npm run build`)
-5. Publish: `dist`
-
-   ```
-VITE_API_URL=https://heyla-os-backend.onrender.com/api/v1
-
-
-  -H 'Content-Type: application/json' \\
-  -d '{"email":"heyla@gmail.com","password":"Heyla@123"}'
-```
-
-**Frontend:** Visit https://heyla-os.onrender.com → Login
-
-## Environment Files Created
-- `backend/.env.render.example`
-- `frontend/.env.example`
-- `backend/create_superadmin.py`
-
-## Troubleshooting
-| Issue | Solution |
-|-------|----------|
-| 404 `/auth/login` | Frontend missing `/api/v1` → Check `.env` VITE_API_URL |
-| 401 Invalid credentials | Use superadmin: heyla@gmail.com / Heyla@123 |
-| CORS error | Origins include `*.onrender.com` ✅ |
-| DB connection | Verify DATABASE_URL & Private Network |
-| No logs | Check new LOGIN HIT logs |
-| 500 Login crash | Render logs show exact error now
-
-**Test Login:**
-```bash
+## Production Test
 curl -X POST https://heyla-os-backend.onrender.com/api/v1/auth/login \\
-  -H 'Content-Type: application/json' \\
-  -d '{"email":"heyla@gmail.com","password":"Heyla@123"}'
-```
-Expected: `{"data":{"access_token":"eyJ...",...},"message":"Login successful"}
+-H 'Content-Type: application/json' \\
+-d '{\"email\":\"admin@test.com\",\"password\":\"admin123\"}'
 
-
-## Scale Up
-- Postgres: Upgrade plan
-- Backend: Add more instances
-- CDN: Render static auto-CDN
-
-**Complete!** 🚀

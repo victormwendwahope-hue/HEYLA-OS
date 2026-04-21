@@ -1,11 +1,13 @@
 import axios from 'axios';
 
 const api = axios.create({
-baseURL: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api/v1' : 'https://heyla-os-backend.onrender.com/api/v1'),
+baseURL: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api/v1' : 'https://heyla-os-backend.onrender.com/api/v1/'),
 });
 
 // Request interceptor to add auth token
 api.interceptors.request.use((config) => {
+  console.log('[API DEBUG] Full URL:', config.baseURL + config.url);
+  console.log('[API DEBUG] Method:', config.method, 'Path:', config.url);
   const token = localStorage.getItem('heyla_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
