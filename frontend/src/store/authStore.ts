@@ -5,8 +5,10 @@ import api from '@/lib/api';
 
 interface AuthState {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  hydrate: () => void;
   initAuth: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (data: { email: string; password: string; name: string; company: string }) => Promise<void>;
@@ -18,26 +20,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   isLoading: false,
 
-  initAuth: async () => {
+  hydrate: () => {
     const token = localStorage.getItem('heyla_token');
-    if (!token) {
-      set({ isLoading: false });
-      return;
+    const userStr = localStorage.getItem('heyla_user');
+    if (token && userStr) {
+      set({ 
+        token,
+        user: JSON.parse(userStr), 
+        isAuthenticated: true 
+      });
     }
-    
+  },
+
+  initAuth: async () => {
     set({ isLoading: true });
     try {
+      // Instant hydrate from localStorage
+      get().hydrate();
+      
+      // Optional fresh /auth/me (don't fail session on error)
       const response = await api.get('/auth/me');
-      set({ 
-        user: response.data.data.user, 
-        isAuthenticated: true, 
-        isLoading: false 
-      });
-      localStorage.setItem('heyla_user', JSON.stringify(response.data.data.user));
+      if (response.data.data.user) {
+        localStorage.setItem('heyla_user', JSON.stringify(response.data.data.user));
+        set({ user: response.data.data.user });
+      }
     } catch (error) {
-      localStorage.removeItem('heyla_token');
-      localStorage.removeItem('heyla_user');
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      console.warn('[AUTH] /auth/me failed - using cached session:', error.response?.status);
+      // Don't clear storage - keep hydrated state
+    } finally {
+      set({ isLoading: false });
     }
   },
 
