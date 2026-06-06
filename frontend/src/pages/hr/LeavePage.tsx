@@ -1,8 +1,8 @@
 import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
-import { useEmployees } from '@/store/employeeStore';
+import { useEmployeeStore } from '@/store/employeeStore';
 import { useState } from 'react';
 import { Plus, X, Calendar, CheckCircle, XCircle } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 interface LeaveRequest {
   id: string;
@@ -15,43 +15,44 @@ interface LeaveRequest {
   days: number;
 }
 
+const mockLeaves: LeaveRequest[] = [
+  { id: '1', employeeId: '4', type: 'Annual', startDate: '2024-02-10', endDate: '2024-02-17', reason: 'Family vacation', status: 'Approved', days: 5 },
+  { id: '2', employeeId: '1', type: 'Sick', startDate: '2024-02-20', endDate: '2024-02-21', reason: 'Medical appointment', status: 'Pending', days: 2 },
+  { id: '3', employeeId: '3', type: 'Study', startDate: '2024-03-01', endDate: '2024-03-03', reason: 'CPA exam preparation', status: 'Pending', days: 3 },
+  { id: '4', employeeId: '2', type: 'Compassionate', startDate: '2024-01-15', endDate: '2024-01-17', reason: 'Family emergency', status: 'Approved', days: 3 },
+];
+
 export default function LeavePage() {
-  const { data: employees = [] } = useEmployees();
-  const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
+  const employees = useEmployeeStore((s) => s.employees);
+  const [leaves, setLeaves] = useState<LeaveRequest[]>(mockLeaves);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ employeeId: '', type: 'Annual' as LeaveRequest['type'], startDate: '', endDate: '', reason: '' });
-  const { toast } = useToast();
 
-  const statusVariant = (s: LeaveRequest['status']) => s === 'Approved' ? 'success' : s === 'Rejected' ? 'destructive' : 'warning';
+  const statusVariant = (s: string) => s === 'Approved' ? 'success' : s === 'Rejected' ? 'destructive' : 'warning';
 
   const handleApprove = (id: string) => {
     setLeaves((prev) => prev.map((l) => l.id === id ? { ...l, status: 'Approved' as const } : l));
-    toast({ title: 'Success', description: 'Leave approved' });
+    toast.success('Leave approved');
   };
 
   const handleReject = (id: string) => {
     setLeaves((prev) => prev.map((l) => l.id === id ? { ...l, status: 'Rejected' as const } : l));
-    toast({ title: 'Success', description: 'Leave rejected' });
+    toast.success('Leave rejected');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.employeeId || !form.startDate || !form.endDate) { 
-      toast({ variant: 'destructive', title: 'Error', description: 'Fill all fields' });
-      return; 
-    }
+    if (!form.employeeId || !form.startDate || !form.endDate) { toast.error('Fill all fields'); return; }
     const days = Math.ceil((new Date(form.endDate).getTime() - new Date(form.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    setLeaves((prev) => [...prev, { ...form, id: Date.now().toString(), status: 'Pending' as const, days }]);
+    setLeaves((prev) => [...prev, { ...form, id: Date.now().toString(), status: 'Pending', days }]);
     setShowAdd(false);
     setForm({ employeeId: '', type: 'Annual', startDate: '', endDate: '', reason: '' });
-    toast({ title: 'Success', description: 'Leave request submitted' });
+    toast.success('Leave request submitted');
   };
-
-  const pendingCount = leaves.filter((l) => l.status === 'Pending').length;
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <PageHeader title="Leave Management" description={`${pendingCount} pending requests`}>
+      <PageHeader title="Leave Management" description={`${leaves.filter((l) => l.status === 'Pending').length} pending requests`}>
         <button onClick={() => setShowAdd(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
           <Plus className="w-4 h-4" /> Request Leave
         </button>
@@ -64,7 +65,7 @@ export default function LeavePage() {
           { label: 'Rejected', count: leaves.filter((l) => l.status === 'Rejected').length, color: 'text-destructive' },
         ].map((s) => (
           <div key={s.label} className="glass rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-muted-foreground">{s.count}</p>
+            <p className={`text-2xl font-bold ${s.color}`}>{s.count}</p>
             <p className="text-xs text-muted-foreground">{s.label}</p>
           </div>
         ))}
@@ -89,7 +90,7 @@ export default function LeavePage() {
                 return (
                   <tr key={leave.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3">
-                      <p className="font-medium">{emp ? `${emp.firstName} {emp.lastName}` : 'Unknown'}</p>
+                      <p className="font-medium">{emp ? `${emp.firstName} ${emp.lastName}` : 'Unknown'}</p>
                       <p className="text-xs text-muted-foreground">{leave.reason}</p>
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground">{leave.type}</td>
@@ -99,8 +100,8 @@ export default function LeavePage() {
                     <td className="px-4 py-3">
                       {leave.status === 'Pending' && (
                         <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => handleApprove(leave.id)} className="p-1 rounded hover:bg-success/10 text-success" title="Approve"><CheckCircle className="w-4 h-4" /></button>
-                          <button onClick={() => handleReject(leave.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Reject"><XCircle className="w-4 h-4" /></button>
+                          <button onClick={() => handleApprove(leave.id)} className="p-1 rounded hover:bg-success/10 text-success"><CheckCircle className="w-4 h-4" /></button>
+                          <button onClick={() => handleReject(leave.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive"><XCircle className="w-4 h-4" /></button>
                         </div>
                       )}
                     </td>

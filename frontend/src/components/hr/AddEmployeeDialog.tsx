@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useAddEmployee } from '@/store/employeeStore';
+import { useEmployeeStore } from '@/store/employeeStore';
 import { Employee } from '@/types';
 import { X } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { formatCurrency } from '@/utils/countries';
 
 interface Props {
@@ -11,54 +11,42 @@ interface Props {
 }
 
 export default function AddEmployeeDialog({ open, onClose }: Props) {
-  const addEmployeeMutation = useAddEmployee();
-  const { toast } = useToast();
-  const [form, setForm] = useState<Omit<Employee, 'id'> & { country: string }>({
+  const addEmployee = useEmployeeStore((s) => s.addEmployee);
+  const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', phone: '', nationalId: '', kraPin: '',
-    nssfNo: '', nhifNo: '', department: '', position: '', employmentType: 'Full-time' as const,
+    nssfNo: '', nhifNo: '', department: '', position: '', employmentType: 'Full-time' as Employee['employmentType'],
     baseSalary: 0, housingAllowance: 0, transportAllowance: 0, medicalAllowance: 0, otherAllowances: 0,
-    address: '', city: '', country: 'KE', emergencyContact: '', emergencyPhone: '',
-    bankName: '', bankAccount: '', status: 'Active' as const, startDate: new Date().toISOString().split('T')[0],
+    address: '', city: '', country: 'Kenya', emergencyContact: '', emergencyPhone: '',
+    bankName: '', bankAccount: '',
   });
 
   if (!open) return null;
 
   const gross = form.baseSalary + form.housingAllowance + form.transportAllowance + form.medicalAllowance + form.otherAllowances;
 
-  const update = (field: keyof typeof form, value: string | number) => setForm((f) => ({ ...f, [field]: value as any }));
+  const update = (field: string, value: string | number) => setForm((f) => ({ ...f, [field]: value }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.firstName || !form.lastName || !form.email) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please fill required fields' });
+      toast.error('Please fill required fields');
       return;
     }
-    try {
-      const employeeData = { ...form } as Omit<Employee, 'id'>;
-      await addEmployeeMutation.mutateAsync(employeeData);
-      toast({ title: 'Success', description: `${form.firstName} ${form.lastName} added!` });
-      onClose();
-      setForm({
-        firstName: '', lastName: '', email: '', phone: '', nationalId: '', kraPin: '',
-        nssfNo: '', nhifNo: '', department: '', position: '', employmentType: 'Full-time' as const,
-        baseSalary: 0, housingAllowance: 0, transportAllowance: 0, medicalAllowance: 0, otherAllowances: 0,
-        address: '', city: '', country: 'KE', emergencyContact: '', emergencyPhone: '',
-        bankName: '', bankAccount: '', status: 'Active' as const, startDate: new Date().toISOString().split('T')[0],
-      });
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to add employee' });
-    }
+    addEmployee({
+      ...form,
+      id: Date.now().toString(),
+      status: 'Active',
+      startDate: new Date().toISOString().split('T')[0],
+    });
+    toast.success(`${form.firstName} ${form.lastName} added!`);
+    onClose();
   };
 
-  const Field = ({ label, field, type = 'text', required = false }: { label: string; field: keyof typeof form; type?: string; required?: boolean; }) => (
-    <div className="col-span-2 sm:col-span-1">
+  const Field = ({ label, field, type = 'text', required = false, half = false }: { label: string; field: string; type?: string; required?: boolean; half?: boolean }) => (
+    <div className={half ? 'col-span-1' : 'col-span-2 sm:col-span-1'}>
       <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}{required && <span className="text-destructive">*</span>}</label>
-      <input 
-        type={type} 
-        value={form[field] as string} 
-        onChange={(e) => update(field, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
-        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" 
-      />
+      <input type={type} value={(form as any)[field]} onChange={(e) => update(field, type === 'number' ? +e.target.value : e.target.value)}
+        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
     </div>
   );
 
@@ -92,13 +80,11 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <Field label="Department" field="department" />
               <Field label="Position" field="position" />
-              <div className="col-span-2 sm:col-span-1">
+              <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Employment Type</label>
-                <select value={form.employmentType} onChange={(e) => update('employmentType', e.target.value as Employee['employmentType'])}
+                <select value={form.employmentType} onChange={(e) => update('employmentType', e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                  {(['Full-time', 'Part-time', 'Contract', 'Intern'] as Employee['employmentType'][]).map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
+                  {['Full-time', 'Part-time', 'Contract', 'Intern'].map((t) => <option key={t}>{t}</option>)}
                 </select>
               </div>
             </div>
@@ -106,7 +92,7 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
 
           {/* Salary */}
           <div>
-            <h3 className="text-sm font-semibold mb-3 text-primary">Compensation ({formatCurrency(1, form.country)})</h3>
+            <h3 className="text-sm font-semibold mb-3 text-primary">Compensation (KES)</h3>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Base Salary" field="baseSalary" type="number" />
               <Field label="Housing Allowance" field="housingAllowance" type="number" />
@@ -115,7 +101,7 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
               <Field label="Other Allowances" field="otherAllowances" type="number" />
             </div>
             <div className="mt-3 p-3 rounded-lg bg-accent border border-primary/20">
-              <p className="text-sm font-semibold text-accent-foreground">Gross Salary: {formatCurrency(gross, form.country)}</p>
+              <p className="text-sm font-semibold text-accent-foreground">Gross Salary: {formatCurrency(gross)}</p>
             </div>
           </div>
 
@@ -142,9 +128,7 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
-            <button type="submit" disabled={addEmployeeMutation.isPending} className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
-              {addEmployeeMutation.isPending ? 'Adding...' : 'Add Employee'}
-            </button>
+            <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Add Employee</button>
           </div>
         </form>
       </div>
