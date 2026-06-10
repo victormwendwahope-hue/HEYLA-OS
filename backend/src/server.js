@@ -11,8 +11,10 @@ import careersRouter from './routes/careers.js';
 import chatRouter from './routes/chat.js';
 import uploadRouter from './routes/upload.js';
 import adminRouter from './routes/admin.js';
+import paymentRouter from './routes/payment.js';
 import { crudRouter } from './routes/crud.js';
 import { rateLimit, securityHeaders } from './security.js';
+
 
 const app = express();
 app.set('trust proxy', 1);
@@ -65,6 +67,10 @@ app.use('/api/upload', uploadRouter);
 
 // Admin
 app.use('/api/admin', adminRouter);
+
+// Payment
+app.use('/api/payment', paymentRouter);
+
 
 // Generic CRUD modules
 const crudCollections = [

@@ -38,56 +38,50 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, password) => {
     set({ isLoading: true });
     try {
-      if (apiEnabled()) {
-        const { token, refreshToken, user } = await api.auth.login(email, password);
-        const mapped = mapUser(user);
-        persist(mapped, token, refreshToken);
-        set({ user: mapped, isAuthenticated: true, isLoading: false });
-        return;
-      }
+      if (!apiEnabled()) throw new ApiError('API not configured (set VITE_API_URL)', 0, null);
+
+      const { token, refreshToken, user } = await api.auth.login(email, password);
+      const mapped = mapUser(user);
+      persist(mapped, token, refreshToken);
+      set({ user: mapped, isAuthenticated: true, isLoading: false });
+      return;
     } catch (err) {
-      if (err instanceof ApiError && err.status > 0) {
-        set({ isLoading: false });
-        throw err;
-      }
-      console.warn('[auth] backend unreachable, using mock login', err);
+      set({ isLoading: false });
+      throw err;
     }
-    await new Promise((r) => setTimeout(r, 400));
-    const mock: User = { id: '1', email, name: email.split('@')[0], company: 'Heyla Corp', role: 'admin' };
-    persist(mock, 'mock-jwt-token');
-    set({ user: mock, isAuthenticated: true, isLoading: false });
   },
 
   register: async (data) => {
     set({ isLoading: true });
     try {
-      if (apiEnabled()) {
-        const { token, refreshToken, user } = await api.auth.register({
-          email: data.email, password: data.password, name: data.name,
-          company: data.company, accountType: data.accountType || 'company',
-        });
-        const mapped = mapUser(user);
-        persist(mapped, token, refreshToken);
-        set({ user: mapped, isAuthenticated: true, isLoading: false });
-        return;
-      }
+      if (!apiEnabled()) throw new ApiError('API not configured (set VITE_API_URL)', 0, null);
+
+      const { token, refreshToken, user } = await api.auth.register({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        company: data.company,
+        accountType: data.accountType || 'company',
+      });
+
+      const mapped = mapUser(user);
+      persist(mapped, token, refreshToken);
+      set({ user: mapped, isAuthenticated: true, isLoading: false });
+      return;
     } catch (err) {
-      if (err instanceof ApiError && err.status > 0) {
-        set({ isLoading: false });
-        throw err;
-      }
-      console.warn('[auth] backend unreachable, using mock register', err);
+      set({ isLoading: false });
+      throw err;
     }
-    await new Promise((r) => setTimeout(r, 600));
-    const mock: User = { id: '1', email: data.email, name: data.name, company: data.company, role: 'admin' };
-    persist(mock, 'mock-jwt-token');
-    set({ user: mock, isAuthenticated: true, isLoading: false });
   },
 
   logout: async () => {
     const rt = getRefreshToken();
     if (apiEnabled()) {
-      try { await api.auth.logout(rt || undefined); } catch { /* ignore */ }
+      try {
+        await api.auth.logout(rt || undefined);
+      } catch {
+        // ignore
+      }
     }
     setToken(null);
     setRefreshToken(null);
@@ -97,7 +91,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logoutAll: async () => {
     if (apiEnabled()) {
-      try { await api.auth.logoutAll(); } catch { /* ignore */ }
+      try {
+        await api.auth.logoutAll();
+      } catch {
+        // ignore
+      }
     }
     setToken(null);
     setRefreshToken(null);
@@ -110,3 +108,4 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return !!u && roles.includes(u.role);
   },
 }));
+
