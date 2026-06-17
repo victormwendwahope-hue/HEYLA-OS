@@ -25,17 +25,22 @@ const origins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localh
   .map((s) => s.trim())
   .filter(Boolean);
 
-app.use(
-  cors({
-    origin(origin, cb) {
-      // Allow tools (Postman, curl) with no origin, and any whitelisted origin.
-      if (!origin) return cb(null, true);
-      if (origins.includes('*') || origins.includes(origin)) return cb(null, true);
-      cb(new Error(`CORS: origin ${origin} not allowed`));
-    },
-    credentials: true,
-  })
-);
+const corsOptions = {
+  credentials: true,
+  origin(origin, cb) {
+    // Allow tools (Postman, curl) with no origin, and any whitelisted origin.
+    if (!origin) return cb(null, true);
+    if (origins.includes('*') || origins.includes(origin)) return cb(null, true);
+
+    // Do not error (which can break preflight); just deny this origin.
+    return cb(null, false);
+  },
+};
+
+app.use(cors(corsOptions));
+// Explicitly answer preflight requests with CORS headers.
+app.options('*', cors(corsOptions));
+
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
 app.use(securityHeaders);
