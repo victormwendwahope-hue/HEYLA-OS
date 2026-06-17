@@ -108,8 +108,14 @@ async function request<T>(method: string, path: string, body?: unknown, init: Re
   const text = await res.text();
   const data = text ? safeParse(text) : null;
 
-  if (!res.ok) {
+if (!res.ok) {
     const msg = (data as any)?.error || res.statusText;
+
+    // Trial-gating: backend responds 403 { redirectToPayment: true, paymentUrl }
+    if (res.status === 403 && (data as any)?.redirectToPayment && (data as any)?.paymentUrl) {
+      location.assign((data as any).paymentUrl);
+    }
+
     if (res.status === 403) toast.error(typeof msg === 'string' ? msg : 'You don\'t have access to this');
     if (res.status === 401 && path.startsWith('/auth/')) {
       // login/register fail — surface inline, no global redirect
