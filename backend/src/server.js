@@ -27,19 +27,25 @@ const origins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localh
 
 const corsOptions = {
   credentials: true,
+  // For Render, Origin is a full scheme+host string.
+  // Ensure we always return an ACAO header for allowed origins, so preflight passes.
   origin(origin, cb) {
-    // Allow tools (Postman, curl) with no origin, and any whitelisted origin.
     if (!origin) return cb(null, true);
-    if (origins.includes('*') || origins.includes(origin)) return cb(null, true);
 
-    // Do not error (which can break preflight); just deny this origin.
+    // If env uses wildcards, allow all.
+    if (origins.includes('*')) return cb(null, true);
+
+    // Exact match only (scheme + host). Ensure CORS_ORIGIN is set correctly.
+    if (origins.includes(origin)) return cb(null, true);
+
+    // Deny without throwing; but preflight will still fail if origin is not whitelisted.
     return cb(null, false);
   },
 };
 
-app.use(cors(corsOptions));
-// Explicitly answer preflight requests with CORS headers.
+// Ensure CORS + OPTIONS are handled before any other middleware.
 app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
