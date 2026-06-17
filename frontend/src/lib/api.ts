@@ -1,10 +1,10 @@
 // Thin fetch wrapper with refresh-token rotation, 401 auto-retry and 403 toast.
 import { toast } from 'sonner';
 
-const BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || '';
+const RAW_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || '';
 // Some deployments accidentally set VITE_API_URL to include /api/v1.
 // Normalize to ensure we call backend routes under /api/*.
-const normalizedBase = BASE.replace(/\/api\/v1$/i, '/api');
+const BASE = RAW_BASE.replace(/\/api\/v1$/i, '/api');
 const ACCESS_KEY = 'heyla_token';
 const REFRESH_KEY = 'heyla_refresh';
 
