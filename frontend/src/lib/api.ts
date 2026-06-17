@@ -2,6 +2,9 @@
 import { toast } from 'sonner';
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || '';
+// Some deployments accidentally set VITE_API_URL to include /api/v1.
+// Normalize to ensure we call backend routes under /api/*.
+const normalizedBase = BASE.replace(/\/api\/v1$/i, '/api');
 const ACCESS_KEY = 'heyla_token';
 const REFRESH_KEY = 'heyla_refresh';
 
