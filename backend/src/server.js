@@ -20,32 +20,24 @@ const app = express();
 app.set('trust proxy', 1);
 const PORT = Number(process.env.PORT) || 4000;
 
-const origins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:8080')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
+// Render frontend origin
+const FRONTEND_ORIGIN = process.env.CORS_ORIGIN || 'https://heyla-os.onrender.com';
 
-const corsOptions = {
-  credentials: true,
-  // For Render, Origin is a full scheme+host string.
-  // Ensure we always return an ACAO header for allowed origins, so preflight passes.
-  origin(origin, cb) {
-    if (!origin) return cb(null, true);
-
-    // If env uses wildcards, allow all.
-    if (origins.includes('*')) return cb(null, true);
-
-    // Exact match only (scheme + host). Ensure CORS_ORIGIN is set correctly.
-    if (origins.includes(origin)) return cb(null, true);
-
-    // Deny without throwing; but preflight will still fail if origin is not whitelisted.
-    return cb(null, false);
-  },
-};
-
-// Ensure CORS + OPTIONS are handled before any other middleware.
-app.options('*', cors(corsOptions));
-app.use(cors(corsOptions));
+// CORS: make sure preflight always succeeds with correct headers.
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow non-browser requests (no origin header)
+      if (!origin) return callback(null, true);
+      if (origin === FRONTEND_ORIGIN) return callback(null, true);
+      return callback(null, false);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    optionsSuccessStatus: 204,
+  })
+);
 
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
@@ -124,7 +116,7 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log(`\n🚀 HEYLA OS backend listening on http://localhost:${PORT}`);
-  console.log(`   CORS origins: ${origins.join(', ')}`);
+  console.log(`   CORS origin:  ${FRONTEND_ORIGIN}`);
   console.log(`   Data dir:     ${path.resolve(process.env.DATA_DIR || './data')}`);
   console.log(`   Try: curl http://localhost:${PORT}/api/health\n`);
 });
