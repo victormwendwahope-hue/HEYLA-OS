@@ -17,6 +17,9 @@ import { audit } from '../audit.js';
 
 const router = Router();
 
+// Debug helpers (DO NOT use password-check in production unless explicitly enabled)
+const DEBUG_AUTH_ENABLED = (process.env.DEBUG_AUTH || '').toLowerCase() === 'true';
+
 // Ensure browser CORS preflight succeeds for the login endpoint.
 // Some hosts/CDNs may not route OPTIONS to the global app handler consistently.
 router.options('/login', async (req, res) => {
@@ -163,6 +166,40 @@ router.post('/logout-all', requireAuth, async (req, res) => {
   await revokeAllForUser(req.user.sub);
   await audit(req, 'auth.logout_all', `users/${req.user.sub}`);
   res.json({ ok: true });
+});
+
+/**
+ * Admin status debug endpoint.
+ * Returns whether the admin user exists + what the stored passwordHash "looks like".
+ * No password is ever returned.
+ */
+router.get('/debug/admin-status', async (_req, res) => {
+  if (!DEBUG_AUTH_ENABLED) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  const adminEmail = (process.env.ADMIN_EMAIL || 'hydancheru@gmail.com').toLowerCase();
+  const admin = await findUserByEmail(adminEmail);
+
+  const passwordHash = admin?.passwordHash || null;
+  const passwordHashLooksBcrypt = typeof passwordHash === 'string' && passwordHash.startsWith('$2');
+
+  return res.json({
+    ok: true,
+    debugAuthEnabled: DEBUG_AUTH_ENABLED,
+    admin: admin
+      ? {
+          id: admin.id,
+          email: admin.email,
+          role: admin.role,
+          accountType: admin.accountType,
+          name: admin.name,
+          company: admin.company,
+          passwordHashLooksBcrypt,
+          passwordHashPrefix: typeof passwordHash === 'string' ? passwordHash.slice(0, 4) : null,
+        }
+      : null,
+  });
 });
 
 export default router;

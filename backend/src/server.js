@@ -182,19 +182,32 @@ app.use((err, _req, res, _next) => {
 async function seedAdminUser() {
   const adminEmail = (process.env.ADMIN_EMAIL || 'hydancheru@gmail.com').toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD || 'DanHacks@Admin';
+  const adminName = process.env.ADMIN_NAME || adminEmail.split('@')[0]?.replace(/[._-]+/g, ' ').trim() || 'Admin';
+  const adminCompany = process.env.ADMIN_COMPANY || '';
 
   const existing = (await db.find('users', (u) => (u.email || '').toLowerCase() === adminEmail))[0];
+
+  // Idempotent + sync env values (fixes "admin exists but wrong passwordHash")
   if (existing) {
-    console.log(`👑 Admin user already exists: ${adminEmail}`);
+    await db.update('users', existing.id, {
+      email: adminEmail,
+      name: adminName,
+      company: adminCompany,
+      accountType: 'individual',
+      role: 'admin',
+      passwordHash: await hashPassword(adminPassword),
+      trialStartedAt: null,
+      trialDurationDays: 0,
+      updatedAt: new Date().toISOString(),
+    });
+    console.log(`👑 Admin user synced (already existed): ${adminEmail}`);
     return;
   }
 
-  const nameFromEmail = adminEmail.split('@')[0]?.replace(/[._-]+/g, ' ').trim() || 'Admin';
-
   await db.insert('users', {
     email: adminEmail,
-    name: nameFromEmail,
-    company: '',
+    name: adminName,
+    company: adminCompany,
     accountType: 'individual',
     role: 'admin',
     passwordHash: await hashPassword(adminPassword),
