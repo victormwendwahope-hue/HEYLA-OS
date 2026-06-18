@@ -40,7 +40,35 @@ console.log('[config] CORS_ORIGINS_ALLOWLIST:', CORS_ORIGINS_ALLOWLIST.join(', '
 console.log('[config] NODE_ENV:', process.env.NODE_ENV);
 console.log('[config] PORT:', process.env.PORT);
 
-// CORS: make sure preflight always succeeds with correct headers.
+// HARD: preflight must match and respond before any other middleware (rateLimit, headers, routes).
+app.options('*', (req, res) => {
+  if (!req.path.startsWith('/api/')) return res.status(404).end();
+
+  const origin = req.headers.origin;
+
+  if (req.path === '/api/auth/login') {
+    console.log('\n🧪 [preflight] OPTIONS /api/auth/login');
+    console.log('[preflight] Origin header:', origin);
+    console.log('[preflight] CORS allowlist:', CORS_ORIGINS_ALLOWLIST.join(', '));
+  }
+
+  // Only set Access-Control-Allow-Origin for allowed origins (credentials require exact origin).
+  if (origin && CORS_ORIGINS_ALLOWLIST.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
+
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, X-Requested-With, Accept, Origin'
+  );
+
+  return res.status(204).end();
+});
+
+// CORS: make sure non-preflight requests succeed with correct headers.
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -55,31 +83,6 @@ app.use(
     optionsSuccessStatus: 204,
   })
 );
-
-// Hard stop preflight early for all API endpoints to avoid any downstream blocking.
-// This guarantees Access-Control-Allow-Origin is present on OPTIONS.
-app.options('/api/*', (req, res) => {
-  const origin = req.headers.origin;
-
-  if (req.path === '/api/auth/login') {
-    console.log('\n🧪 [preflight] OPTIONS /api/auth/login');
-    console.log('[preflight] Origin header:', origin);
-    console.log('[preflight] CORS allowlist:', CORS_ORIGINS_ALLOWLIST.join(', '));
-  }
-
-  if (origin && CORS_ORIGINS_ALLOWLIST.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
-  }
-
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, X-Requested-With, Accept, Origin'
-  );
-  return res.status(204).end();
-});
 
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
