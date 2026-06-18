@@ -24,7 +24,8 @@
     <script>
       // Runtime API base override (used by src/lib/api.ts)
       // Backend: https://heyla-backend.onrender.com
-      window.__VITE_API_URL__ = "https://heyla-backend.onrender.com";
+      // Include /api because backend mounts routes under /api (e.g., /api/auth/login)
+      window.__VITE_API_URL__ = "https://heyla-backend.onrender.com/api";
     </script>
 
     <script type="module" src="/src/main.tsx"></script>
