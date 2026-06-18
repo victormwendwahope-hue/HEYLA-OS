@@ -28,61 +28,70 @@ const PORT = Number(process.env.PORT) || 4000;
  *   https://myapp.example.com (production)
  */
 const DEFAULT_FRONTEND_ORIGIN = 'http://localhost:5173';
-const FRONTEND_ORIGIN = (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN.trim())
-  ? process.env.CORS_ORIGIN.trim()
-  : DEFAULT_FRONTEND_ORIGIN;
 
-const CORS_ORIGINS_ALLOWLIST = [FRONTEND_ORIGIN];
+const CORS_ORIGINS_ALLOWLIST = [
+  DEFAULT_FRONTEND_ORIGIN,
+  process.env.CORS_ORIGIN,
+  process.env.FRONTEND_ORIGIN,
+  'https://heyla-os.onrender.com',
+  'https://heyla-os-backend.onrender.com',
+  'https://heyla-backend.onrender.com',
+].filter(Boolean);
 
-console.log('\n🧩 [config] CORS_ORIGIN env:', process.env.CORS_ORIGIN);
-console.log('[config] FRONTEND_ORIGIN effective:', FRONTEND_ORIGIN);
-console.log('[config] CORS_ORIGINS_ALLOWLIST:', CORS_ORIGINS_ALLOWLIST.join(', '));
+console.log('\n🧩 [config] CORS_ORIGINS_ALLOWLIST:');
+console.log(CORS_ORIGINS_ALLOWLIST);
+console.log('[config] CORS_ORIGIN env:', process.env.CORS_ORIGIN);
+console.log('[config] FRONTEND_ORIGIN env:', process.env.FRONTEND_ORIGIN);
 console.log('[config] NODE_ENV:', process.env.NODE_ENV);
 console.log('[config] PORT:', process.env.PORT);
 
-// HARD: preflight must match and respond before any other middleware (rateLimit, headers, routes).
-app.options('*', (req, res) => {
-  if (!req.path.startsWith('/api/')) return res.status(404).end();
-
+app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  if (req.path === '/api/auth/login') {
-    console.log('\n🧪 [preflight] OPTIONS /api/auth/login');
-    console.log('[preflight] Origin header:', origin);
-    console.log('[preflight] CORS allowlist:', CORS_ORIGINS_ALLOWLIST.join(', '));
-  }
-
-  // Only set Access-Control-Allow-Origin for allowed origins (credentials require exact origin).
   if (origin && CORS_ORIGINS_ALLOWLIST.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
   }
 
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.setHeader(
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, X-Requested-With, Accept, Origin'
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  );
+  res.header(
+    'Access-Control-Allow-Methods',
+    'GET, POST, PUT, PATCH, DELETE, OPTIONS'
   );
 
-  return res.status(204).end();
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
 });
 
-// CORS: make sure non-preflight requests succeed with correct headers.
+// CORS library for actual (non-preflight) requests.
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow non-browser requests (no origin header)
       if (!origin) return callback(null, true);
-      if (CORS_ORIGINS_ALLOWLIST.includes(origin)) return callback(null, true);
-      return callback(null, false);
+
+      if (CORS_ORIGINS_ALLOWLIST.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log('[CORS BLOCKED]', origin);
+      return callback(new Error(`Origin ${origin} not allowed`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
     optionsSuccessStatus: 204,
   })
 );
+
+
 
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
@@ -93,6 +102,16 @@ app.use('/api/', rateLimit({ windowMs: 60_000, max: 300, key: 'api' }));
 
 // Static uploads
 app.use('/uploads', express.static(db.uploadsDir));
+
+// Root health
+app.get('/', (_req, res) => {
+  res.json({
+    ok: true,
+    service: 'HEYLA OS Backend',
+    status: 'running',
+    time: new Date().toISOString(),
+  });
+});
 
 // Health
 app.get('/api/health', (_req, res) =>
@@ -161,7 +180,7 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log(`\n🚀 HEYLA OS backend listening on http://localhost:${PORT}`);
-  console.log(`   CORS origin:  ${FRONTEND_ORIGIN}`);
+  console.log(`   CORS allowlist: ${CORS_ORIGINS_ALLOWLIST.join(', ')}`);
   console.log(`   Data dir:     ${path.resolve(process.env.DATA_DIR || './data')}`);
   console.log(`   Try: curl http://localhost:${PORT}/api/health\n`);
 });
