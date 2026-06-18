@@ -17,6 +17,33 @@ import { audit } from '../audit.js';
 
 const router = Router();
 
+// Ensure browser CORS preflight succeeds for the login endpoint.
+// Some hosts/CDNs may not route OPTIONS to the global app handler consistently.
+router.options('/login', async (req, res) => {
+  const origin = req.headers.origin;
+
+  const DEFAULT_FRONTEND_ORIGIN = 'http://localhost:5173';
+  const FRONTEND_ORIGIN = (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN.trim())
+    ? process.env.CORS_ORIGIN.trim()
+    : DEFAULT_FRONTEND_ORIGIN;
+
+  const CORS_ORIGINS_ALLOWLIST = [FRONTEND_ORIGIN];
+
+  if (origin && CORS_ORIGINS_ALLOWLIST.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
+
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, X-Requested-With, Accept, Origin'
+  );
+
+  return res.status(204).end();
+});
+
 const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(255),
   password: z.string().min(8).max(200)
