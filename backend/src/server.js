@@ -6,6 +6,7 @@ import path from 'node:path';
 
 import { db } from './db.js';
 import authRouter from './routes/auth.js';
+import { hashPassword } from './auth.js';
 import jobsRouter, { applicationsRouter } from './routes/jobs.js';
 import careersRouter from './routes/careers.js';
 import chatRouter from './routes/chat.js';
@@ -178,9 +179,39 @@ app.use((err, _req, res, _next) => {
   res.status(err.status || 500).json({ error: err.message || 'Server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 HEYLA OS backend listening on http://localhost:${PORT}`);
-  console.log(`   CORS allowlist: ${CORS_ORIGINS_ALLOWLIST.join(', ')}`);
-  console.log(`   Data dir:     ${path.resolve(process.env.DATA_DIR || './data')}`);
-  console.log(`   Try: curl http://localhost:${PORT}/api/health\n`);
-});
+async function seedAdminUser() {
+  const adminEmail = (process.env.ADMIN_EMAIL || 'hydancheru@gmail.com').toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD || 'DanHacks@Admin';
+
+  const existing = (await db.find('users', (u) => (u.email || '').toLowerCase() === adminEmail))[0];
+  if (existing) {
+    console.log(`👑 Admin user already exists: ${adminEmail}`);
+    return;
+  }
+
+  const nameFromEmail = adminEmail.split('@')[0]?.replace(/[._-]+/g, ' ').trim() || 'Admin';
+
+  await db.insert('users', {
+    email: adminEmail,
+    name: nameFromEmail,
+    company: '',
+    accountType: 'individual',
+    role: 'admin',
+    passwordHash: await hashPassword(adminPassword),
+    trialStartedAt: null,
+    trialDurationDays: 0,
+  });
+
+  console.log(`👑 Admin user created: ${adminEmail}`);
+}
+
+seedAdminUser()
+  .catch((e) => console.error('Admin seed failed:', e))
+  .finally(() => {
+    app.listen(PORT, () => {
+      console.log(`\n🚀 HEYLA OS backend listening on http://localhost:${PORT}`);
+      console.log(`   CORS allowlist: ${CORS_ORIGINS_ALLOWLIST.join(', ')}`);
+      console.log(`   Data dir:     ${path.resolve(process.env.DATA_DIR || './data')}`);
+      console.log(`   Try: curl http://localhost:${PORT}/api/health\n`);
+    });
+  });
