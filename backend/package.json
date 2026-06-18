@@ -1,6 +1,6 @@
 {
   "name": "heyla-os-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "HEYLA OS standalone Node/Express backend (JSON-file persistence, JWT auth, no external services).",
@@ -16,8 +16,12 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
-    "multer": "^1.4.5-lts.1",
+    "multer": "^2.1.0",
     "nanoid": "^5.0.7",
     "zod": "^3.23.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
+

@@ -3,6 +3,7 @@
 import { db } from './db.js';
 
 function clientIp(req) {
+  if (!req || !req.headers) return 'unknown';
   const xf = req.headers['x-forwarded-for'];
   if (typeof xf === 'string' && xf.length) return xf.split(',')[0].trim();
   return req.ip || req.socket?.remoteAddress || 'unknown';

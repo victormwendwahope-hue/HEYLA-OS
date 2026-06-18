@@ -20,8 +20,25 @@ const app = express();
 app.set('trust proxy', 1);
 const PORT = Number(process.env.PORT) || 4000;
 
-// Render frontend origin
-const FRONTEND_ORIGIN = process.env.CORS_ORIGIN || 'https://heyla-os.onrender.com';
+/**
+ * Render frontend origin
+ * IMPORTANT: set CORS_ORIGIN environment variable to match your frontend's origin.
+ * Examples:
+ *   http://localhost:5173 (local dev)
+ *   https://myapp.example.com (production)
+ */
+const DEFAULT_FRONTEND_ORIGIN = 'http://localhost:5173';
+const FRONTEND_ORIGIN = (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN.trim())
+  ? process.env.CORS_ORIGIN.trim()
+  : DEFAULT_FRONTEND_ORIGIN;
+
+const CORS_ORIGINS_ALLOWLIST = [FRONTEND_ORIGIN];
+
+console.log('\n🧩 [config] CORS_ORIGIN env:', process.env.CORS_ORIGIN);
+console.log('[config] FRONTEND_ORIGIN effective:', FRONTEND_ORIGIN);
+console.log('[config] CORS_ORIGINS_ALLOWLIST:', CORS_ORIGINS_ALLOWLIST.join(', '));
+console.log('[config] NODE_ENV:', process.env.NODE_ENV);
+console.log('[config] PORT:', process.env.PORT);
 
 // CORS: make sure preflight always succeeds with correct headers.
 app.use(
@@ -29,7 +46,7 @@ app.use(
     origin: (origin, callback) => {
       // Allow non-browser requests (no origin header)
       if (!origin) return callback(null, true);
-      if (origin === FRONTEND_ORIGIN) return callback(null, true);
+      if (CORS_ORIGINS_ALLOWLIST.includes(origin)) return callback(null, true);
       return callback(null, false);
     },
     credentials: true,
@@ -43,10 +60,18 @@ app.use(
 // This guarantees Access-Control-Allow-Origin is present on OPTIONS.
 app.options('/api/*', (req, res) => {
   const origin = req.headers.origin;
-  if (origin && origin === FRONTEND_ORIGIN) {
+
+  if (req.path === '/api/auth/login') {
+    console.log('\n🧪 [preflight] OPTIONS /api/auth/login');
+    console.log('[preflight] Origin header:', origin);
+    console.log('[preflight] CORS allowlist:', CORS_ORIGINS_ALLOWLIST.join(', '));
+  }
+
+  if (origin && CORS_ORIGINS_ALLOWLIST.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
   }
+
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
   res.setHeader(

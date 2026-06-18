@@ -1,11 +1,13 @@
 import { Router } from 'express';
+import { requireAuth } from '../auth.js';
 
 const router = Router();
+router.use(requireAuth);
 
-// Simple pass-through for the frontend to know where to redirect.
+// Return payment URL for frontend redirect
 router.get('/', (_req, res) => {
   const url = process.env.PAYMENT_URL;
-  if (!url) return res.status(500).json({ error: 'PAYMENT_URL not configured' });
+  if (!url) return res.status(400).json({ error: 'PAYMENT_URL not configured' });
   res.json({ url });
 });
 

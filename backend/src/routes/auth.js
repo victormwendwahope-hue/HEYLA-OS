@@ -41,9 +41,9 @@ router.post('/register', validate({ body: registerSchema }), async (req, res) =>
     return res.status(409).json({ error: 'Email already registered' });
   }
 
-  const isAdmin =
-    email.toLowerCase() === (process.env.ADMIN_EMAIL || 'emailhydancheru@gmail.com').toLowerCase() &&
-    password === (process.env.ADMIN_PASSWORD || 'DanHacks@Admin');
+  const adminEmail = (process.env.ADMIN_EMAIL || 'hydancheru@gmail.com').toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD || 'DanHacks@Admin';
+  const isAdmin = email.toLowerCase() === adminEmail && password === adminPassword;
 
   const user = await db.insert('users', {
     email, name, company, accountType,
@@ -63,72 +63,50 @@ router.post('/register', validate({ body: registerSchema }), async (req, res) =>
 router.post('/login', validate({ body: loginSchema }), async (req, res) => {
   const { email, password } = req.body;
 
-  const adminEmail = (process.env.ADMIN_EMAIL || 'emailhydancheru@gmail.com').toLowerCase();
+  const adminEmail = (process.env.ADMIN_EMAIL || 'hydancheru@gmail.com').toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD || 'DanHacks@Admin';
-
-  // Admin-only login enforcement.
-  const isAdminCreds = email.toLowerCase() === adminEmail && password === adminPassword;
-  if (!isAdminCreds) {
-    // If user exists, enforce trial gating. Otherwise return forbidden.
-    const user = await findUserByEmail(email);
-    if (!user) {
-      await audit(req, 'auth.login.fail', null, { email, reason: 'not-admin' });
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-
-    const now = Date.now();
-    const trialStartedAt = user.trialStartedAt ? Date.parse(user.trialStartedAt) : null;
-    const trialDurationDays = Number(user.trialDurationDays || 7);
-    const trialEnd = trialStartedAt ? trialStartedAt + trialDurationDays * 24 * 60 * 60 * 1000 : null;
-
-    if (!trialEnd || now < trialEnd) {
-      // Tell frontend where to redirect for payment.
-      const paymentUrl = process.env.PAYMENT_URL;
-      return res.status(403).json({
-        error: 'Trial active',
-        redirectToPayment: true,
-        paymentUrl: paymentUrl || null,
-      });
-    }
-  }
 
   const loginUser = await findUserByEmail(email);
 
-  // Enforce registration-first: no auto-creation on login.
+  // Enforce registration-first: user must exist.
   if (!loginUser) {
-    if (isAdminCreds) {
-      await audit(req, 'auth.login.fail', null, { email, reason: 'admin-not-registered' });
-      return res.status(403).json({ error: 'Account not registered' });
-    }
     await audit(req, 'auth.login.fail', null, { email, reason: 'not-registered' });
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
-
-  const ok = loginUser ? await verifyPassword(password, loginUser.passwordHash) : false;
-  if (!loginUser || !ok) {
+  // Verify password.
+  const ok = await verifyPassword(password, loginUser.passwordHash);
+  if (!ok) {
     await audit(req, 'auth.login.fail', null, { email, reason: 'bad-credentials' });
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
-  const now = Date.now();
-  // If non-admin user, verify trial expiry again.
+  // Non-admin users: check if trial has EXPIRED (now > trialEnd).
+  // If expired, block and direct to payment.
   if (loginUser.role !== 'admin') {
+    const now = Date.now();
     const trialStartedAt = loginUser.trialStartedAt ? Date.parse(loginUser.trialStartedAt) : null;
     const trialDurationDays = Number(loginUser.trialDurationDays || 7);
     const trialEnd = trialStartedAt ? trialStartedAt + trialDurationDays * 24 * 60 * 60 * 1000 : null;
-    if (trialEnd && now < trialEnd) {
+
+    // Block if trial exists AND has expired (now > trialEnd).
+    if (trialEnd && now > trialEnd) {
+      await audit(req, 'auth.login.fail', null, { email, reason: 'trial-expired' });
       return res.status(403).json({
-        error: 'Trial active',
+        error: 'Trial expired. Please upgrade to continue.',
         redirectToPayment: true,
         paymentUrl: process.env.PAYMENT_URL || null,
       });
     }
   }
 
+  // Login successful.
   const access = issueAccessToken(loginUser);
   const { token: refreshToken } = await issueRefreshToken(loginUser);
-  await audit({ ...req, user: { sub: loginUser.id, email: loginUser.email, role: loginUser.role } }, 'auth.login', `users/${loginUser.id}`);
+  
+  // Audit: create a minimal req-like object for audit since we can't spread req directly.
+  await audit(req, 'auth.login', `users/${loginUser.id}`, { email: loginUser.email });
+  
   res.json({ token: access, refreshToken, user: publicUser(loginUser) });
 });
 
