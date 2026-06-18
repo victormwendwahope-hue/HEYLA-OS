@@ -20,6 +20,13 @@
 
   <body>
     <div id="root"></div>
+
+    <script>
+      // Runtime API base override (used by src/lib/api.ts)
+      // Backend: https://heyla-backend.onrender.com
+      window.__VITE_API_URL__ = "https://heyla-backend.onrender.com";
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

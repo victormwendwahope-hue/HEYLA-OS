@@ -1,10 +1,21 @@
 // Thin fetch wrapper with refresh-token rotation, 401 auto-retry and 403 toast.
 import { toast } from 'sonner';
 
-const RAW_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || '';
+const runtimeBase =
+  (typeof window !== 'undefined' ? (window as any).__VITE_API_URL__ : undefined) as string | undefined;
+
+const RAW_BASE =
+  (runtimeBase ?? (import.meta.env.VITE_API_URL as string | undefined))?.replace(/\/$/, '') || '';
+
+// Defensive: if an older deploy set the wrong Render backend hostname, fix it client-side.
+const normalizedHostBase = RAW_BASE.replace(
+  /^https?:\/\/heyla-os-backend\.onrender\.com\/?/i,
+  'https://heyla-backend.onrender.com',
+);
+
 // Some deployments accidentally set VITE_API_URL to include /api/v1.
 // Normalize to ensure we call backend routes under /api/*.
-const BASE = RAW_BASE.replace(/\/api\/v1$/i, '/api');
+const BASE = normalizedHostBase.replace(/\/api\/v1$/i, '/api');
 const ACCESS_KEY = 'heyla_token';
 const REFRESH_KEY = 'heyla_refresh';
 
