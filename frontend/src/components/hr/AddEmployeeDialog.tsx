@@ -24,7 +24,17 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
 
   const gross = form.baseSalary + form.housingAllowance + form.transportAllowance + form.medicalAllowance + form.otherAllowances;
 
+  // Keep inputs controlled, but DO NOT coerce number on every keystroke.
+  // Otherwise empty string -> +'' => 0 triggers re-render glitches (feels like typing 1 char at a time).
   const update = (field: string, value: string | number) => setForm((f) => ({ ...f, [field]: value }));
+
+    const updateNumberField = (field: string, raw: string) => {
+      setForm((f) => {
+        const next = { ...f } as any;
+        next[field] = raw === '' ? '' : Number(raw);
+        return next;
+      });
+    };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,21 +42,59 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
       toast.error('Please fill required fields');
       return;
     }
+
+    // Normalize numeric fields on submit (convert '' to 0)
+    const normalized: typeof form = { ...form } as typeof form;
+    const numberFields: Array<keyof typeof form> = [
+      'baseSalary',
+      'housingAllowance',
+      'transportAllowance',
+      'medicalAllowance',
+      'otherAllowances',
+    ];
+
+    for (const k of numberFields) {
+      const v = (normalized as any)[k];
+      (normalized as any)[k] = v === '' || v === null || v === undefined ? 0 : Number(v);
+    }
+
     addEmployee({
-      ...form,
+      ...normalized,
       id: Date.now().toString(),
       status: 'Active',
       startDate: new Date().toISOString().split('T')[0],
     });
-    toast.success(`${form.firstName} ${form.lastName} added!`);
+    toast.success(`${normalized.firstName} ${normalized.lastName} added!`);
     onClose();
   };
 
-  const Field = ({ label, field, type = 'text', required = false, half = false }: { label: string; field: string; type?: string; required?: boolean; half?: boolean }) => (
+  const Field = ({
+    label,
+    field,
+    type = 'text',
+    required = false,
+    half = false,
+  }: {
+    label: string;
+    field: string;
+    type?: string;
+    required?: boolean;
+    half?: boolean;
+  }) => (
     <div className={half ? 'col-span-1' : 'col-span-2 sm:col-span-1'}>
-      <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}{required && <span className="text-destructive">*</span>}</label>
-      <input type={type} value={(form as any)[field]} onChange={(e) => update(field, type === 'number' ? +e.target.value : e.target.value)}
-        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+      <label className="text-xs font-medium text-muted-foreground mb-1 block">
+        {label}
+        {required && <span className="text-destructive">*</span>}
+      </label>
+      <input
+        type={type}
+        value={(form as any)[field] ?? ''}
+        onChange={(e) => {
+          if (type === 'number') updateNumberField(field, e.target.value);
+          else update(field, e.target.value);
+        }}
+        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+      />
     </div>
   );
 
