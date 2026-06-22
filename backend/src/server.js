@@ -13,6 +13,7 @@ import chatRouter from './routes/chat.js';
 import uploadRouter from './routes/upload.js';
 import adminRouter from './routes/admin.js';
 import paymentRouter from './routes/payment.js';
+import { requireAuth } from './auth.js';
 import { crudRouter } from './routes/crud.js';
 import { rateLimit, securityHeaders } from './security.js';
 
@@ -139,6 +140,53 @@ app.use('/api/admin', adminRouter);
 // Payment
 app.use('/api/payment', paymentRouter);
 
+// --- Payslip export (CSV) ---
+app.post('/api/payroll/export-payslips', requireAuth, async (req, res) => {
+  try {
+    const items = Array.isArray(req.body?.items) ? req.body.items : [];
+    if (items.length === 0) {
+      return res.status(400).json({ error: 'No payroll items to export' });
+    }
+
+    // Expected fields (coming from frontend PayrollPage computed rows)
+    // We'll export a safe subset with fallback defaults.
+    const fields = [
+      { key: 'employeeNo', header: 'Employee No' },
+      { key: 'firstName', header: 'First Name' },
+      { key: 'lastName', header: 'Last Name' },
+      { key: 'department', header: 'Department' },
+      { key: 'gross', header: 'Gross' },
+      { key: 'paye', header: 'PAYE' },
+      { key: 'nssf', header: 'NSSF' },
+      { key: 'nhif', header: 'NHIF' },
+      { key: 'netPay', header: 'Net Pay' },
+    ];
+
+    const escapeCsv = (v) => {
+      const s = v === null || v === undefined ? '' : String(v);
+      // RFC4180-ish escaping
+      if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+
+    const headerRow = fields.map((f) => escapeCsv(f.header)).join(',');
+    const rows = items.map((it) =>
+      fields
+        .map((f) => escapeCsv((it && (it[f.key] as any)) ?? ''))
+        .join(',')
+    );
+
+    const csv = [headerRow, ...rows].join('\n');
+
+    const filename = `payslips_${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.status(200).send(csv);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: 'Failed to export payslips' });
+  }
+});
 
 // Generic CRUD modules
 const crudCollections = [

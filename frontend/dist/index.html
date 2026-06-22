@@ -16,11 +16,19 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@HEYLA OS" />
     <meta name="twitter:image" content="https://heyla-os.dev/opengraph-image-p98pqg.png" />
-    <script type="module" crossorigin src="/assets/index-CyzYuG7n.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-kiEXhBYf.css">
+    <script type="module" crossorigin src="/assets/index-OwfSJonF.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-hZ6yZ8eA.css">
   </head>
 
   <body>
     <div id="root"></div>
+
+    <script>
+      // Runtime API base override (used by src/lib/api.ts)
+      // Backend: https://heyla-backend.onrender.com
+      // Include /api because backend mounts routes under /api (e.g., /api/auth/login)
+      window.__VITE_API_URL__ = "https://heyla-backend.onrender.com/api";
+    </script>
+
   </body>
 </html>

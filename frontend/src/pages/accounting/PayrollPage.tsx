@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import { PageHeader, StatCard } from '@/components/shared/CommonUI';
 import { useEmployeeStore } from '@/store/employeeStore';
 import { formatCurrency } from '@/utils/countries';
+import { apiBaseUrl } from '@/lib/api';
+import { Button } from '@/components/ui/button';
 import { DollarSign, Users, Calculator, Download } from 'lucide-react';
 
 export default function PayrollPage() {
   const employees = useEmployeeStore((s) => s.employees);
   const activeEmployees = employees.filter((e) => e.status === 'Active');
+
+  const [exporting, setExporting] = useState(false);
 
   const payrollData = activeEmployees.map((e) => {
     const gross = e.baseSalary + e.housingAllowance + e.transportAllowance + e.medicalAllowance + e.otherAllowances;
@@ -20,12 +25,58 @@ export default function PayrollPage() {
   const totalNet = payrollData.reduce((s, p) => s + p.netPay, 0);
   const totalDeductions = totalGross - totalNet;
 
+  const onExportPayslips = async () => {
+    if (exporting) return;
+    if (!payrollData.length) return;
+
+    try {
+      setExporting(true);
+
+      // Backend expects: { items: [...] }
+      const res = await fetch(`${apiBaseUrl()}/payroll/export-payslips`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('heyla_token') || ''}`,
+        },
+        body: JSON.stringify({ items: payrollData }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || 'Export failed');
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+
+      const cd = res.headers.get('content-disposition') || '';
+      const match = cd.match(/filename="?([^"]+)"?/i);
+      a.download = match?.[1] || `payslips_${new Date().toISOString().slice(0, 10)}.csv`;
+
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Payroll" description="Monthly payroll processing and management">
-        <button className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
-          <Download className="w-4 h-4" /> Export Payslips
-        </button>
+        <Button
+          type="button"
+          onClick={onExportPayslips}
+          isLoading={exporting}
+          disabled={exporting || payrollData.length === 0}
+        >
+          <Download className="w-4 h-4" />
+          Export Payslips
+        </Button>
       </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
