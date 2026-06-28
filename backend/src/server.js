@@ -10,6 +10,7 @@ import { hashPassword } from './auth.js';
 import jobsRouter, { applicationsRouter } from './routes/jobs.js';
 import careersRouter from './routes/careers.js';
 import chatRouter from './routes/chat.js';
+import aiRouter from './routes/ai.js';
 import uploadRouter from './routes/upload.js';
 import adminRouter from './routes/admin.js';
 import paymentRouter from './routes/payment.js';
@@ -130,6 +131,9 @@ app.use('/api/careers', careersRouter);
 
 // Chat
 app.use('/api/chat', chatRouter);
+
+// AI Chat Assistant
+app.use('/api/ai', aiRouter);
 
 // Uploads
 app.use('/api/upload', uploadRouter);
