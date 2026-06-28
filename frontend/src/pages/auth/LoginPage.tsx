@@ -6,8 +6,8 @@ import { toast } from 'sonner';
 import { countries } from '@/utils/countries';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@heyla.co');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState('KE');
