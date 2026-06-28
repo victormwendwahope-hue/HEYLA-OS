@@ -1,13 +1,16 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEmployeeStore } from '@/store/employeeStore';
 import { StatusBadge } from '@/components/shared/CommonUI';
 import { formatCurrency } from '@/utils/countries';
-import { ArrowLeft, Mail, Phone, MapPin, Building2, Calendar } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Building2, Calendar, Trash2, Download, FileText } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function EmployeeProfilePage() {
   const { id } = useParams();
   const employee = useEmployeeStore((s) => s.employees.find((e) => e.id === id));
+  const removeEmployee = useEmployeeStore((s) => s.removeEmployee);
+  const navigate = useNavigate();
   const [tab, setTab] = useState('overview');
 
   if (!employee) return (
@@ -42,6 +45,9 @@ export default function EmployeeProfilePage() {
               <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Joined {employee.startDate}</span>
             </div>
           </div>
+          <button onClick={() => { if (confirm('Delete employee?')) { removeEmployee(employee.id); toast.success('Employee deleted'); navigate('/hr'); } }} className="shrink-0 px-4 py-2 rounded-lg text-sm font-medium border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2">
+            <Trash2 className="w-4 h-4" /> Delete Employee
+          </button>
         </div>
       </div>
 
@@ -93,41 +99,133 @@ export default function EmployeeProfilePage() {
 
       {tab === 'payroll' && (
         <div className="glass rounded-xl p-5">
-          <h3 className="font-semibold mb-4">Compensation Breakdown</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Compensation Breakdown</h3>
+            <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground font-medium">{employee.payType} Rate</span>
+          </div>
           <div className="space-y-3">
-            {[
-              ['Base Salary', employee.baseSalary],
-              ['Housing Allowance', employee.housingAllowance],
-              ['Transport Allowance', employee.transportAllowance],
-              ['Medical Allowance', employee.medicalAllowance],
-              ['Other Allowances', employee.otherAllowances],
-            ].map(([label, value]) => (
-              <div key={label as string} className="flex justify-between text-sm py-2 border-b border-border last:border-0">
-                <span className="text-muted-foreground">{label as string}</span>
-                <span className="font-medium">{formatCurrency(value as number)}</span>
-              </div>
-            ))}
-            <div className="flex justify-between text-sm pt-3 border-t-2 border-primary/20">
-              <span className="font-bold">Gross Salary</span>
-              <span className="font-bold text-primary">{formatCurrency(gross)}</span>
-            </div>
+            {employee.payType === 'Hourly' ? (
+              <>
+                <div className="flex justify-between text-sm py-2 border-b border-border">
+                  <span className="text-muted-foreground">Hourly Rate</span>
+                  <span className="font-medium">{formatCurrency(employee.hourlyRate)}/hr</span>
+                </div>
+                <div className="flex justify-between text-sm pt-3 border-t-2 border-primary/20">
+                  <span className="font-bold">Monthly Est. (160hrs)</span>
+                  <span className="font-bold text-primary">{formatCurrency(employee.hourlyRate * 160)}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between text-sm py-2 border-b border-border">
+                  <span className="text-muted-foreground">Base Salary</span>
+                  <span className="font-medium">{formatCurrency(employee.baseSalary)}</span>
+                </div>
+                {employee.payType === 'Salary' && (
+                  <>
+                    <div className="flex justify-between text-sm py-2 border-b border-border">
+                      <span className="text-muted-foreground">Housing Allowance</span>
+                      <span className="font-medium">{formatCurrency(employee.housingAllowance)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm py-2 border-b border-border">
+                      <span className="text-muted-foreground">Medical Allowance</span>
+                      <span className="font-medium">{formatCurrency(employee.medicalAllowance)}</span>
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between text-sm py-2 border-b border-border">
+                  <span className="text-muted-foreground">Transport Allowance</span>
+                  <span className="font-medium">{formatCurrency(employee.transportAllowance)}</span>
+                </div>
+                <div className="flex justify-between text-sm py-2 border-b border-border last:border-0">
+                  <span className="text-muted-foreground">Other Allowances</span>
+                  <span className="font-medium">{formatCurrency(employee.otherAllowances)}</span>
+                </div>
+                <div className="flex justify-between text-sm pt-3 border-t-2 border-primary/20">
+                  <span className="font-bold">Gross Salary</span>
+                  <span className="font-bold text-primary">{formatCurrency(gross)}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
 
-      {tab === 'attendance' && (
-        <div className="glass rounded-xl p-5 text-center py-16">
-          <Building2 className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">Attendance tracking coming soon</p>
-        </div>
-      )}
+      {tab === 'attendance' && (() => {
+        const employeeAttendance = [
+          { date: '2026-06-26', status: 'Present', timeIn: '08:00', timeOut: '17:00' },
+          { date: '2026-06-25', status: 'Present', timeIn: '08:15', timeOut: '17:30' },
+          { date: '2026-06-24', status: 'Late', timeIn: '09:30', timeOut: '17:00' },
+          { date: '2026-06-23', status: 'Present', timeIn: '07:45', timeOut: '16:45' },
+          { date: '2026-06-20', status: 'Absent', timeIn: '-', timeOut: '-' },
+        ];
+        return (
+          <div className="glass rounded-xl p-5">
+            <h3 className="font-semibold mb-4">Attendance Records</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="text-left py-2 px-3 font-medium">Date</th>
+                    <th className="text-left py-2 px-3 font-medium">Status</th>
+                    <th className="text-left py-2 px-3 font-medium">Time In</th>
+                    <th className="text-left py-2 px-3 font-medium">Time Out</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employeeAttendance.map((record) => (
+                    <tr key={record.date} className="border-b border-border/50">
+                      <td className="py-2.5 px-3">{record.date}</td>
+                      <td className="py-2.5 px-3">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                          record.status === 'Present' ? 'bg-green-500/10 text-green-500' :
+                          record.status === 'Late' ? 'bg-yellow-500/10 text-yellow-500' :
+                          'bg-red-500/10 text-red-500'
+                        }`}>
+                          {record.status}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3">{record.timeIn}</td>
+                      <td className="py-2.5 px-3">{record.timeOut}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
 
-      {tab === 'documents' && (
-        <div className="glass rounded-xl p-5 text-center py-16">
-          <Building2 className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">Document management coming soon</p>
-        </div>
-      )}
+      {tab === 'documents' && (() => {
+        const employeeDocs = [
+          { name: 'Employment Contract.pdf', type: 'Contract', date: '2023-01-15', size: '890 KB' },
+          { name: 'KRA PIN Certificate.pdf', type: 'Certificate', date: '2023-01-15', size: '450 KB' },
+          { name: 'National ID Copy.pdf', type: 'ID Document', date: '2023-01-10', size: '320 KB' },
+          { name: 'Performance Review Q4 2024.pdf', type: 'Review', date: '2025-01-10', size: '1.2 MB' },
+        ];
+        return (
+          <div className="glass rounded-xl p-5">
+            <h3 className="font-semibold mb-4">Documents</h3>
+            <div className="space-y-2">
+              {employeeDocs.map((doc) => (
+                <div key={doc.name} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-8 h-8 text-primary/60" />
+                    <div>
+                      <p className="text-sm font-medium">{doc.name}</p>
+                      <p className="text-xs text-muted-foreground">{doc.type} · {doc.date} · {doc.size}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => toast.success(`Downloading ${doc.name}`)}
+                    className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                    <Download className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

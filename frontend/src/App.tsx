@@ -18,6 +18,7 @@ import BlacklistPage from "@/pages/hr/BlacklistPage";
 import DocumentsPage from "@/pages/hr/DocumentsPage";
 import WIBAPage from "@/pages/hr/WIBAPage";
 import InjuryPage from "@/pages/hr/InjuryPage";
+import HRPayrollPage from "@/pages/hr/HRPayrollPage";
 import CRMPage from "@/pages/crm/CRMPage";
 import AccountingPage from "@/pages/accounting/AccountingPage";
 import PayrollPage from "@/pages/accounting/PayrollPage";
@@ -127,6 +128,7 @@ const App = () => (
               <Route path="/hr/injuries" element={<InjuryPage />} />
               <Route path="/hr/blacklist" element={<BlacklistPage />} />
               <Route path="/hr/documents" element={<DocumentsPage />} />
+              <Route path="/hr/payroll" element={<HRPayrollPage />} />
               <Route path="/jobs" element={<JobsPage />} />
               <Route path="/ehs" element={<EHSPage />} />
               <Route path="/engineering" element={<EngineeringPage />} />

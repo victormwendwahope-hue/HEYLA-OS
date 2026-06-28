@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { Lead } from '@/types';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 const mockLeads: Lead[] = [
   { id: '1', name: 'Safaricom PLC', email: 'info@safaricom.co.ke', phone: '+254 722 000 000', company: 'Safaricom', status: 'Qualified', value: 2500000, source: 'Referral', assignedTo: 'Ochieng Otieno', createdAt: '2024-01-10', notes: 'Enterprise deal' },
@@ -12,12 +14,53 @@ const mockLeads: Lead[] = [
 
 interface LeadState {
   leads: Lead[];
-  addLead: (lead: Lead) => void;
-  updateLead: (id: string, data: Partial<Lead>) => void;
+  loading: boolean;
+  fetchLeads: () => Promise<void>;
+  addLead: (lead: Lead) => Promise<void>;
+  updateLead: (id: string, data: Partial<Lead>) => Promise<void>;
+  removeLead: (id: string) => Promise<void>;
 }
 
 export const useLeadStore = create<LeadState>((set) => ({
   leads: mockLeads,
-  addLead: (lead) => set((s) => ({ leads: [...s.leads, lead] })),
-  updateLead: (id, data) => set((s) => ({ leads: s.leads.map((l) => (l.id === id ? { ...l, ...data } : l)) })),
+  loading: false,
+  fetchLeads: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Lead[]>('/leads');
+      set({ leads: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  addLead: async (lead) => {
+    try {
+      const created = await api.post<Lead>('/leads', lead);
+      set((s) => ({ leads: [...s.leads, created] }));
+      toast.success('Lead created');
+    } catch {
+      set((s) => ({ leads: [...s.leads, lead] }));
+      toast.error('Failed to create lead');
+    }
+  },
+  updateLead: async (id, data) => {
+    try {
+      const updated = await api.patch<Lead>(`/leads/${id}`, data);
+      set((s) => ({ leads: s.leads.map((l) => (l.id === id ? updated : l)) }));
+      toast.success('Lead updated');
+    } catch {
+      set((s) => ({ leads: s.leads.map((l) => (l.id === id ? { ...l, ...data } : l)) }));
+      toast.error('Failed to update lead');
+    }
+  },
+  removeLead: async (id) => {
+    try {
+      await api.delete(`/leads/${id}`);
+      set((s) => ({ leads: s.leads.filter((l) => l.id !== id) }));
+      toast.success('Lead deleted');
+    } catch {
+      set((s) => ({ leads: s.leads.filter((l) => l.id !== id) }));
+      toast.error('Failed to delete lead');
+    }
+  },
 }));

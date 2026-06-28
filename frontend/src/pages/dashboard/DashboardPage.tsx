@@ -3,7 +3,8 @@ import { useEmployeeStore } from '@/store/employeeStore';
 import { useLeadStore } from '@/store/leadStore';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { formatCurrency } from '@/utils/countries';
-import { Users, DollarSign, TrendingUp, Package, ArrowUpRight, ArrowDownRight, Activity, Search, ExternalLink, BookOpen, Building2, Scale, Wrench } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Package, ArrowUpRight, ArrowDownRight, Activity, Search, ExternalLink, BookOpen, Building2, Scale, Wrench, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useState, useRef, useEffect } from 'react';
 
@@ -69,6 +70,7 @@ export default function DashboardPage() {
   const products = useInventoryStore((s) => s.products);
   const [resourceSearch, setResourceSearch] = useState('');
   const [showResources, setShowResources] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<{ title: string; desc: string } | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -135,7 +137,7 @@ export default function DashboardPage() {
                     <cat.icon className="w-3.5 h-3.5" /> {cat.category}
                   </div>
                   {cat.items.map((item, i) => (
-                    <button key={i} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors border-b border-border last:border-0">
+                    <button key={i} onClick={() => setSelectedResource({ title: item.title, desc: item.desc })} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors border-b border-border last:border-0">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">{item.title}</p>
                         <p className="text-xs text-muted-foreground">{item.desc}</p>
@@ -228,6 +230,21 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Resource Preview Modal */}
+      {selectedResource && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-lg m-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-border sticky top-0 bg-card rounded-t-2xl z-10">
+              <h2 className="text-lg font-bold">{selectedResource.title}</h2>
+              <button onClick={() => setSelectedResource(null)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-5">
+              <p className="text-muted-foreground leading-relaxed">{selectedResource.desc}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

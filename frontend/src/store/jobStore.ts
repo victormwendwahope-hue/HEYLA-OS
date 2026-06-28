@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 export interface Job {
   id: string;
@@ -65,24 +67,119 @@ interface JobState {
   jobs: Job[];
   applicants: Applicant[];
   interviews: Interview[];
-  addJob: (j: Job) => void;
-  updateJob: (id: string, data: Partial<Job>) => void;
-  removeJob: (id: string) => void;
-  addApplicant: (a: Applicant) => void;
-  updateApplicant: (id: string, data: Partial<Applicant>) => void;
-  addInterview: (i: Interview) => void;
-  updateInterview: (id: string, data: Partial<Interview>) => void;
+  loading: boolean;
+  fetchJobs: () => Promise<void>;
+  fetchApplicants: () => Promise<void>;
+  fetchInterviews: () => Promise<void>;
+  addJob: (j: Job) => Promise<void>;
+  updateJob: (id: string, data: Partial<Job>) => Promise<void>;
+  removeJob: (id: string) => Promise<void>;
+  addApplicant: (a: Applicant) => Promise<void>;
+  updateApplicant: (id: string, data: Partial<Applicant>) => Promise<void>;
+  addInterview: (i: Interview) => Promise<void>;
+  updateInterview: (id: string, data: Partial<Interview>) => Promise<void>;
 }
 
 export const useJobStore = create<JobState>((set) => ({
   jobs: mockJobs,
   applicants: mockApplicants,
   interviews: mockInterviews,
-  addJob: (j) => set((s) => ({ jobs: [...s.jobs, j] })),
-  updateJob: (id, data) => set((s) => ({ jobs: s.jobs.map((j) => j.id === id ? { ...j, ...data } : j) })),
-  removeJob: (id) => set((s) => ({ jobs: s.jobs.filter((j) => j.id !== id) })),
-  addApplicant: (a) => set((s) => ({ applicants: [...s.applicants, a] })),
-  updateApplicant: (id, data) => set((s) => ({ applicants: s.applicants.map((a) => a.id === id ? { ...a, ...data } : a) })),
-  addInterview: (i) => set((s) => ({ interviews: [...s.interviews, i] })),
-  updateInterview: (id, data) => set((s) => ({ interviews: s.interviews.map((i) => i.id === id ? { ...i, ...data } : i) })),
+  loading: false,
+  fetchJobs: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Job[]>('/jobs');
+      set({ jobs: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchApplicants: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Applicant[]>('/applicants');
+      set({ applicants: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchInterviews: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Interview[]>('/interviews');
+      set({ interviews: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  addJob: async (j) => {
+    try {
+      const created = await api.post<Job>('/jobs', j);
+      set((s) => ({ jobs: [...s.jobs, created] }));
+      toast.success('Job created');
+    } catch {
+      set((s) => ({ jobs: [...s.jobs, j] }));
+      toast.error('Failed to create job');
+    }
+  },
+  updateJob: async (id, data) => {
+    try {
+      const updated = await api.patch<Job>(`/jobs/${id}`, data);
+      set((s) => ({ jobs: s.jobs.map((j) => j.id === id ? updated : j) }));
+      toast.success('Job updated');
+    } catch {
+      set((s) => ({ jobs: s.jobs.map((j) => j.id === id ? { ...j, ...data } : j) }));
+      toast.error('Failed to update job');
+    }
+  },
+  removeJob: async (id) => {
+    try {
+      await api.delete(`/jobs/${id}`);
+      set((s) => ({ jobs: s.jobs.filter((j) => j.id !== id) }));
+      toast.success('Job deleted');
+    } catch {
+      set((s) => ({ jobs: s.jobs.filter((j) => j.id !== id) }));
+      toast.error('Failed to delete job');
+    }
+  },
+  addApplicant: async (a) => {
+    try {
+      const created = await api.post<Applicant>('/applicants', a);
+      set((s) => ({ applicants: [...s.applicants, created] }));
+      toast.success('Applicant added');
+    } catch {
+      set((s) => ({ applicants: [...s.applicants, a] }));
+      toast.error('Failed to add applicant');
+    }
+  },
+  updateApplicant: async (id, data) => {
+    try {
+      const updated = await api.patch<Applicant>(`/applicants/${id}`, data);
+      set((s) => ({ applicants: s.applicants.map((a) => a.id === id ? updated : a) }));
+      toast.success('Applicant updated');
+    } catch {
+      set((s) => ({ applicants: s.applicants.map((a) => a.id === id ? { ...a, ...data } : a) }));
+      toast.error('Failed to update applicant');
+    }
+  },
+  addInterview: async (i) => {
+    try {
+      const created = await api.post<Interview>('/interviews', i);
+      set((s) => ({ interviews: [...s.interviews, created] }));
+      toast.success('Interview scheduled');
+    } catch {
+      set((s) => ({ interviews: [...s.interviews, i] }));
+      toast.error('Failed to schedule interview');
+    }
+  },
+  updateInterview: async (id, data) => {
+    try {
+      const updated = await api.patch<Interview>(`/interviews/${id}`, data);
+      set((s) => ({ interviews: s.interviews.map((i) => i.id === id ? updated : i) }));
+      toast.success('Interview updated');
+    } catch {
+      set((s) => ({ interviews: s.interviews.map((i) => i.id === id ? { ...i, ...data } : i) }));
+      toast.error('Failed to update interview');
+    }
+  },
 }));

@@ -5,6 +5,32 @@ import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/utils/countries';
 
+interface FieldProps {
+  label: string;
+  field: string;
+  form: Record<string, any>;
+  update: (field: string, value: string) => void;
+  numeric?: boolean;
+  required?: boolean;
+  half?: boolean;
+}
+
+const Field = ({ label, field, form, update, numeric = false, required = false, half = false }: FieldProps) => (
+  <div className={half ? 'col-span-1' : 'col-span-2 sm:col-span-1'}>
+    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+      {label}
+      {required && <span className="text-destructive">*</span>}
+    </label>
+    <input
+      type="text"
+      inputMode={numeric ? 'numeric' : 'text'}
+      value={form[field] ?? ''}
+      onChange={(e) => update(field, e.target.value)}
+      className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+    />
+  </div>
+);
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -15,26 +41,17 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', phone: '', nationalId: '', kraPin: '',
     nssfNo: '', nhifNo: '', department: '', position: '', employmentType: 'Full-time' as Employee['employmentType'],
-    baseSalary: 0, housingAllowance: 0, transportAllowance: 0, medicalAllowance: 0, otherAllowances: 0,
+    payType: 'Salary' as Employee['payType'], baseSalary: '', hourlyRate: '',
+    housingAllowance: '', transportAllowance: '', medicalAllowance: '', otherAllowances: '',
     address: '', city: '', country: 'Kenya', emergencyContact: '', emergencyPhone: '',
     bankName: '', bankAccount: '',
   });
 
   if (!open) return null;
 
-  const gross = form.baseSalary + form.housingAllowance + form.transportAllowance + form.medicalAllowance + form.otherAllowances;
+  const gross = (Number(form.baseSalary) || 0) + (Number(form.housingAllowance) || 0) + (Number(form.transportAllowance) || 0) + (Number(form.medicalAllowance) || 0) + (Number(form.otherAllowances) || 0);
 
-  // Keep inputs controlled, but DO NOT coerce number on every keystroke.
-  // Otherwise empty string -> +'' => 0 triggers re-render glitches (feels like typing 1 char at a time).
-  const update = (field: string, value: string | number) => setForm((f) => ({ ...f, [field]: value }));
-
-    const updateNumberField = (field: string, raw: string) => {
-      setForm((f) => {
-        const next = { ...f } as any;
-        next[field] = raw === '' ? '' : Number(raw);
-        return next;
-      });
-    };
+  const update = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,60 +60,21 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
       return;
     }
 
-    // Normalize numeric fields on submit (convert '' to 0)
-    const normalized: typeof form = { ...form } as typeof form;
-    const numberFields: Array<keyof typeof form> = [
-      'baseSalary',
-      'housingAllowance',
-      'transportAllowance',
-      'medicalAllowance',
-      'otherAllowances',
-    ];
-
-    for (const k of numberFields) {
-      const v = (normalized as any)[k];
-      (normalized as any)[k] = v === '' || v === null || v === undefined ? 0 : Number(v);
-    }
-
     addEmployee({
-      ...normalized,
+      ...form,
       id: Date.now().toString(),
+      baseSalary: Number(form.baseSalary) || 0,
+      hourlyRate: Number(form.hourlyRate) || 0,
+      housingAllowance: Number(form.housingAllowance) || 0,
+      transportAllowance: Number(form.transportAllowance) || 0,
+      medicalAllowance: Number(form.medicalAllowance) || 0,
+      otherAllowances: Number(form.otherAllowances) || 0,
       status: 'Active',
       startDate: new Date().toISOString().split('T')[0],
     });
-    toast.success(`${normalized.firstName} ${normalized.lastName} added!`);
+    toast.success(`${form.firstName} ${form.lastName} added!`);
     onClose();
   };
-
-  const Field = ({
-    label,
-    field,
-    type = 'text',
-    required = false,
-    half = false,
-  }: {
-    label: string;
-    field: string;
-    type?: string;
-    required?: boolean;
-    half?: boolean;
-  }) => (
-    <div className={half ? 'col-span-1' : 'col-span-2 sm:col-span-1'}>
-      <label className="text-xs font-medium text-muted-foreground mb-1 block">
-        {label}
-        {required && <span className="text-destructive">*</span>}
-      </label>
-      <input
-        type={type}
-        value={(form as any)[field] ?? ''}
-        onChange={(e) => {
-          if (type === 'number') updateNumberField(field, e.target.value);
-          else update(field, e.target.value);
-        }}
-        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-      />
-    </div>
-  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
@@ -111,14 +89,14 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
           <div>
             <h3 className="text-sm font-semibold mb-3 text-primary">Personal Information</h3>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="First Name" field="firstName" required />
-              <Field label="Last Name" field="lastName" required />
-              <Field label="Email" field="email" type="email" required />
-              <Field label="Phone" field="phone" />
-              <Field label="National ID" field="nationalId" />
-              <Field label="KRA PIN" field="kraPin" />
-              <Field label="NSSF No" field="nssfNo" />
-              <Field label="NHIF No" field="nhifNo" />
+              <Field label="First Name" field="firstName" form={form} update={update} required />
+              <Field label="Last Name" field="lastName" form={form} update={update} required />
+              <Field label="Email" field="email" form={form} update={update} required />
+              <Field label="Phone" field="phone" form={form} update={update} />
+              <Field label="National ID" field="nationalId" form={form} update={update} />
+              <Field label="KRA PIN" field="kraPin" form={form} update={update} />
+              <Field label="NSSF No" field="nssfNo" form={form} update={update} />
+              <Field label="NHIF No" field="nhifNo" form={form} update={update} />
             </div>
           </div>
 
@@ -126,8 +104,8 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
           <div>
             <h3 className="text-sm font-semibold mb-3 text-primary">Employment Details</h3>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Department" field="department" />
-              <Field label="Position" field="position" />
+              <Field label="Department" field="department" form={form} update={update} />
+              <Field label="Position" field="position" form={form} update={update} />
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Employment Type</label>
                 <select value={form.employmentType} onChange={(e) => update('employmentType', e.target.value)}
@@ -135,33 +113,44 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
                   {['Full-time', 'Part-time', 'Contract', 'Intern'].map((t) => <option key={t}>{t}</option>)}
                 </select>
               </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Pay Type</label>
+                <select value={form.payType} onChange={(e) => update('payType', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                  {['Salary', 'Hourly', 'Basic'].map((t) => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              {form.payType === 'Hourly' && <Field label="Hourly Rate" field="hourlyRate" form={form} update={update} numeric />}
             </div>
           </div>
 
           {/* Salary */}
           <div>
-            <h3 className="text-sm font-semibold mb-3 text-primary">Compensation (KES)</h3>
+            <h3 className="text-sm font-semibold mb-3 text-primary">Compensation ({form.payType === 'Hourly' ? 'Per Hour' : 'KES'})</h3>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Base Salary" field="baseSalary" type="number" />
-              <Field label="Housing Allowance" field="housingAllowance" type="number" />
-              <Field label="Transport Allowance" field="transportAllowance" type="number" />
-              <Field label="Medical Allowance" field="medicalAllowance" type="number" />
-              <Field label="Other Allowances" field="otherAllowances" type="number" />
+              {form.payType !== 'Hourly' && <Field label="Base Salary" field="baseSalary" form={form} update={update} numeric />}
+              {form.payType === 'Hourly' && <Field label="Hourly Rate" field="hourlyRate" form={form} update={update} numeric />}
+              {form.payType === 'Salary' && <Field label="Housing Allowance" field="housingAllowance" form={form} update={update} numeric />}
+              {form.payType !== 'Hourly' && <Field label="Transport Allowance" field="transportAllowance" form={form} update={update} numeric />}
+              {form.payType === 'Salary' && <Field label="Medical Allowance" field="medicalAllowance" form={form} update={update} numeric />}
+              {form.payType !== 'Hourly' && <Field label="Other Allowances" field="otherAllowances" form={form} update={update} numeric />}
             </div>
-            <div className="mt-3 p-3 rounded-lg bg-accent border border-primary/20">
-              <p className="text-sm font-semibold text-accent-foreground">Gross Salary: {formatCurrency(gross)}</p>
-            </div>
+            {form.payType !== 'Hourly' && (
+              <div className="mt-3 p-3 rounded-lg bg-accent border border-primary/20">
+                <p className="text-sm font-semibold text-accent-foreground">Gross Salary: {formatCurrency(gross)}</p>
+              </div>
+            )}
           </div>
 
           {/* Address & Emergency */}
           <div>
             <h3 className="text-sm font-semibold mb-3 text-primary">Address & Emergency</h3>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Address" field="address" />
-              <Field label="City" field="city" />
-              <Field label="Country" field="country" />
-              <Field label="Emergency Contact" field="emergencyContact" />
-              <Field label="Emergency Phone" field="emergencyPhone" />
+              <Field label="Address" field="address" form={form} update={update} />
+              <Field label="City" field="city" form={form} update={update} />
+              <Field label="Country" field="country" form={form} update={update} />
+              <Field label="Emergency Contact" field="emergencyContact" form={form} update={update} />
+              <Field label="Emergency Phone" field="emergencyPhone" form={form} update={update} />
             </div>
           </div>
 
@@ -169,8 +158,8 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
           <div>
             <h3 className="text-sm font-semibold mb-3 text-primary">Banking Details</h3>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Bank Name" field="bankName" />
-              <Field label="Account Number" field="bankAccount" />
+              <Field label="Bank Name" field="bankName" form={form} update={update} />
+              <Field label="Account Number" field="bankAccount" form={form} update={update} />
             </div>
           </div>
 

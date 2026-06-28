@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 export interface FuelEntry {
   id: string;
@@ -15,7 +17,7 @@ export interface FuelEntry {
   station: string;
   fuelType: 'Diesel' | 'Petrol';
   loadState: 'Loaded' | 'Unloaded';
-  cargoWeight: number; // in kg
+  cargoWeight: number;
   kmPerLiter: number;
   tripDistance: number;
 }
@@ -33,14 +35,53 @@ const mockFuelEntries: FuelEntry[] = [
 
 interface FuelState {
   entries: FuelEntry[];
-  addEntry: (e: FuelEntry) => void;
-  updateEntry: (id: string, data: Partial<FuelEntry>) => void;
-  removeEntry: (id: string) => void;
+  loading: boolean;
+  fetchEntries: () => Promise<void>;
+  addEntry: (e: FuelEntry) => Promise<void>;
+  updateEntry: (id: string, data: Partial<FuelEntry>) => Promise<void>;
+  removeEntry: (id: string) => Promise<void>;
 }
 
 export const useFuelStore = create<FuelState>((set) => ({
   entries: mockFuelEntries,
-  addEntry: (e) => set((s) => ({ entries: [...s.entries, e] })),
-  updateEntry: (id, data) => set((s) => ({ entries: s.entries.map((e) => e.id === id ? { ...e, ...data } : e) })),
-  removeEntry: (id) => set((s) => ({ entries: s.entries.filter((e) => e.id !== id) })),
+  loading: false,
+  fetchEntries: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<FuelEntry[]>('/fuel');
+      set({ entries: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  addEntry: async (e) => {
+    try {
+      const created = await api.post<FuelEntry>('/fuel', e);
+      set((s) => ({ entries: [...s.entries, created] }));
+      toast.success('Fuel entry created');
+    } catch {
+      set((s) => ({ entries: [...s.entries, e] }));
+      toast.error('Failed to create fuel entry');
+    }
+  },
+  updateEntry: async (id, data) => {
+    try {
+      const updated = await api.patch<FuelEntry>(`/fuel/${id}`, data);
+      set((s) => ({ entries: s.entries.map((e) => e.id === id ? updated : e) }));
+      toast.success('Fuel entry updated');
+    } catch {
+      set((s) => ({ entries: s.entries.map((e) => e.id === id ? { ...e, ...data } : e) }));
+      toast.error('Failed to update fuel entry');
+    }
+  },
+  removeEntry: async (id) => {
+    try {
+      await api.delete(`/fuel/${id}`);
+      set((s) => ({ entries: s.entries.filter((e) => e.id !== id) }));
+      toast.success('Fuel entry deleted');
+    } catch {
+      set((s) => ({ entries: s.entries.filter((e) => e.id !== id) }));
+      toast.error('Failed to delete fuel entry');
+    }
+  },
 }));

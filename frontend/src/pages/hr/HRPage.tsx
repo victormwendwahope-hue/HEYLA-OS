@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useEmployeeStore } from '@/store/employeeStore';
 import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
-import { Search, Plus, Download, Filter, Eye } from 'lucide-react';
+import { Search, Plus, Download, Filter, Eye, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/utils/countries';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import AddEmployeeDialog from '@/components/hr/AddEmployeeDialog';
 
 export default function HRPage() {
   const employees = useEmployeeStore((s) => s.employees);
+  const removeEmployee = useEmployeeStore((s) => s.removeEmployee);
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
   const [showAdd, setShowAdd] = useState(false);
@@ -27,7 +29,18 @@ export default function HRPage() {
         <button onClick={() => setShowAdd(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
           <Plus className="w-4 h-4" /> Add Employee
         </button>
-        <button className="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors flex items-center gap-2">
+        <button onClick={() => {
+          const headers = ['firstName', 'lastName', 'email', 'department', 'position', 'status', 'salary'];
+          const rows = filtered.map(e => {
+            const salary = e.baseSalary + e.housingAllowance + e.transportAllowance + e.medicalAllowance + e.otherAllowances;
+            return [e.firstName, e.lastName, e.email, e.department, e.position, e.status, salary].map(v => `"${v}"`).join(',');
+          });
+          const csv = [headers.join(','), ...rows].join('\n');
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = 'employees.csv'; a.click();
+          window.URL.revokeObjectURL(url);
+        }} className="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors flex items-center gap-2">
           <Download className="w-4 h-4" /> Export CSV
         </button>
       </PageHeader>
@@ -85,9 +98,14 @@ export default function HRPage() {
                     <td className="px-4 py-3 hidden sm:table-cell"><StatusBadge status={e.status} variant={statusVariant(e.status)} /></td>
                     <td className="px-4 py-3 text-right hidden lg:table-cell font-medium">{formatCurrency(gross)}</td>
                     <td className="px-4 py-3 text-center">
-                      <Link to={`/hr/employee/${e.id}`} className="inline-flex items-center gap-1 text-primary text-xs font-medium hover:underline">
-                        <Eye className="w-3.5 h-3.5" /> View
-                      </Link>
+                      <div className="flex items-center justify-center gap-2">
+                        <Link to={`/hr/employee/${e.id}`} className="inline-flex items-center gap-1 text-primary text-xs font-medium hover:underline">
+                          <Eye className="w-3.5 h-3.5" /> View
+                        </Link>
+                        <button onClick={() => { if (confirm('Delete employee?')) { removeEmployee(e.id); toast.success('Employee deleted'); } }} className="inline-flex items-center gap-1 text-destructive text-xs font-medium hover:underline">
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

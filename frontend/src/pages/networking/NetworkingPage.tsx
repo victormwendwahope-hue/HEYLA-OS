@@ -1,6 +1,6 @@
 import { PageHeader } from '@/components/shared/CommonUI';
 import { Heart, MessageCircle, Share2, Send, Briefcase, Image, Trash2, MapPin, Clock } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNetworkStore } from '@/store/networkStore';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
@@ -12,7 +12,12 @@ export default function NetworkingPage() {
   const [newPost, setNewPost] = useState('');
   const [tab, setTab] = useState<'feed' | 'jobs'>('feed');
   const [showJobForm, setShowJobForm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoName, setPhotoName] = useState('');
   const [jobForm, setJobForm] = useState({ title: '', company: user?.company || '', location: '', type: 'Full-time' as const, salary: '', skills: '', description: '' });
+  const [postComments, setPostComments] = useState<Record<string, string[]>>({});
+  const [commentInput, setCommentInput] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState('');
 
   const handlePost = () => {
     if (!newPost.trim()) return;
@@ -74,9 +79,11 @@ export default function NetworkingPage() {
                   className="w-full resize-none bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground" rows={3} />
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
                   <div className="flex gap-2">
-                    <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-lg hover:bg-muted">
+                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setPhotoName(f.name); toast.info(`Selected: ${f.name}`); }}} />
+                    <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-lg hover:bg-muted">
                       <Image className="w-4 h-4" /> Photo
                     </button>
+                    {photoName && <span className="text-xs text-muted-foreground self-center">{photoName}</span>}
                   </div>
                   <button onClick={handlePost} disabled={!newPost.trim()}
                     className="gradient-primary text-primary-foreground px-4 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:opacity-90 transition-opacity disabled:opacity-50">
@@ -112,13 +119,33 @@ export default function NetworkingPage() {
                   className={`flex items-center gap-1.5 text-sm transition-colors ${post.liked ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}>
                   <Heart className={`w-4 h-4 ${post.liked ? 'fill-primary' : ''}`} /> {post.likes}
                 </button>
-                <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
-                  <MessageCircle className="w-4 h-4" /> {post.comments}
+                <button onClick={() => setCommentInput(commentInput === post.id ? null : post.id)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <MessageCircle className="w-4 h-4" /> {postComments[post.id]?.length || post.comments}
                 </button>
-                <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success('Link copied to clipboard'); }} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
                   <Share2 className="w-4 h-4" /> Share
                 </button>
               </div>
+              {commentInput === post.id && (
+                <div className="mt-3 pt-3 border-t border-border space-y-2">
+                  {postComments[post.id]?.map((c, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm">
+                      <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold shrink-0">
+                        {user?.name?.charAt(0) || 'U'}
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium">{user?.name || 'You'}</p>
+                        <p className="text-xs text-muted-foreground">{c}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <form onSubmit={(e) => { e.preventDefault(); if (!commentText.trim()) return; setPostComments(p => ({ ...p, [post.id]: [...(p[post.id] || []), commentText] })); setCommentText(''); toast.success('Comment added'); }} className="flex gap-2">
+                    <input value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Write a comment..."
+                      className="flex-1 px-3 py-1.5 rounded-lg border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                    <button type="submit" disabled={!commentText.trim()} className="gradient-primary text-primary-foreground p-1.5 rounded-lg disabled:opacity-50"><Send className="w-3.5 h-3.5" /></button>
+                  </form>
+                </div>
+              )}
             </div>
           ))}
         </>

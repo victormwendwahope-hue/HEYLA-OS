@@ -47,6 +47,13 @@ export default function CareersPage() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  useEffect(() => {
+    const saved = localStorage.getItem('heyla_career_profile');
+    if (saved) {
+      try { setProfile(JSON.parse(saved)); } catch {}
+    }
+  }, []);
+
   const addSkill = () => {
     if (newSkill.trim() && !profile.skills.includes(newSkill.trim())) {
       setProfile(p => ({ ...p, skills: [...p.skills, newSkill.trim()] }));
@@ -283,7 +290,7 @@ export default function CareersPage() {
                 </select>
               </div>
 
-              <button onClick={() => toast.success('Profile saved!')} className="w-full gradient-primary text-primary-foreground py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+              <button onClick={() => { localStorage.setItem('heyla_career_profile', JSON.stringify(profile)); toast.success('Profile saved!'); }} className="w-full gradient-primary text-primary-foreground py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
                 Save Profile
               </button>
             </div>

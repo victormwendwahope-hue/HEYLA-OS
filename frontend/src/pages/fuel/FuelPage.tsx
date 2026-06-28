@@ -9,8 +9,9 @@ import { toast } from 'sonner';
 const COLORS = ['hsl(24, 95%, 53%)', 'hsl(142, 71%, 45%)', 'hsl(210, 90%, 55%)', 'hsl(38, 92%, 50%)', 'hsl(280, 70%, 55%)'];
 
 export default function FuelPage() {
-  const { entries, addEntry, removeEntry } = useFuelStore();
+  const { entries, addEntry, updateEntry, removeEntry } = useFuelStore();
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [tab, setTab] = useState<'overview' | 'by-vehicle' | 'load-analysis' | 'logs'>('overview');
   const [form, setForm] = useState({ vehicleName: '', vehicleModel: '', plate: '', driver: '', liters: 0, costPerLiter: 210, station: '', fuelType: 'Diesel' as 'Diesel' | 'Petrol', loadState: 'Unloaded' as 'Loaded' | 'Unloaded', cargoWeight: 0, tripDistance: 0 });
 
@@ -65,15 +66,25 @@ export default function FuelPage() {
     e.preventDefault();
     if (!form.vehicleName || !form.liters) { toast.error('Vehicle and liters required'); return; }
     const kmPerLiter = form.tripDistance && form.liters ? form.tripDistance / form.liters : 0;
-    addEntry({
-      id: Date.now().toString(), vehicleId: '', ...form,
-      date: new Date().toISOString().split('T')[0],
-      totalCost: form.liters * form.costPerLiter,
-      mileage: 0, kmPerLiter, tripDistance: form.tripDistance,
-    });
+    if (editingId) {
+      updateEntry(editingId, {
+        ...form,
+        totalCost: form.liters * form.costPerLiter,
+        kmPerLiter, tripDistance: form.tripDistance,
+      });
+      toast.success('Fuel entry updated');
+    } else {
+      addEntry({
+        id: Date.now().toString(), vehicleId: '', ...form,
+        date: new Date().toISOString().split('T')[0],
+        totalCost: form.liters * form.costPerLiter,
+        mileage: 0, kmPerLiter, tripDistance: form.tripDistance,
+      });
+      toast.success('Fuel entry added');
+    }
     setShowForm(false);
+    setEditingId(null);
     setForm({ vehicleName: '', vehicleModel: '', plate: '', driver: '', liters: 0, costPerLiter: 210, station: '', fuelType: 'Diesel', loadState: 'Unloaded', cargoWeight: 0, tripDistance: 0 });
-    toast.success('Fuel entry added');
   };
 
   const tabs = [
@@ -318,7 +329,10 @@ export default function FuelPage() {
                     <td className="px-4 py-3 font-semibold">{e.kmPerLiter.toFixed(1)}</td>
                     <td className="px-4 py-3 font-semibold">{formatCurrency(e.totalCost)}</td>
                     <td className="px-4 py-3">
-                      <button onClick={() => { removeEntry(e.id); toast.success('Entry removed'); }} className="text-xs text-destructive hover:underline">Delete</button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => { setEditingId(e.id); setForm({ vehicleName: e.vehicleName, vehicleModel: e.vehicleModel, plate: e.plate, driver: e.driver, liters: e.liters, costPerLiter: e.costPerLiter, station: e.station, fuelType: e.fuelType, loadState: e.loadState, cargoWeight: e.cargoWeight, tripDistance: e.tripDistance }); setShowForm(true); }} className="text-xs text-primary hover:underline">Edit</button>
+                        <button onClick={() => { removeEntry(e.id); toast.success('Entry removed'); }} className="text-xs text-destructive hover:underline">Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -332,8 +346,8 @@ export default function FuelPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
           <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-lg m-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-border sticky top-0 bg-card rounded-t-2xl z-10">
-              <h2 className="text-lg font-bold">Log Fuel Entry</h2>
-              <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
+              <h2 className="text-lg font-bold">{editingId ? 'Edit Fuel Entry' : 'Log Fuel Entry'}</h2>
+              <button onClick={() => { setShowForm(false); setEditingId(null); }} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-3">
@@ -367,8 +381,8 @@ export default function FuelPage() {
               <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Station</label>
                 <input value={form.station} onChange={e => setForm({ ...form, station: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
-                <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Log Entry</button>
+                <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
+                <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">{editingId ? 'Update Entry' : 'Log Entry'}</button>
               </div>
             </form>
           </div>

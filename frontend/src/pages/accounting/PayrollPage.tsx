@@ -4,7 +4,8 @@ import { useEmployeeStore } from '@/store/employeeStore';
 import { formatCurrency } from '@/utils/countries';
 import { apiBaseUrl } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { DollarSign, Users, Calculator, Download } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { DollarSign, Users, Calculator, Download, ArrowLeft } from 'lucide-react';
 
 export default function PayrollPage() {
   const employees = useEmployeeStore((s) => s.employees);
@@ -68,15 +69,20 @@ export default function PayrollPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Payroll" description="Monthly payroll processing and management">
-        <Button
-          type="button"
-          onClick={onExportPayslips}
-          isLoading={exporting}
-          disabled={exporting || payrollData.length === 0}
-        >
-          <Download className="w-4 h-4" />
-          Export Payslips
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link to="/hr/payroll" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors">
+            <ArrowLeft className="w-4 h-4" /> HR Payroll Setup
+          </Link>
+          <Button
+            type="button"
+            onClick={onExportPayslips}
+            isLoading={exporting}
+            disabled={exporting || payrollData.length === 0}
+          >
+            <Download className="w-4 h-4" />
+            Export Payslips
+          </Button>
+        </div>
       </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

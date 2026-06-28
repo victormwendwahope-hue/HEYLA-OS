@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { Product } from '@/types';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 const mockProducts: Product[] = [
   { id: '1', name: 'Solar Panel 300W', sku: 'SOL-300', category: 'Energy', price: 45000, cost: 32000, stock: 24, minStock: 10, status: 'In Stock' },
@@ -12,12 +14,53 @@ const mockProducts: Product[] = [
 
 interface InventoryState {
   products: Product[];
-  addProduct: (p: Product) => void;
-  updateProduct: (id: string, data: Partial<Product>) => void;
+  loading: boolean;
+  fetchProducts: () => Promise<void>;
+  addProduct: (p: Product) => Promise<void>;
+  updateProduct: (id: string, data: Partial<Product>) => Promise<void>;
+  removeProduct: (id: string) => Promise<void>;
 }
 
 export const useInventoryStore = create<InventoryState>((set) => ({
   products: mockProducts,
-  addProduct: (p) => set((s) => ({ products: [...s.products, p] })),
-  updateProduct: (id, data) => set((s) => ({ products: s.products.map((p) => (p.id === id ? { ...p, ...data } : p)) })),
+  loading: false,
+  fetchProducts: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Product[]>('/products');
+      set({ products: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  addProduct: async (p) => {
+    try {
+      const created = await api.post<Product>('/products', p);
+      set((s) => ({ products: [...s.products, created] }));
+      toast.success('Product created');
+    } catch {
+      set((s) => ({ products: [...s.products, p] }));
+      toast.error('Failed to create product');
+    }
+  },
+  updateProduct: async (id, data) => {
+    try {
+      const updated = await api.patch<Product>(`/products/${id}`, data);
+      set((s) => ({ products: s.products.map((p) => (p.id === id ? updated : p)) }));
+      toast.success('Product updated');
+    } catch {
+      set((s) => ({ products: s.products.map((p) => (p.id === id ? { ...p, ...data } : p)) }));
+      toast.error('Failed to update product');
+    }
+  },
+  removeProduct: async (id) => {
+    try {
+      await api.delete(`/products/${id}`);
+      set((s) => ({ products: s.products.filter((p) => p.id !== id) }));
+      toast.success('Product deleted');
+    } catch {
+      set((s) => ({ products: s.products.filter((p) => p.id !== id) }));
+      toast.error('Failed to delete product');
+    }
+  },
 }));

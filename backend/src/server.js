@@ -172,7 +172,7 @@ app.post('/api/payroll/export-payslips', requireAuth, async (req, res) => {
     const headerRow = fields.map((f) => escapeCsv(f.header)).join(',');
     const rows = items.map((it) =>
       fields
-        .map((f) => escapeCsv((it && (it[f.key] as any)) ?? ''))
+        .map((f) => escapeCsv((it && it[f.key]) ?? ''))
         .join(',')
     );
 
@@ -200,13 +200,15 @@ const crudCollections = [
   // Inventory
   'products',
   // Transport / fuel
-  'vehicles', 'fuel', 'trips',
+  'vehicles', 'drivers', 'shipments', 'fuel', 'trips',
   // EHS
-  'ehs-incidents', 'ehs-inspections', 'ehs-compliance',
+  'ehs-incidents', 'ehs-inspections', 'ehs-compliance', 'ehs-alerts',
   // Engineering
   'engineering-projects', 'engineering-contracts', 'engineering-claims',
   'engineering-variations', 'engineering-payments', 'engineering-disputes',
   'engineering-warnings',
+  // Jobs
+  'interviews',
   // Networking / marketplace
   'network-posts', 'network-connections',
   'marketplace-listings', 'marketplace-orders',

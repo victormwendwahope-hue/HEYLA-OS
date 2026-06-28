@@ -132,7 +132,7 @@ export default function MarketplacePage() {
                   <span key={s} className="px-2 py-0.5 rounded-md bg-accent text-accent-foreground text-xs">{s}</span>
                 ))}
               </div>
-              <button className="w-full mt-4 py-2 rounded-lg border border-primary text-primary text-sm font-medium hover:bg-accent transition-colors flex items-center justify-center gap-1.5">
+              <button onClick={() => toast.info(`Hire request sent to ${f.name}`)} className="w-full mt-4 py-2 rounded-lg border border-primary text-primary text-sm font-medium hover:bg-accent transition-colors flex items-center justify-center gap-1.5">
                 <Send className="w-3.5 h-3.5" /> Hire
               </button>
             </div>

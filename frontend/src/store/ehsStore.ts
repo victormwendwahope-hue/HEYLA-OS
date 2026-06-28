@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 export interface Incident {
   id: string;
@@ -49,13 +51,22 @@ interface EHSStore {
   compliance: ComplianceItem[];
   inspections: Inspection[];
   alerts: SafetyAlert[];
+  loading: boolean;
+  fetchIncidents: () => Promise<void>;
+  fetchCompliance: () => Promise<void>;
+  fetchInspections: () => Promise<void>;
+  fetchAlerts: () => Promise<void>;
   addIncident: (i: Omit<Incident, 'id'>) => void;
   updateIncident: (id: string, data: Partial<Incident>) => void;
   deleteIncident: (id: string) => void;
   addCompliance: (c: Omit<ComplianceItem, 'id'>) => void;
   updateCompliance: (id: string, data: Partial<ComplianceItem>) => void;
+  deleteCompliance: (id: string) => void;
   addInspection: (i: Omit<Inspection, 'id'>) => void;
   updateInspection: (id: string, data: Partial<Inspection>) => void;
+  deleteInspection: (id: string) => void;
+  addAlert: (a: Omit<SafetyAlert, 'id'>) => void;
+  removeAlert: (id: string) => void;
   markAlertRead: (id: string) => void;
 }
 
@@ -108,12 +119,53 @@ export const useEHSStore = create<EHSStore>((set) => ({
   compliance: mockCompliance,
   inspections: mockInspections,
   alerts: mockAlerts,
+  loading: false,
+  fetchIncidents: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Incident[]>('/ehs-incidents');
+      set({ incidents: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchCompliance: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<ComplianceItem[]>('/ehs-compliance');
+      set({ compliance: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchInspections: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Inspection[]>('/ehs-inspections');
+      set({ inspections: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchAlerts: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<SafetyAlert[]>('/ehs-alerts');
+      set({ alerts: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
   addIncident: (i) => set((s) => ({ incidents: [...s.incidents, { ...i, id: `INC${String(s.incidents.length + 1).padStart(3, '0')}` }] })),
   updateIncident: (id, data) => set((s) => ({ incidents: s.incidents.map((i) => i.id === id ? { ...i, ...data } : i) })),
   deleteIncident: (id) => set((s) => ({ incidents: s.incidents.filter((i) => i.id !== id) })),
   addCompliance: (c) => set((s) => ({ compliance: [...s.compliance, { ...c, id: `C${String(s.compliance.length + 1).padStart(3, '0')}` }] })),
   updateCompliance: (id, data) => set((s) => ({ compliance: s.compliance.map((c) => c.id === id ? { ...c, ...data } : c) })),
+  deleteCompliance: (id) => set((s) => ({ compliance: s.compliance.filter((c) => c.id !== id) })),
   addInspection: (i) => set((s) => ({ inspections: [...s.inspections, { ...i, id: `INS${String(s.inspections.length + 1).padStart(3, '0')}` }] })),
   updateInspection: (id, data) => set((s) => ({ inspections: s.inspections.map((i) => i.id === id ? { ...i, ...data } : i) })),
+  deleteInspection: (id) => set((s) => ({ inspections: s.inspections.filter((i) => i.id !== id) })),
+  addAlert: (a) => set((s) => ({ alerts: [...s.alerts, { ...a, id: `A${String(s.alerts.length + 1).padStart(3, '0')}` }] })),
+  removeAlert: (id) => set((s) => ({ alerts: s.alerts.filter((a) => a.id !== id) })),
   markAlertRead: (id) => set((s) => ({ alerts: s.alerts.map((a) => a.id === id ? { ...a, read: true } : a) })),
 }));

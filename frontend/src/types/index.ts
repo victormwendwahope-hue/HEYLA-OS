@@ -1,3 +1,5 @@
+export type PayType = 'Hourly' | 'Salary' | 'Basic';
+
 export interface Employee {
   id: string;
   firstName: string;
@@ -11,9 +13,11 @@ export interface Employee {
   department: string;
   position: string;
   employmentType: 'Full-time' | 'Part-time' | 'Contract' | 'Intern';
+  payType: PayType;
   status: 'Active' | 'On Leave' | 'Terminated';
   startDate: string;
   baseSalary: number;
+  hourlyRate: number;
   housingAllowance: number;
   transportAllowance: number;
   medicalAllowance: number;
@@ -26,6 +30,24 @@ export interface Employee {
   emergencyPhone: string;
   bankName: string;
   bankAccount: string;
+}
+
+export interface PayrollRecord {
+  id: string;
+  employeeId: string;
+  period: string;
+  payType: PayType;
+  hourlyRate: number;
+  hoursWorked: number;
+  basicPay: number;
+  overtime: number;
+  grossPay: number;
+  deductions: number;
+  netPay: number;
+  status: 'Draft' | 'Approved' | 'Paid';
+  approvedBy?: string;
+  paidAt?: string;
+  createdAt: string;
 }
 
 export interface Lead {

@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 export type FIDICType = 'Red Book' | 'Yellow Book' | 'Silver Book' | 'Gold Book';
 
@@ -94,19 +96,34 @@ interface EngStore {
   payments: PaymentCertificate[];
   disputes: Dispute[];
   earlyWarnings: EarlyWarning[];
+  loading: boolean;
+  fetchProjects: () => Promise<void>;
+  fetchContracts: () => Promise<void>;
+  fetchClaims: () => Promise<void>;
+  fetchVariations: () => Promise<void>;
+  fetchPayments: () => Promise<void>;
+  fetchDisputes: () => Promise<void>;
+  fetchEarlyWarnings: () => Promise<void>;
   addProject: (p: Omit<Project, 'id'>) => void;
   updateProject: (id: string, d: Partial<Project>) => void;
+  removeProject: (id: string) => void;
   addContract: (c: Omit<Contract, 'id'>) => void;
   updateContract: (id: string, d: Partial<Contract>) => void;
+  removeContract: (id: string) => void;
   addClaim: (c: Omit<Claim, 'id'>) => void;
   updateClaim: (id: string, d: Partial<Claim>) => void;
+  removeClaim: (id: string) => void;
   addVariation: (v: Omit<Variation, 'id'>) => void;
   updateVariation: (id: string, d: Partial<Variation>) => void;
+  removeVariation: (id: string) => void;
   addPayment: (p: Omit<PaymentCertificate, 'id'>) => void;
   updatePayment: (id: string, d: Partial<PaymentCertificate>) => void;
+  removePayment: (id: string) => void;
   addDispute: (d: Omit<Dispute, 'id'>) => void;
+  removeDispute: (id: string) => void;
   addEarlyWarning: (e: Omit<EarlyWarning, 'id'>) => void;
   updateEarlyWarning: (id: string, d: Partial<EarlyWarning>) => void;
+  removeEarlyWarning: (id: string) => void;
 }
 
 const mockProjects: Project[] = [
@@ -162,17 +179,88 @@ export const useEngineeringStore = create<EngStore>((set) => ({
   payments: mockPayments,
   disputes: mockDisputes,
   earlyWarnings: mockEarlyWarnings,
+  loading: false,
+  fetchProjects: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Project[]>('/engineering-projects');
+      set({ projects: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchContracts: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Contract[]>('/engineering-contracts');
+      set({ contracts: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchClaims: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Claim[]>('/engineering-claims');
+      set({ claims: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchVariations: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Variation[]>('/engineering-variations');
+      set({ variations: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchPayments: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<PaymentCertificate[]>('/engineering-payments');
+      set({ payments: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchDisputes: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Dispute[]>('/engineering-disputes');
+      set({ disputes: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchEarlyWarnings: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<EarlyWarning[]>('/engineering-early-warnings');
+      set({ earlyWarnings: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
   addProject: (p) => set((s) => ({ projects: [...s.projects, { ...p, id: `PRJ${uid()}` }] })),
   updateProject: (id, d) => set((s) => ({ projects: s.projects.map((p) => p.id === id ? { ...p, ...d } : p) })),
+  removeProject: (id) => set((s) => ({ projects: s.projects.filter((p) => p.id !== id) })),
   addContract: (c) => set((s) => ({ contracts: [...s.contracts, { ...c, id: `CON${uid()}` }] })),
   updateContract: (id, d) => set((s) => ({ contracts: s.contracts.map((c) => c.id === id ? { ...c, ...d } : c) })),
+  removeContract: (id) => set((s) => ({ contracts: s.contracts.filter((c) => c.id !== id) })),
   addClaim: (c) => set((s) => ({ claims: [...s.claims, { ...c, id: `CLM${uid()}` }] })),
   updateClaim: (id, d) => set((s) => ({ claims: s.claims.map((c) => c.id === id ? { ...c, ...d } : c) })),
+  removeClaim: (id) => set((s) => ({ claims: s.claims.filter((c) => c.id !== id) })),
   addVariation: (v) => set((s) => ({ variations: [...s.variations, { ...v, id: `VAR${uid()}` }] })),
   updateVariation: (id, d) => set((s) => ({ variations: s.variations.map((v) => v.id === id ? { ...v, ...d } : v) })),
+  removeVariation: (id) => set((s) => ({ variations: s.variations.filter((v) => v.id !== id) })),
   addPayment: (p) => set((s) => ({ payments: [...s.payments, { ...p, id: `PAY${uid()}` }] })),
   updatePayment: (id, d) => set((s) => ({ payments: s.payments.map((p) => p.id === id ? { ...p, ...d } : p) })),
+  removePayment: (id) => set((s) => ({ payments: s.payments.filter((p) => p.id !== id) })),
   addDispute: (d) => set((s) => ({ disputes: [...s.disputes, { ...d, id: `DIS${uid()}` }] })),
+  removeDispute: (id) => set((s) => ({ disputes: s.disputes.filter((d) => d.id !== id) })),
   addEarlyWarning: (e) => set((s) => ({ earlyWarnings: [...s.earlyWarnings, { ...e, id: `EW${uid()}` }] })),
   updateEarlyWarning: (id, d) => set((s) => ({ earlyWarnings: s.earlyWarnings.map((e) => e.id === id ? { ...e, ...d } : e) })),
+  removeEarlyWarning: (id) => set((s) => ({ earlyWarnings: s.earlyWarnings.filter((e) => e.id !== id) })),
 }));

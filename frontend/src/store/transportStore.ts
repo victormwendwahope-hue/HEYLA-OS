@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 export interface Vehicle {
   id: string;
@@ -62,22 +64,141 @@ interface TransportState {
   vehicles: Vehicle[];
   drivers: Driver[];
   shipments: Shipment[];
-  addVehicle: (v: Vehicle) => void;
-  updateVehicle: (id: string, data: Partial<Vehicle>) => void;
-  removeVehicle: (id: string) => void;
-  addDriver: (d: Driver) => void;
-  addShipment: (s: Shipment) => void;
-  updateShipment: (id: string, data: Partial<Shipment>) => void;
+  loading: boolean;
+  fetchVehicles: () => Promise<void>;
+  fetchDrivers: () => Promise<void>;
+  fetchShipments: () => Promise<void>;
+  addVehicle: (v: Vehicle) => Promise<void>;
+  updateVehicle: (id: string, data: Partial<Vehicle>) => Promise<void>;
+  removeVehicle: (id: string) => Promise<void>;
+  addDriver: (d: Driver) => Promise<void>;
+  updateDriver: (id: string, data: Partial<Driver>) => Promise<void>;
+  removeDriver: (id: string) => Promise<void>;
+  addShipment: (s: Shipment) => Promise<void>;
+  updateShipment: (id: string, data: Partial<Shipment>) => Promise<void>;
+  removeShipment: (id: string) => Promise<void>;
 }
 
 export const useTransportStore = create<TransportState>((set) => ({
   vehicles: mockVehicles,
   drivers: mockDrivers,
   shipments: mockShipments,
-  addVehicle: (v) => set((s) => ({ vehicles: [...s.vehicles, v] })),
-  updateVehicle: (id, data) => set((s) => ({ vehicles: s.vehicles.map((v) => v.id === id ? { ...v, ...data } : v) })),
-  removeVehicle: (id) => set((s) => ({ vehicles: s.vehicles.filter((v) => v.id !== id) })),
-  addDriver: (d) => set((s) => ({ drivers: [...s.drivers, d] })),
-  addShipment: (sh) => set((s) => ({ shipments: [...s.shipments, sh] })),
-  updateShipment: (id, data) => set((s) => ({ shipments: s.shipments.map((sh) => sh.id === id ? { ...sh, ...data } : sh) })),
+  loading: false,
+  fetchVehicles: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Vehicle[]>('/vehicles');
+      set({ vehicles: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchDrivers: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Driver[]>('/drivers');
+      set({ drivers: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchShipments: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Shipment[]>('/shipments');
+      set({ shipments: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  addVehicle: async (v) => {
+    try {
+      const created = await api.post<Vehicle>('/vehicles', v);
+      set((s) => ({ vehicles: [...s.vehicles, created] }));
+      toast.success('Vehicle created');
+    } catch {
+      set((s) => ({ vehicles: [...s.vehicles, v] }));
+      toast.error('Failed to create vehicle');
+    }
+  },
+  updateVehicle: async (id, data) => {
+    try {
+      const updated = await api.patch<Vehicle>(`/vehicles/${id}`, data);
+      set((s) => ({ vehicles: s.vehicles.map((v) => v.id === id ? updated : v) }));
+      toast.success('Vehicle updated');
+    } catch {
+      set((s) => ({ vehicles: s.vehicles.map((v) => v.id === id ? { ...v, ...data } : v) }));
+      toast.error('Failed to update vehicle');
+    }
+  },
+  removeVehicle: async (id) => {
+    try {
+      await api.delete(`/vehicles/${id}`);
+      set((s) => ({ vehicles: s.vehicles.filter((v) => v.id !== id) }));
+      toast.success('Vehicle deleted');
+    } catch {
+      set((s) => ({ vehicles: s.vehicles.filter((v) => v.id !== id) }));
+      toast.error('Failed to delete vehicle');
+    }
+  },
+  addDriver: async (d) => {
+    try {
+      const created = await api.post<Driver>('/drivers', d);
+      set((s) => ({ drivers: [...s.drivers, created] }));
+      toast.success('Driver created');
+    } catch {
+      set((s) => ({ drivers: [...s.drivers, d] }));
+      toast.error('Failed to create driver');
+    }
+  },
+  updateDriver: async (id, data) => {
+    try {
+      const updated = await api.patch<Driver>(`/drivers/${id}`, data);
+      set((s) => ({ drivers: s.drivers.map((d) => d.id === id ? updated : d) }));
+      toast.success('Driver updated');
+    } catch {
+      set((s) => ({ drivers: s.drivers.map((d) => d.id === id ? { ...d, ...data } : d) }));
+      toast.error('Failed to update driver');
+    }
+  },
+  removeDriver: async (id) => {
+    try {
+      await api.delete(`/drivers/${id}`);
+      set((s) => ({ drivers: s.drivers.filter((d) => d.id !== id) }));
+      toast.success('Driver deleted');
+    } catch {
+      set((s) => ({ drivers: s.drivers.filter((d) => d.id !== id) }));
+      toast.error('Failed to delete driver');
+    }
+  },
+  addShipment: async (sh) => {
+    try {
+      const created = await api.post<Shipment>('/shipments', sh);
+      set((s) => ({ shipments: [...s.shipments, created] }));
+      toast.success('Shipment created');
+    } catch {
+      set((s) => ({ shipments: [...s.shipments, sh] }));
+      toast.error('Failed to create shipment');
+    }
+  },
+  updateShipment: async (id, data) => {
+    try {
+      const updated = await api.patch<Shipment>(`/shipments/${id}`, data);
+      set((s) => ({ shipments: s.shipments.map((sh) => sh.id === id ? updated : sh) }));
+      toast.success('Shipment updated');
+    } catch {
+      set((s) => ({ shipments: s.shipments.map((sh) => sh.id === id ? { ...sh, ...data } : sh) }));
+      toast.error('Failed to update shipment');
+    }
+  },
+  removeShipment: async (id) => {
+    try {
+      await api.delete(`/shipments/${id}`);
+      set((s) => ({ shipments: s.shipments.filter((sh) => sh.id !== id) }));
+      toast.success('Shipment deleted');
+    } catch {
+      set((s) => ({ shipments: s.shipments.filter((sh) => sh.id !== id) }));
+      toast.error('Failed to delete shipment');
+    }
+  },
 }));

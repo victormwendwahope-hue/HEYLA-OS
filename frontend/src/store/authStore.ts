@@ -10,6 +10,7 @@ interface AuthState {
   register: (data: { email: string; password: string; name: string; company: string; accountType?: 'company' | 'individual' }) => Promise<void>;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
+  updateUser: (data: Partial<User>) => void;
   hasRole: (...roles: User['role'][]) => boolean;
 }
 
@@ -101,6 +102,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     setRefreshToken(null);
     localStorage.removeItem('heyla_user');
     set({ user: null, isAuthenticated: false });
+  },
+
+  updateUser: (data) => {
+    const current = get().user;
+    if (!current) return;
+    const updated = { ...current, ...data };
+    localStorage.setItem('heyla_user', JSON.stringify(updated));
+    set({ user: updated });
   },
 
   hasRole: (...roles) => {

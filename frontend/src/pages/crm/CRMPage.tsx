@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLeadStore } from '@/store/leadStore';
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
 import { formatCurrency } from '@/utils/countries';
-import { Plus, Search, GripVertical, X, Edit2, Phone, Mail, Calendar, TrendingUp, Users, DollarSign, Target, Headphones } from 'lucide-react';
+import { Plus, Search, GripVertical, X, Edit2, Phone, Mail, Calendar, TrendingUp, Users, DollarSign, Target, Headphones, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Lead } from '@/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -34,7 +34,7 @@ const priorityVariant = (p: string) => ({ Low: 'default' as const, Medium: 'warn
 const ticketStatusVariant = (s: string) => ({ Open: 'warning' as const, 'In Progress': 'info' as const, Resolved: 'success' as const, Closed: 'default' as const }[s] || 'default' as const);
 
 export default function CRMPage() {
-  const { leads, addLead, updateLead } = useLeadStore();
+  const { leads, addLead, updateLead, removeLead } = useLeadStore();
   const [tab, setTab] = useState<Tab>('sales');
   const [view, setView] = useState<'table' | 'kanban'>('kanban');
   const [search, setSearch] = useState('');
@@ -42,6 +42,27 @@ export default function CRMPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [tickets, setTickets] = useState(mockTickets);
+
+  const emptyTicketForm = { client: '', subject: '', priority: 'Low' as Ticket['priority'], description: '' };
+  const [showTicketForm, setShowTicketForm] = useState(false);
+  const [ticketForm, setTicketForm] = useState(emptyTicketForm);
+
+  const handleAddTicket = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ticketForm.client || !ticketForm.subject) { toast.error('Client and subject required'); return; }
+    setTickets(p => [...p, {
+      id: Date.now().toString(),
+      client: ticketForm.client,
+      subject: ticketForm.subject,
+      priority: ticketForm.priority,
+      status: 'Open',
+      assignedTo: '',
+      createdAt: new Date().toISOString().split('T')[0],
+    }]);
+    setShowTicketForm(false);
+    setTicketForm(emptyTicketForm);
+    toast.success('Ticket added');
+  };
 
   const filtered = leads.filter(l => `${l.name} ${l.company} ${l.email}`.toLowerCase().includes(search.toLowerCase()));
   const totalPipeline = leads.filter(l => !['Won', 'Lost'].includes(l.status)).reduce((s, l) => s + l.value, 0);
@@ -160,7 +181,10 @@ export default function CRMPage() {
                         <td className="px-4 py-3 font-medium">{formatCurrency(l.value)}</td>
                         <td className="px-4 py-3 text-muted-foreground">{l.source}</td>
                         <td className="px-4 py-3">
-                          <button onClick={() => openEdit(l)} className="text-primary text-xs font-medium hover:underline flex items-center gap-1"><Edit2 className="w-3 h-3" /> Edit</button>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => openEdit(l)} className="text-primary text-xs font-medium hover:underline flex items-center gap-1"><Edit2 className="w-3 h-3" /> Edit</button>
+                            <button onClick={() => { if (confirm('Delete this lead?')) { removeLead(l.id); toast.success('Lead deleted'); } }} className="text-destructive text-xs font-medium hover:underline flex items-center gap-1"><Trash2 className="w-3 h-3" /> Delete</button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -182,7 +206,7 @@ export default function CRMPage() {
           </div>
 
           <div className="glass rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-border"><h3 className="font-semibold">Support Tickets</h3></div>
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between"><h3 className="font-semibold">Support Tickets</h3><button onClick={() => setShowTicketForm(true)} className="gradient-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 hover:opacity-90 transition-opacity"><Plus className="w-3.5 h-3.5" /> Add Ticket</button></div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-border bg-muted/30">
@@ -204,6 +228,7 @@ export default function CRMPage() {
                         {t.status === 'In Progress' && (
                           <button onClick={() => { setTickets(p => p.map(x => x.id === t.id ? { ...x, status: 'Resolved' } : x)); toast.success('Resolved'); }} className="text-xs text-success font-medium hover:underline">Resolve</button>
                         )}
+                        <button onClick={() => { if (confirm('Delete this ticket?')) { setTickets(p => p.filter(x => x.id !== t.id)); toast.success('Ticket deleted'); } }} className="text-destructive hover:text-destructive/80"><Trash2 className="w-3.5 h-3.5" /></button>
                       </td>
                     </tr>
                   ))}
@@ -293,6 +318,46 @@ export default function CRMPage() {
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
                 <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">{editId ? 'Update' : 'Add Lead'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Ticket Form Modal */}
+      {showTicketForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-lg m-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-border sticky top-0 bg-card rounded-t-2xl z-10">
+              <h2 className="text-lg font-bold">Add Ticket</h2>
+              <button onClick={() => { setShowTicketForm(false); setTicketForm(emptyTicketForm); }} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={handleAddTicket} className="p-5 space-y-4">
+              {[
+                { label: 'Client*', field: 'client' },
+                { label: 'Subject*', field: 'subject' },
+              ].map(f => (
+                <div key={f.field}>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">{f.label}</label>
+                  <input value={(ticketForm as any)[f.field]} onChange={e => setTicketForm({ ...ticketForm, [f.field]: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+              ))}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Priority</label>
+                <select value={ticketForm.priority} onChange={e => setTicketForm({ ...ticketForm, priority: e.target.value as Ticket['priority'] })}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                  {['Low', 'Medium', 'High', 'Critical'].map(p => <option key={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Description</label>
+                <textarea value={ticketForm.description} onChange={e => setTicketForm({ ...ticketForm, description: e.target.value })} rows={3}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => { setShowTicketForm(false); setTicketForm(emptyTicketForm); }} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
+                <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Add Ticket</button>
               </div>
             </form>
           </div>

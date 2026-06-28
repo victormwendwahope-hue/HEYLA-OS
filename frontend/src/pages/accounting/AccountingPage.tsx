@@ -1,6 +1,6 @@
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
 import { formatCurrency } from '@/utils/countries';
-import { DollarSign, ArrowUpRight, ArrowDownRight, FileText, Plus, X, CreditCard, Receipt, PieChart as PieIcon } from 'lucide-react';
+import { DollarSign, ArrowUpRight, ArrowDownRight, FileText, Plus, X, CreditCard, Receipt, PieChart as PieIcon, Trash2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -71,7 +71,7 @@ export default function AccountingPage() {
     { id: '4', description: 'Client Lunch - KCB', category: 'Travel', amount: 8500, date: '2024-02-08', status: 'Approved' },
     { id: '5', description: 'Server Hosting', category: 'Software', amount: 45000, date: '2024-02-10', status: 'Pending' },
   ]);
-  const [payments] = useState<Payment[]>([
+  const [payments, setPayments] = useState<Payment[]>([
     { id: '1', from: 'Safaricom PLC', amount: 850000, method: 'M-Pesa', date: '2024-01-16', reference: 'MPESA-ABC123' },
     { id: '2', from: 'KCB Group', amount: 200000, method: 'Bank Transfer', date: '2024-01-25', reference: 'BT-DEF456' },
     { id: '3', from: 'M-KOPA Solar', amount: 600000, method: 'Cheque', date: '2024-02-02', reference: 'CHQ-789012' },
@@ -80,6 +80,8 @@ export default function AccountingPage() {
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [iForm, setIForm] = useState({ client: '', amount: 0, date: '' });
   const [eForm, setEForm] = useState({ description: '', category: 'Rent', amount: 0, date: '' });
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [pForm, setPForm] = useState({ from: '', amount: 0, method: 'M-Pesa', date: '', reference: '' });
 
   const totalRevenue = invoices.filter(i => i.status === 'Paid').reduce((s, i) => s + i.amount, 0);
   const totalExpenses = expenses.filter(e => e.status === 'Approved').reduce((s, e) => s + e.amount, 0);
@@ -98,6 +100,25 @@ export default function AccountingPage() {
     setExpenses(prev => [...prev, { ...eForm, id: Date.now().toString(), status: 'Pending' as const }]);
     setShowExpenseForm(false); setEForm({ description: '', category: 'Rent', amount: 0, date: '' });
     toast.success('Expense added');
+  };
+
+  const handleAddPayment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pForm.from || !pForm.amount) { toast.error('Payer and amount required'); return; }
+    setPayments(prev => [...prev, { ...pForm, id: Date.now().toString() }]);
+    setShowPaymentForm(false); setPForm({ from: '', amount: 0, method: 'M-Pesa', date: '', reference: '' });
+    toast.success('Payment recorded');
+  };
+
+  const generateReport = (title: string, content: string) => {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.toLowerCase().replace(/\s+/g, '-')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${title} downloaded`);
   };
 
   const tabs: { key: Tab; label: string }[] = [
@@ -217,7 +238,10 @@ export default function AccountingPage() {
                     <td className="px-4 py-3"><StatusBadge status={inv.status} variant={statusVariant(inv.status)} /></td>
                     <td className="px-4 py-3 text-muted-foreground">{inv.date}</td>
                     <td className="px-4 py-3">
-                      {inv.status !== 'Paid' && <button onClick={() => { setInvoices(p => p.map(i => i.id === inv.id ? { ...i, status: 'Paid' as const } : i)); toast.success('Marked as paid'); }} className="text-xs text-success font-medium hover:underline">Mark Paid</button>}
+                      <div className="flex items-center gap-2">
+                        {inv.status !== 'Paid' && <button onClick={() => { setInvoices(p => p.map(i => i.id === inv.id ? { ...i, status: 'Paid' as const } : i)); toast.success('Marked as paid'); }} className="text-xs text-success font-medium hover:underline">Mark Paid</button>}
+                        <button onClick={() => { if (confirm('Delete invoice?')) { setInvoices(p => p.filter(i => i.id !== inv.id)); toast.success('Invoice deleted'); } }} className="text-xs text-destructive font-medium hover:underline"><Trash2 className="w-3 h-3 inline" /> Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -246,7 +270,10 @@ export default function AccountingPage() {
                     <td className="px-4 py-3 text-muted-foreground">{exp.date}</td>
                     <td className="px-4 py-3"><StatusBadge status={exp.status} variant={statusVariant(exp.status)} /></td>
                     <td className="px-4 py-3">
-                      {exp.status === 'Pending' && <button onClick={() => { setExpenses(p => p.map(e => e.id === exp.id ? { ...e, status: 'Approved' as const } : e)); toast.success('Approved'); }} className="text-xs text-success font-medium hover:underline">Approve</button>}
+                      <div className="flex items-center gap-2">
+                        {exp.status === 'Pending' && <button onClick={() => { setExpenses(p => p.map(e => e.id === exp.id ? { ...e, status: 'Approved' as const } : e)); toast.success('Approved'); }} className="text-xs text-success font-medium hover:underline">Approve</button>}
+                        <button onClick={() => { if (confirm('Delete expense?')) { setExpenses(p => p.filter(e => e.id !== exp.id)); toast.success('Expense deleted'); } }} className="text-xs text-destructive font-medium hover:underline"><Trash2 className="w-3 h-3 inline" /> Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -258,8 +285,9 @@ export default function AccountingPage() {
 
       {tab === 'payments' && (
         <div className="glass rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-border">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <h3 className="font-semibold">Payment History ({payments.length})</h3>
+            <button onClick={() => setShowPaymentForm(true)} className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border hover:bg-muted transition-colors flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /> Add Payment</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -296,7 +324,28 @@ export default function AccountingPage() {
                 <div>
                   <h3 className="font-semibold">{r.title}</h3>
                   <p className="text-sm text-muted-foreground mt-1">{r.desc}</p>
-                  <button className="text-sm text-primary font-medium mt-2 hover:underline">Generate Report →</button>
+                  <button onClick={() => {
+                    let content = '';
+                    const title = r.title;
+                    if (title === 'Profit & Loss Statement') {
+                      const totalIncome = monthlyData.reduce((s, m) => s + m.income, 0);
+                      const totalExpenses = monthlyData.reduce((s, m) => s + m.expenses, 0);
+                      const netProfit = totalIncome - totalExpenses;
+                      content = `Profit & Loss Statement\n${'='.repeat(40)}\n\nDate: ${new Date().toLocaleDateString()}\n\nMonthly Breakdown:\n${monthlyData.map(m => `  ${m.month}:\n    Income:     ${formatCurrency(m.income)}\n    Expenses:   ${formatCurrency(m.expenses)}\n    Net:        ${formatCurrency(m.income - m.expenses)}`).join('\n')}\n\n${'='.repeat(40)}\nTotal Income:     ${formatCurrency(totalIncome)}\nTotal Expenses:   ${formatCurrency(totalExpenses)}\nNet Profit/Loss:  ${formatCurrency(netProfit)}`;
+                    } else if (title === 'Balance Sheet') {
+                      const totalIncome = monthlyData.reduce((s, m) => s + m.income, 0);
+                      const totalExpenses = monthlyData.reduce((s, m) => s + m.expenses, 0);
+                      const equity = totalIncome - totalExpenses;
+                      content = `Balance Sheet\n${'='.repeat(40)}\n\nDate: ${new Date().toLocaleDateString()}\n\nASSETS\n${'-'.repeat(30)}\n  Cash & Bank:         ${formatCurrency(totalIncome * 0.4)}\n  Accounts Receivable: ${formatCurrency(totalIncome * 0.35)}\n  Equipment:           ${formatCurrency(totalIncome * 0.15)}\n  Other Assets:        ${formatCurrency(totalIncome * 0.1)}\n  ${'-'.repeat(30)}\n  Total Assets:        ${formatCurrency(totalIncome)}\n\nLIABILITIES\n${'-'.repeat(30)}\n  Accounts Payable:    ${formatCurrency(totalExpenses * 0.5)}\n  Short-term Loans:    ${formatCurrency(totalExpenses * 0.3)}\n  Accrued Expenses:    ${formatCurrency(totalExpenses * 0.2)}\n  ${'-'.repeat(30)}\n  Total Liabilities:   ${formatCurrency(totalExpenses)}\n\nEQUITY\n${'-'.repeat(30)}\n  Retained Earnings:   ${formatCurrency(equity)}\n  ${'-'.repeat(30)}\n  Total Equity:        ${formatCurrency(equity)}\n\n${'='.repeat(40)}\nLiabilities + Equity: ${formatCurrency(totalExpenses + equity)}`;
+                    } else if (title === 'Cash Flow Statement') {
+                      content = `Cash Flow Statement\n${'='.repeat(40)}\n\nDate: ${new Date().toLocaleDateString()}\n\nPeriod Breakdown:\n${cashFlowData.map(c => `  ${c.month}:\n    Cash In:    ${formatCurrency(c.inflow)}\n    Cash Out:   ${formatCurrency(c.outflow)}\n    Net Cash:   ${formatCurrency(c.inflow - c.outflow)}`).join('\n')}\n\n${'='.repeat(40)}\nTotal Cash In:     ${formatCurrency(cashFlowData.reduce((s, c) => s + c.inflow, 0))}\nTotal Cash Out:    ${formatCurrency(cashFlowData.reduce((s, c) => s + c.outflow, 0))}\nNet Cash Flow:     ${formatCurrency(cashFlowData.reduce((s, c) => s + c.inflow - c.outflow, 0))}`;
+                    } else if (title === 'Tax Report') {
+                      const totalIncome = monthlyData.reduce((s, m) => s + m.income, 0);
+                      const totalExpenses = monthlyData.reduce((s, m) => s + m.expenses, 0);
+                      content = `Tax Report - VAT Summary\n${'='.repeat(40)}\n\nDate: ${new Date().toLocaleDateString()}\n\nVAT Rate: 16%\n\nMonthly VAT Breakdown:\n${monthlyData.map(m => `  ${m.month}:\n    Income:           ${formatCurrency(m.income)}\n    VAT on Sales:     ${formatCurrency(m.income * 0.16)}\n    Expenses:         ${formatCurrency(m.expenses)}\n    VAT on Purchases: ${formatCurrency(m.expenses * 0.16)}`).join('\n')}\n\n${'='.repeat(40)}\nTotal Income:           ${formatCurrency(totalIncome)}\nVAT Collected (Output): ${formatCurrency(totalIncome * 0.16)}\nTotal Expenses:         ${formatCurrency(totalExpenses)}\nVAT Paid (Input):       ${formatCurrency(totalExpenses * 0.16)}\n${'='.repeat(40)}\nNet VAT Due:            ${formatCurrency(totalIncome * 0.16 - totalExpenses * 0.16)}`;
+                    }
+                    generateReport(r.title, content);
+                  }} className="text-sm text-primary font-medium mt-2 hover:underline">Generate Report →</button>
                 </div>
               </div>
             </div>
@@ -352,6 +401,40 @@ export default function AccountingPage() {
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowExpenseForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
                 <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Add Expense</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-md m-4">
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <h2 className="text-lg font-bold">Record Payment</h2>
+              <button onClick={() => setShowPaymentForm(false)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={handleAddPayment} className="p-5 space-y-4">
+              <div><label className="text-xs font-medium text-muted-foreground mb-1 block">From (Client Name)*</label>
+                <input value={pForm.from} onChange={(e) => setPForm({ ...pForm, from: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Amount (KES)*</label>
+                  <input type="number" value={pForm.amount || ''} onChange={(e) => setPForm({ ...pForm, amount: +e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Method</label>
+                  <select value={pForm.method} onChange={(e) => setPForm({ ...pForm, method: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
+                    {['M-Pesa', 'Bank Transfer', 'Cheque', 'Cash'].map(c => <option key={c}>{c}</option>)}
+                  </select></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Date</label>
+                  <input type="date" value={pForm.date} onChange={(e) => setPForm({ ...pForm, date: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Reference</label>
+                  <input value={pForm.reference} onChange={(e) => setPForm({ ...pForm, reference: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowPaymentForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
+                <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Record Payment</button>
               </div>
             </form>
           </div>

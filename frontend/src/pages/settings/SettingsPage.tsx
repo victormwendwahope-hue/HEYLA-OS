@@ -1,14 +1,32 @@
 import { PageHeader } from '@/components/shared/CommonUI';
 import { useAuthStore } from '@/store/authStore';
-import { useState } from 'react';
-import { User, Building2, Bell, Shield, Palette, Globe } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { User, Building2, Bell, Shield, Palette, Globe, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
   const [tab, setTab] = useState('profile');
   const [profile, setProfile] = useState({ name: user?.name || '', email: user?.email || '', company: user?.company || '', phone: '+254 712 345 678' });
   const [notifications, setNotifications] = useState({ email: true, push: true, sms: false, weeklyReport: true });
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [passwordForm, setPasswordForm] = useState({ current: '', newPass: '', confirm: '' });
+
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const stored = localStorage.getItem('heyla-theme');
+    if (stored === 'dark' || (!stored && document.documentElement.classList.contains('dark'))) return 'dark';
+    return 'light';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('heyla-theme', theme);
+  }, [theme]);
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -46,7 +64,8 @@ export default function SettingsPage() {
                   {profile.name.charAt(0)}
                 </div>
                 <div>
-                  <button className="text-sm text-primary font-medium hover:underline">Change Photo</button>
+                  <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) toast.success(`Photo selected: ${f.name}`); }} />
+                  <button onClick={() => photoInputRef.current?.click()} className="text-sm text-primary font-medium hover:underline">Change Photo</button>
                   <p className="text-xs text-muted-foreground">JPG, PNG. Max 2MB.</p>
                 </div>
               </div>
@@ -64,7 +83,7 @@ export default function SettingsPage() {
                   </div>
                 ))}
               </div>
-              <button onClick={() => toast.success('Profile updated')} className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+              <button onClick={() => { updateUser({ name: profile.name, email: profile.email, company: profile.company }); toast.success('Profile updated'); }} className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
                 Save Changes
               </button>
             </div>
@@ -122,18 +141,18 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Current Password</label>
-                  <input type="password" className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  <input type="password" value={passwordForm.current} onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">New Password</label>
-                  <input type="password" className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  <input type="password" value={passwordForm.newPass} onChange={(e) => setPasswordForm({ ...passwordForm, newPass: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Confirm Password</label>
-                  <input type="password" className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  <input type="password" value={passwordForm.confirm} onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
               </div>
-              <button onClick={() => toast.success('Password updated')} className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+              <button onClick={() => { if (!passwordForm.current || !passwordForm.newPass) { toast.error('Fill all password fields'); return; } if (passwordForm.newPass !== passwordForm.confirm) { toast.error('Passwords do not match'); return; } toast.success('Password updated'); setPasswordForm({ current: '', newPass: '', confirm: '' }); }} className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
                 Update Password
               </button>
             </div>
@@ -142,16 +161,19 @@ export default function SettingsPage() {
           {tab === 'appearance' && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold">Appearance</h3>
-              <p className="text-sm text-muted-foreground">Theme and display preferences coming soon.</p>
               <div className="grid grid-cols-2 gap-4">
-                <div className="glass rounded-xl p-4 text-center border-2 border-primary cursor-pointer">
-                  <div className="w-full h-20 bg-background rounded-lg mb-2 border border-border" />
+                <button onClick={() => setTheme('light')} className={`glass rounded-xl p-4 text-center border-2 transition-all ${theme === 'light' ? 'border-primary' : 'border-transparent hover:border-primary'}`}>
+                  <div className="w-full h-20 bg-background rounded-lg mb-2 border border-border relative flex items-center justify-center">
+                    {theme === 'light' && <Check className="w-6 h-6 text-primary" />}
+                  </div>
                   <p className="text-sm font-medium">Light</p>
-                </div>
-                <div className="glass rounded-xl p-4 text-center cursor-pointer hover:border-primary transition-colors">
-                  <div className="w-full h-20 bg-foreground rounded-lg mb-2" />
+                </button>
+                <button onClick={() => setTheme('dark')} className={`glass rounded-xl p-4 text-center border-2 transition-all ${theme === 'dark' ? 'border-primary' : 'border-transparent hover:border-primary'}`}>
+                  <div className="w-full h-20 bg-foreground rounded-lg mb-2 relative flex items-center justify-center">
+                    {theme === 'dark' && <Check className="w-6 h-6 text-background" />}
+                  </div>
                   <p className="text-sm font-medium">Dark</p>
-                </div>
+                </button>
               </div>
             </div>
           )}

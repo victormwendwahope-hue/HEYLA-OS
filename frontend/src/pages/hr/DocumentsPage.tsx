@@ -1,5 +1,5 @@
 import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Plus, X, FileText, Download, Trash2, Upload, File, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -27,6 +27,8 @@ export default function DocumentsPage() {
   const [showUpload, setShowUpload] = useState(false);
   const [filter, setFilter] = useState('All');
   const [form, setForm] = useState({ name: '', category: 'Other' as Document['category'] });
+  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories = ['All', 'Contract', 'Policy', 'ID Document', 'Certificate', 'Payslip', 'Other'];
   const filtered = filter === 'All' ? docs : docs.filter((d) => d.category === filter);
@@ -42,6 +44,7 @@ export default function DocumentsPage() {
     setDocs((prev) => [...prev, { ...form, id: Date.now().toString(), uploadedBy: 'John Kamau', uploadDate: new Date().toISOString().split('T')[0], size: '1.0 MB' }]);
     setShowUpload(false);
     setForm({ name: '', category: 'Other' });
+    setFile(null);
     toast.success('Document uploaded');
   };
 
@@ -81,7 +84,12 @@ export default function DocumentsPage() {
               </div>
             </div>
             <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-border">
-              <button className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+              <button onClick={() => {
+                const blob = new Blob([`Name: ${doc.name}\nCategory: ${doc.category}\nSize: ${doc.size}\nUploaded: ${doc.uploadDate} by ${doc.uploadedBy}`], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = doc.name; a.click();
+                window.URL.revokeObjectURL(url);
+              }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                 <Download className="w-4 h-4" />
               </button>
               <button onClick={() => handleDelete(doc.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors">
@@ -107,10 +115,17 @@ export default function DocumentsPage() {
               <button onClick={() => setShowUpload(false)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleUpload} className="p-5 space-y-4">
-              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center">
+              <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:bg-muted/30 transition-colors">
                 <File className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Drag & drop or click to select</p>
-                <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, XLSX up to 10MB</p>
+                {file ? (
+                  <p className="text-sm font-medium text-foreground">{file.name}</p>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground">Drag & drop or click to select</p>
+                    <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, XLSX up to 10MB</p>
+                  </>
+                )}
+                <input ref={fileInputRef} type="file" accept=".pdf,.docx,.xlsx" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }} />
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Document Name</label>

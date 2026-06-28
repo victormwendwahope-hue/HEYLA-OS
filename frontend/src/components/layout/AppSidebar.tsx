@@ -24,6 +24,7 @@ const mainNav = [
     { title: 'Injury Management', url: '/hr/injuries', icon: HeartPulse },
     { title: 'Blacklist', url: '/hr/blacklist', icon: ShieldBan },
     { title: 'Documents', url: '/hr/documents', icon: FolderOpen },
+    { title: 'Payroll', url: '/hr/payroll', icon: Receipt },
   ] },
   { title: 'EHS', url: '/ehs', icon: ShieldCheck, items: [
     { title: 'Dashboard', url: '/ehs', icon: ShieldCheck },

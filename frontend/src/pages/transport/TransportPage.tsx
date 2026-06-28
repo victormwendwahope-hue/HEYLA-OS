@@ -1,7 +1,7 @@
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
 import { useTransportStore } from '@/store/transportStore';
 import { formatCurrency } from '@/utils/countries';
-import { Truck, Users, Package, MapPin, Plus, X, AlertTriangle, Fuel, BarChart3 } from 'lucide-react';
+import { Truck, Users, Package, MapPin, Plus, X, AlertTriangle, Fuel, BarChart3, Trash2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -29,7 +29,7 @@ const shipmentStatusVariant = (s: string) => {
 type Tab = 'overview' | 'fleet' | 'drivers' | 'shipments';
 
 export default function TransportPage() {
-  const { vehicles, drivers, shipments, addVehicle, addShipment, updateShipment } = useTransportStore();
+  const { vehicles, drivers, shipments, addVehicle, addShipment, updateShipment, removeVehicle, removeShipment } = useTransportStore();
   const [tab, setTab] = useState<Tab>('overview');
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [showShipmentForm, setShowShipmentForm] = useState(false);
@@ -155,7 +155,7 @@ export default function TransportPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-border bg-muted/30">
-                {['Vehicle', 'Plate', 'Type', 'Status', 'Driver', 'Mileage', 'Fuel'].map(h => <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>)}
+                {['Vehicle', 'Plate', 'Type', 'Status', 'Driver', 'Mileage', 'Fuel', ''].map(h => <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>)}
               </tr></thead>
               <tbody>
                 {vehicles.map((v) => (
@@ -167,6 +167,9 @@ export default function TransportPage() {
                     <td className="px-4 py-3 text-muted-foreground">{v.driver || '—'}</td>
                     <td className="px-4 py-3">{v.mileage.toLocaleString()} km</td>
                     <td className="px-4 py-3 text-muted-foreground">{v.fuelType}</td>
+                    <td className="px-4 py-3">
+                      <button onClick={() => { if (confirm('Delete vehicle?')) { removeVehicle(v.id); toast.success('Vehicle deleted'); } }} className="text-destructive hover:underline text-xs font-medium">Delete</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -235,6 +238,9 @@ export default function TransportPage() {
                 </div>
               </div>
               {s.driver && <p className="text-xs text-muted-foreground mt-2">Driver: {s.driver} • Vehicle: {s.vehicle}</p>}
+              <div className="flex justify-end mt-2">
+                <button onClick={() => { if (confirm('Delete shipment?')) { removeShipment(s.id); toast.success('Shipment deleted'); } }} className="text-destructive text-xs font-medium hover:underline flex items-center gap-1"><Trash2 className="w-3 h-3" /> Delete</button>
+              </div>
             </div>
           ))}
         </div>

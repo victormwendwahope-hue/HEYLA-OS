@@ -9,7 +9,7 @@ import { Product } from '@/types';
 const emptyForm = { name: '', sku: '', category: '', price: 0, cost: 0, stock: 0, minStock: 5 };
 
 export default function InventoryPage() {
-  const { products, addProduct, updateProduct } = useInventoryStore();
+  const { products, addProduct, updateProduct, removeProduct } = useInventoryStore();
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -81,6 +81,9 @@ export default function InventoryPage() {
             <div className="flex justify-end gap-2 mt-3">
               <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                 <Edit2 className="w-4 h-4" />
+              </button>
+              <button onClick={() => { if (confirm('Delete product?')) { removeProduct(p.id); toast.success('Product deleted'); } }} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+                <Trash2 className="w-4 h-4" />
               </button>
             </div>
           </div>

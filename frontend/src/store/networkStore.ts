@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 export interface Post {
   id: string;
@@ -39,11 +41,14 @@ export interface Applicant {
 interface NetworkState {
   posts: Post[];
   jobs: JobPost[];
-  addPost: (post: Post) => void;
-  deletePost: (id: string) => void;
+  loading: boolean;
+  fetchPosts: () => Promise<void>;
+  fetchJobs: () => Promise<void>;
+  addPost: (post: Post) => Promise<void>;
+  deletePost: (id: string) => Promise<void>;
   toggleLike: (id: string) => void;
-  addJob: (job: JobPost) => void;
-  deleteJob: (id: string) => void;
+  addJob: (job: JobPost) => Promise<void>;
+  deleteJob: (id: string) => Promise<void>;
   updateApplicant: (jobId: string, applicantId: string, data: Partial<Applicant>) => void;
   addApplicant: (jobId: string, applicant: Applicant) => void;
 }
@@ -86,13 +91,68 @@ const mockJobs: JobPost[] = [
 export const useNetworkStore = create<NetworkState>((set) => ({
   posts: mockPosts,
   jobs: mockJobs,
-  addPost: (post) => set((s) => ({ posts: [post, ...s.posts] })),
-  deletePost: (id) => set((s) => ({ posts: s.posts.filter((p) => p.id !== id) })),
+  loading: false,
+  fetchPosts: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Post[]>('/network-posts');
+      set({ posts: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  fetchJobs: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<JobPost[]>('/network-jobs');
+      set({ jobs: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  addPost: async (post) => {
+    try {
+      const created = await api.post<Post>('/network-posts', post);
+      set((s) => ({ posts: [created, ...s.posts] }));
+      toast.success('Post created');
+    } catch {
+      set((s) => ({ posts: [post, ...s.posts] }));
+      toast.error('Failed to create post');
+    }
+  },
+  deletePost: async (id) => {
+    try {
+      await api.delete(`/network-posts/${id}`);
+      set((s) => ({ posts: s.posts.filter((p) => p.id !== id) }));
+      toast.success('Post deleted');
+    } catch {
+      set((s) => ({ posts: s.posts.filter((p) => p.id !== id) }));
+      toast.error('Failed to delete post');
+    }
+  },
   toggleLike: (id) => set((s) => ({
     posts: s.posts.map((p) => p.id === id ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p),
   })),
-  addJob: (job) => set((s) => ({ jobs: [job, ...s.jobs] })),
-  deleteJob: (id) => set((s) => ({ jobs: s.jobs.filter((j) => j.id !== id) })),
+  addJob: async (job) => {
+    try {
+      const created = await api.post<JobPost>('/network-jobs', job);
+      set((s) => ({ jobs: [created, ...s.jobs] }));
+      toast.success('Job created');
+    } catch {
+      set((s) => ({ jobs: [job, ...s.jobs] }));
+      toast.error('Failed to create job');
+    }
+  },
+  deleteJob: async (id) => {
+    try {
+      await api.delete(`/network-jobs/${id}`);
+      set((s) => ({ jobs: s.jobs.filter((j) => j.id !== id) }));
+      toast.success('Job deleted');
+    } catch {
+      set((s) => ({ jobs: s.jobs.filter((j) => j.id !== id) }));
+      toast.error('Failed to delete job');
+    }
+  },
   updateApplicant: (jobId, applicantId, data) => set((s) => ({
     jobs: s.jobs.map((j) => j.id === jobId ? {
       ...j,
