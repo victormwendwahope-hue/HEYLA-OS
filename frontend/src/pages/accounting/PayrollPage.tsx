@@ -291,13 +291,6 @@ export default function PayrollPage() {
         )}
       </div>
 
-      <style>{`
-@media print {
-  body > *:not(#print-pslip-area) { display: none !important; }
-  #print-pslip-area { display: block !important; position: absolute; top: 0; left: 0; width: 100%; }
-}
-`}</style>
-
       {/* Payslip Preview Modal */}
       {showPayslip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
@@ -305,14 +298,22 @@ export default function PayrollPage() {
             <div className="flex items-center justify-between p-5 border-b border-border sticky top-0 bg-card z-10">
               <h2 className="text-lg font-bold">Payslip — {showPayslip.employeeName}</h2>
               <div className="flex items-center gap-2">
-                <button onClick={() => { window.print(); }}
+                <button onClick={() => {
+                  if (!showPayslip) return;
+                  const win = window.open('', '_blank');
+                  if (!win) return;
+                  win.document.write(buildPayslipHtml(showPayslip));
+                  win.document.close();
+                  win.focus();
+                  setTimeout(() => win.print(), 300);
+                }}
                   className="border border-border px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-muted transition-colors">
                   <Printer className="w-4 h-4" /> Print
                 </button>
                 <button onClick={() => setShowPayslip(null)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
               </div>
             </div>
-            <div id="print-pslip-area" className="p-6">
+            <div className="p-6">
               <PayslipDetail payslip={showPayslip} />
             </div>
           </div>
@@ -320,6 +321,87 @@ export default function PayrollPage() {
       )}
     </div>
   );
+}
+
+function buildPayslipHtml(p: Payslip): string {
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:4px 8px">${label}</td><td style="padding:4px 8px;text-align:right">${value}</td></tr>`;
+  const boldRow = (label: string, value: string, color = '#000') =>
+    `<tr style="font-weight:700;border-top:1px solid #ccc"><td style="padding:6px 8px">${label}</td><td style="padding:6px 8px;text-align:right;color:${color}">${value}</td></tr>`;
+
+  const paymentDate = p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : '-';
+  const generated = new Date(p.generatedAt).toLocaleString();
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Payslip - ${p.employeeName}</title>
+<style>
+  @page { margin: 15mm; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #222; margin: 0; padding: 20px; }
+  .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 12px; margin-bottom: 20px; }
+  .header h2 { margin: 0; font-size: 20px; }
+  .header p { margin: 4px 0 0; color: #666; font-size: 12px; }
+  .header h3 { margin: 8px 0 0; font-size: 16px; }
+  .info { display: flex; justify-content: space-between; margin-bottom: 20px; }
+  .info div { flex: 1; }
+  .info .right { text-align: right; }
+  .info p { margin: 3px 0; }
+  .info strong { color: #000; }
+  .info .muted { color: #666; }
+  .tables { display: flex; gap: 24px; margin-bottom: 16px; }
+  .tables > div { flex: 1; }
+  .tables h4 { border-bottom: 1px solid #ccc; padding-bottom: 4px; margin: 0 0 8px; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .footer { border-top: 2px solid #333; padding-top: 12px; text-align: right; }
+  .footer .net { font-size: 18px; font-weight: 700; }
+  .footer .net span { color: #2563eb; }
+  .footer .gen { font-size: 11px; color: #888; margin-top: 4px; }
+</style></head><body>
+  <div class="header">
+    <h2>${p.companyName || 'HEYLA OS SOLUTIONS LTD'}</h2>
+    <p>KRA PIN: ${p.companyKraPin || 'A123456789Z'}</p>
+    <h3>PAYSLIP — ${p.period}</h3>
+  </div>
+  <div class="info">
+    <div>
+      <p><span class="muted">Employee:</span> <strong>${p.employeeName}</strong></p>
+      <p><span class="muted">Payroll No:</span> <strong>${p.payrollNumber}</strong></p>
+      <p><span class="muted">Department:</span> ${p.department}</p>
+      <p><span class="muted">Position:</span> ${p.position}</p>
+    </div>
+    <div class="right">
+      <p><span class="muted">Payslip #:</span> <strong>${p.payslipNumber}</strong></p>
+      <p><span class="muted">Period:</span> ${p.period}</p>
+      <p><span class="muted">Payment Date:</span> ${paymentDate}</p>
+      <p><span class="muted">Leave:</span> ${p.paidLeaveDays}p / ${p.unpaidLeaveDays}a / ${p.sickLeaveDays}s</p>
+    </div>
+  </div>
+  <div class="tables">
+    <div>
+      <h4>EARNINGS</h4>
+      <table>
+        ${row('Basic Salary', formatCurrency(p.basicPay))}
+        ${row('Housing Allowance', formatCurrency(p.housingAllowance))}
+        ${row('Transport Allowance', formatCurrency(p.transportAllowance))}
+        ${row('Medical Allowance', formatCurrency(p.medicalAllowance))}
+        ${row('Other Allowances', formatCurrency(p.otherAllowances))}
+        ${p.overtime > 0 ? row('Overtime', formatCurrency(p.overtime)) : ''}
+        ${boldRow('GROSS PAY', formatCurrency(p.grossPay), '#2563eb')}
+      </table>
+    </div>
+    <div>
+      <h4>DEDUCTIONS</h4>
+      <table>
+        ${row('PAYE (Tax)', formatCurrency(p.paye))}
+        ${row('NSSF', formatCurrency(p.nssf))}
+        ${row('NHIF', formatCurrency(p.nhif))}
+        ${boldRow('TOTAL DEDUCTIONS', formatCurrency(p.totalDeductions), '#dc2626')}
+      </table>
+    </div>
+  </div>
+  <div class="footer">
+    <p class="net">NET PAY: <span>${formatCurrency(p.netPay)}</span></p>
+    <p class="gen">Generated on ${generated}</p>
+  </div>
+</body></html>`;
 }
 
 function PayslipDetail({ payslip: p }: { payslip: Payslip }) {
