@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { User } from '@/types';
 import { api, apiEnabled, setToken, setRefreshToken, getRefreshToken, ApiError } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface AuthState {
   user: User | null;
@@ -11,6 +12,8 @@ interface AuthState {
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  updateProfile: (data: { name?: string; company?: string; avatar?: string }) => Promise<void>;
   hasRole: (...roles: User['role'][]) => boolean;
 }
 
@@ -110,6 +113,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const updated = { ...current, ...data };
     localStorage.setItem('heyla_user', JSON.stringify(updated));
     set({ user: updated });
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    await api.auth.changePassword(currentPassword, newPassword);
+    toast.success('Password changed successfully. Please log in again.');
+    get().logout();
+  },
+
+  updateProfile: async (data) => {
+    const res = await api.auth.updateProfile(data);
+    const mapped = mapUser(res.user);
+    const current = get().user;
+    const updated = { ...current, ...mapped };
+    localStorage.setItem('heyla_user', JSON.stringify(updated));
+    set({ user: updated });
+    toast.success('Profile updated');
   },
 
   hasRole: (...roles) => {

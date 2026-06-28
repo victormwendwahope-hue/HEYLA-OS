@@ -26,6 +26,8 @@ import InventoryPage from "@/pages/inventory/InventoryPage";
 import NetworkingPage from "@/pages/networking/NetworkingPage";
 import MarketplacePage from "@/pages/marketplace/MarketplacePage";
 import SettingsPage from "@/pages/settings/SettingsPage";
+import AdminPage from "@/pages/admin/AdminPage";
+import PaymentPage from "@/pages/payment/PaymentPage";
 import TransportPage from "@/pages/transport/TransportPage";
 import FuelPage from "@/pages/fuel/FuelPage";
 import JobsPage from "@/pages/jobs/JobsPage";
@@ -92,6 +94,7 @@ const App = () => (
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/" element={<GeoLanding />} />
             <Route path="/careers" element={<CareersPage />} />
+            <Route path="/payment" element={<PaymentPage />} />
             
             {/* Country Landing Pages */}
             <Route path="/country/ke" element={<KenyaLanding />} />
@@ -141,6 +144,7 @@ const App = () => (
               <Route path="/networking" element={<NetworkingPage />} />
               <Route path="/marketplace" element={<MarketplacePage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

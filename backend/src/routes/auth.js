@@ -168,6 +168,39 @@ router.post('/logout-all', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(200),
+  newPassword: z.string().min(8).max(200)
+    .regex(/[A-Z]/, 'Must contain an uppercase letter')
+    .regex(/[a-z]/, 'Must contain a lowercase letter')
+    .regex(/[0-9]/, 'Must contain a number'),
+});
+
+router.post('/change-password', requireAuth, validate({ body: changePasswordSchema }), async (req, res) => {
+  const user = await db.get('users', req.user.sub);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const ok = await verifyPassword(req.body.currentPassword, user.passwordHash);
+  if (!ok) return res.status(400).json({ error: 'Current password is incorrect' });
+  await db.update('users', user.id, { passwordHash: await hashPassword(req.body.newPassword) });
+  await revokeAllForUser(user.id);
+  await audit(req, 'auth.change_password', `users/${user.id}`);
+  res.json({ ok: true });
+});
+
+const updateProfileSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  company: z.string().trim().max(200).optional(),
+  avatar: z.string().max(500000).optional(),
+});
+
+router.patch('/profile', requireAuth, validate({ body: updateProfileSchema }), async (req, res) => {
+  const user = await db.get('users', req.user.sub);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const updated = await db.update('users', user.id, { ...req.body, updatedAt: new Date().toISOString() });
+  await audit(req, 'auth.update_profile', `users/${user.id}`);
+  res.json({ user: publicUser(updated) });
+});
+
 /**
  * Admin status debug endpoint.
  * Returns whether the admin user exists + what the stored passwordHash "looks like".

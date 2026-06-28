@@ -44,6 +44,10 @@ export interface PayrollRecord {
   hourlyRate: number;
   hoursWorked: number;
   basicPay: number;
+  housingAllowance: number;
+  transportAllowance: number;
+  medicalAllowance: number;
+  otherAllowances: number;
   overtime: number;
   grossPay: number;
   deductions: number;
@@ -132,8 +136,17 @@ export interface User {
   email: string;
   name: string;
   company: string;
-  role: 'admin' | 'manager' | 'employee';
+  role: 'admin' | 'manager' | 'employee' | 'individual';
   avatar?: string;
+}
+
+export interface AttendanceRecord {
+  id: string;
+  employeeId: string;
+  date: string;
+  checkIn: string;
+  checkOut: string;
+  status: 'Present' | 'Absent' | 'Late' | 'Half Day' | 'On Leave';
 }
 
 export interface CountryConfig {

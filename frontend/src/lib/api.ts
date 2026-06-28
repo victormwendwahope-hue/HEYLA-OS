@@ -123,8 +123,9 @@ if (!res.ok) {
     const msg = (data as any)?.error || res.statusText;
 
     // Trial-gating: backend responds 403 { redirectToPayment: true, paymentUrl }
-    if (res.status === 403 && (data as any)?.redirectToPayment && (data as any)?.paymentUrl) {
-      location.assign((data as any).paymentUrl);
+    if (res.status === 403 && (data as any)?.redirectToPayment) {
+      const paymentUrl = (data as any).paymentUrl || '/payment';
+      location.assign(paymentUrl);
     }
 
     if (res.status === 403) toast.error(typeof msg === 'string' ? msg : 'You don\'t have access to this');
@@ -163,6 +164,10 @@ export const api = {
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/refresh', { refreshToken }),
     logout: (refreshToken?: string) => request<{ ok: true }>('POST', '/auth/logout', { refreshToken }),
     logoutAll: () => request<{ ok: true }>('POST', '/auth/logout-all'),
+    changePassword: (currentPassword: string, newPassword: string) =>
+      request<{ ok: true }>('POST', '/auth/change-password', { currentPassword, newPassword }),
+    updateProfile: (data: { name?: string; company?: string; avatar?: string }) =>
+      request<{ user: any }>('PATCH', '/auth/profile', data),
   },
 
   admin: {
@@ -173,6 +178,8 @@ export const api = {
     users: () => request<any[]>('GET', '/admin/users'),
     setRole: (id: string, role: string) => request<any>('PATCH', `/admin/users/${id}/role`, { role }),
     revokeSessions: (id: string) => request<{ ok: true }>('POST', `/admin/users/${id}/revoke-sessions`),
+    resetPassword: (id: string, newPassword: string) =>
+      request<{ ok: true }>('POST', `/admin/users/${id}/reset-password`, { newPassword }),
   },
 };
 

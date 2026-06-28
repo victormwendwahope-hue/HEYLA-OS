@@ -1,31 +1,21 @@
 import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
 import { useEmployeeStore } from '@/store/employeeStore';
-import { useState } from 'react';
+import { useAttendanceStore } from '@/store/attendanceStore';
+import { useState, useEffect } from 'react';
 import { Clock, CheckCircle2, XCircle, Coffee, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface AttendanceRecord {
-  employeeId: string;
-  date: string;
-  checkIn: string;
-  checkOut: string;
-  status: 'Present' | 'Absent' | 'Late' | 'Half Day' | 'On Leave';
-}
+import { AttendanceRecord } from '@/types';
 
 const today = new Date().toISOString().split('T')[0];
 
-const mockAttendance: AttendanceRecord[] = [
-  { employeeId: '1', date: today, checkIn: '08:15', checkOut: '17:30', status: 'Present' },
-  { employeeId: '2', date: today, checkIn: '09:45', checkOut: '17:00', status: 'Late' },
-  { employeeId: '3', date: today, checkIn: '08:00', checkOut: '13:00', status: 'Half Day' },
-  { employeeId: '4', date: today, checkIn: '', checkOut: '', status: 'On Leave' },
-  { employeeId: '5', date: today, checkIn: '07:50', checkOut: '17:15', status: 'Present' },
-];
-
 export default function AttendancePage() {
   const employees = useEmployeeStore((s) => s.employees);
-  const [records, setRecords] = useState<AttendanceRecord[]>(mockAttendance);
+  const { records, fetchRecords, addRecord, updateRecord, getRecordsByDate } = useAttendanceStore();
   const [selectedDate, setSelectedDate] = useState(today);
+
+  useEffect(() => {
+    fetchRecords();
+  }, []);
 
   const statusVariant = (s: string) => {
     const m: Record<string, 'success' | 'warning' | 'destructive' | 'info' | 'default'> = {
@@ -36,20 +26,26 @@ export default function AttendancePage() {
 
   const markAttendance = (employeeId: string, status: AttendanceRecord['status']) => {
     const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-    setRecords((prev) => {
-      const existing = prev.find((r) => r.employeeId === employeeId && r.date === selectedDate);
-      if (existing) {
-        return prev.map((r) => r.employeeId === employeeId && r.date === selectedDate ? { ...r, status, checkIn: status !== 'Absent' ? now : '' } : r);
-      }
-      return [...prev, { employeeId, date: selectedDate, checkIn: status !== 'Absent' ? now : '', checkOut: '', status }];
-    });
-    toast.success('Attendance updated');
+    const existing = records.find((r) => r.employeeId === employeeId && r.date === selectedDate);
+    if (existing) {
+      updateRecord(existing.id, { status, checkIn: status !== 'Absent' ? now : '' });
+    } else {
+      addRecord({
+        id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        employeeId,
+        date: selectedDate,
+        checkIn: status !== 'Absent' ? now : '',
+        checkOut: '',
+        status,
+      });
+    }
   };
 
-  const present = records.filter((r) => r.date === selectedDate && r.status === 'Present').length;
-  const late = records.filter((r) => r.date === selectedDate && r.status === 'Late').length;
-  const absent = records.filter((r) => r.date === selectedDate && (r.status === 'Absent')).length;
-  const onLeave = records.filter((r) => r.date === selectedDate && r.status === 'On Leave').length;
+  const dayRecords = getRecordsByDate(selectedDate);
+  const present = dayRecords.filter((r) => r.status === 'Present').length;
+  const late = dayRecords.filter((r) => r.status === 'Late').length;
+  const absent = dayRecords.filter((r) => r.status === 'Absent').length;
+  const onLeave = dayRecords.filter((r) => r.status === 'On Leave').length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -90,7 +86,7 @@ export default function AttendancePage() {
             </thead>
             <tbody>
               {employees.map((emp) => {
-                const record = records.find((r) => r.employeeId === emp.id && r.date === selectedDate);
+                const record = dayRecords.find((r) => r.employeeId === emp.id);
                 return (
                   <tr key={emp.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3">

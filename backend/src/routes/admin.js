@@ -1,7 +1,7 @@
 // Admin-only routes: audit log access, user role management.
 import { Router } from 'express';
 import { db } from '../db.js';
-import { requireAuth, requireRole, ROLES, revokeAllForUser } from '../auth.js';
+import { requireAuth, requireRole, ROLES, revokeAllForUser, hashPassword } from '../auth.js';
 import { validate, idParam, paginationQuery, z } from '../validate.js';
 import { audit } from '../audit.js';
 
@@ -42,6 +42,24 @@ router.post('/users/:id/revoke-sessions',
   async (req, res) => {
     await revokeAllForUser(req.params.id);
     await audit(req, 'admin.user.revoke_sessions', `users/${req.params.id}`);
+    res.json({ ok: true });
+  });
+
+const resetPasswordSchema = z.object({
+  newPassword: z.string().min(8).max(200)
+    .regex(/[A-Z]/, 'Must contain an uppercase letter')
+    .regex(/[a-z]/, 'Must contain a lowercase letter')
+    .regex(/[0-9]/, 'Must contain a number'),
+});
+
+router.post('/users/:id/reset-password',
+  validate({ params: idParam, body: resetPasswordSchema }),
+  async (req, res) => {
+    const u = await db.get('users', req.params.id);
+    if (!u) return res.status(404).json({ error: 'User not found' });
+    await db.update('users', req.params.id, { passwordHash: await hashPassword(req.body.newPassword) });
+    await revokeAllForUser(req.params.id);
+    await audit(req, 'admin.user.reset_password', `users/${req.params.id}`);
     res.json({ ok: true });
   });
 

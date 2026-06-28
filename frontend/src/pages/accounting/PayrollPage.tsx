@@ -291,6 +291,13 @@ export default function PayrollPage() {
         )}
       </div>
 
+      <style>{`
+@media print {
+  body > *:not(#print-pslip-area) { display: none !important; }
+  #print-pslip-area { display: block !important; position: absolute; top: 0; left: 0; width: 100%; }
+}
+`}</style>
+
       {/* Payslip Preview Modal */}
       {showPayslip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
@@ -305,7 +312,7 @@ export default function PayrollPage() {
                 <button onClick={() => setShowPayslip(null)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
               </div>
             </div>
-            <div className="p-6">
+            <div id="print-pslip-area" className="p-6">
               <PayslipDetail payslip={showPayslip} />
             </div>
           </div>

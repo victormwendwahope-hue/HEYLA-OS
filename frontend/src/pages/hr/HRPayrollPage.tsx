@@ -1,17 +1,36 @@
 import { useState, useRef, useEffect } from 'react';
 import { useEmployeeStore } from '@/store/employeeStore';
 import { usePayrollStore } from '@/store/payrollStore';
+import { useAttendanceStore } from '@/store/attendanceStore';
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
 import { formatCurrency } from '@/utils/countries';
 import {
   DollarSign, Clock, Users, Receipt, Save, Edit3, Trash2, Plus, X, ArrowRight,
-  Calendar, Ban, Stethoscope, Printer, FileText, Search, Send, Download
+  Calendar, Ban, Stethoscope, Printer, FileText, Search, Send, Download, CheckCircle2, XCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Employee, Payslip } from '@/types';
 
 type PageTab = 'setup' | 'payslips';
 type PayTab = 'hourly' | 'basic';
+
+function countWorkingDays(year: number, month: number): number {
+  let count = 0;
+  const daysInMonth = new Date(year, month, 0).getDate();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const day = new Date(year, month - 1, d).getDay();
+    if (day !== 0 && day !== 6) count++;
+  }
+  return count;
+}
+
+function getMonthRange(period: string): { start: string; end: string } {
+  const [y, m] = period.split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const start = `${period}-01`;
+  const end = `${period}-${String(daysInMonth).padStart(2, '0')}`;
+  return { start, end };
+}
 
 export default function HRPayrollPage() {
   const [pageTab, setPageTab] = useState<PageTab>('setup');
@@ -32,6 +51,7 @@ export default function HRPayrollPage() {
   const employees = useEmployeeStore((s) => s.employees);
   const updateEmployee = useEmployeeStore((s) => s.updateEmployee);
   const { records, payslips, publishPayroll, fetchRecords, fetchPayslips, getRecordsByPeriod, getPayslipsByPeriod, getPayslipByEmployee } = usePayrollStore();
+  const { records: attendanceRecords, fetchRecords: fetchAttendance, getRecordsByEmployeeAndPeriod } = useAttendanceStore();
   const activeEmployees = employees.filter((e) => e.status === 'Active');
 
   const employeeMap = Object.fromEntries(employees.map((e) => [e.id, e]));
@@ -39,19 +59,42 @@ export default function HRPayrollPage() {
   useEffect(() => {
     fetchRecords();
     fetchPayslips();
+    fetchAttendance();
   }, []);
+
+  const periodRange = getMonthRange(period);
+  const workingDays = countWorkingDays(Number(period.split('-')[0]), Number(period.split('-')[1]));
+
+  const getActiveDaysFor = (employeeId: string) => {
+    const empRecords = attendanceRecords.filter(
+      (r) => r.employeeId === employeeId && r.date >= periodRange.start && r.date <= periodRange.end
+    );
+    const active = empRecords.filter((r) => r.status !== 'Absent').length;
+    const absent = empRecords.filter((r) => r.status === 'Absent').length;
+    return { active, absent, total: empRecords.length, workingDays };
+  };
+
+  const prorate = (fullAmount: number, activeDays: number): number => {
+    if (workingDays === 0 || activeDays === 0) return 0;
+    return (fullAmount / workingDays) * activeDays;
+  };
 
   const hourlyEmployees = activeEmployees.filter((e) => e.payType === 'Hourly');
   const basicEmployees = activeEmployees.filter((e) => e.payType === 'Basic' || e.payType === 'Salary');
 
   const totalHourlyCost = hourlyEmployees.reduce((s, e) => {
-    const hrs = hoursWorked[e.id] || 160;
+    const { active } = getActiveDaysFor(e.id);
+    const effectiveDays = active || workingDays;
+    const hrs = prorate(hoursWorked[e.id] || 160, effectiveDays);
     const ot = overtime[e.id] || 0;
     return s + (e.hourlyRate || 0) * Math.min(hrs, 208) + (e.hourlyRate || 0) * 1.5 * ot;
   }, 0);
 
   const totalBasicCost = basicEmployees.reduce((s, e) => {
-    return s + (e.baseSalary || 0) + (e.housingAllowance || 0) + (e.transportAllowance || 0) + (e.medicalAllowance || 0) + (e.otherAllowances || 0);
+    const { active } = getActiveDaysFor(e.id);
+    const effectiveDays = active || workingDays;
+    const fullPay = (e.baseSalary || 0) + (e.housingAllowance || 0) + (e.transportAllowance || 0) + (e.medicalAllowance || 0) + (e.otherAllowances || 0);
+    return s + prorate(fullPay, effectiveDays);
   }, 0);
 
   const startEdit = (e: Employee) => {
@@ -115,11 +158,13 @@ export default function HRPayrollPage() {
     const currentList = tab === 'hourly' ? hourlyEmployees : basicEmployees;
     if (currentList.length === 0) { toast.error('No employees to publish'); return; }
     const draftRecords = currentList.map((e) => {
-      const hrs = hoursWorked[e.id] || (tab === 'hourly' ? 160 : 0);
+      const { active } = getActiveDaysFor(e.id);
+      const effectiveDays = active || workingDays;
+      const hrs = tab === 'hourly' ? prorate(hoursWorked[e.id] || 160, effectiveDays) : 0;
       const ot = overtime[e.id] || 0;
       const gross = tab === 'hourly'
         ? (e.hourlyRate || 0) * Math.min(hrs, 208) + (e.hourlyRate || 0) * 1.5 * ot
-        : (e.baseSalary || 0) + (e.housingAllowance || 0) + (e.transportAllowance || 0) + (e.medicalAllowance || 0) + (e.otherAllowances || 0);
+        : prorate((e.baseSalary || 0) + (e.housingAllowance || 0) + (e.transportAllowance || 0) + (e.medicalAllowance || 0) + (e.otherAllowances || 0), effectiveDays);
       const deductions = Math.max(0, (gross - 24000) * 0.3) + Math.min(gross * 0.06, 2160) + 1700;
       return {
         id: `tmp-${e.id}-${Date.now()}`,
@@ -127,12 +172,16 @@ export default function HRPayrollPage() {
         period,
         payType: e.payType,
         hourlyRate: e.hourlyRate || 0,
-        hoursWorked: hrs,
-        basicPay: tab === 'hourly' ? 0 : e.baseSalary || 0,
+        hoursWorked: Math.round(hrs),
+        basicPay: tab === 'hourly' ? 0 : Math.round(prorate(e.baseSalary || 0, effectiveDays)),
+        housingAllowance: tab === 'hourly' ? 0 : Math.round(prorate(e.housingAllowance || 0, effectiveDays)),
+        transportAllowance: tab === 'hourly' ? 0 : Math.round(prorate(e.transportAllowance || 0, effectiveDays)),
+        medicalAllowance: tab === 'hourly' ? 0 : Math.round(prorate(e.medicalAllowance || 0, effectiveDays)),
+        otherAllowances: tab === 'hourly' ? 0 : Math.round(prorate(e.otherAllowances || 0, effectiveDays)),
         overtime: ot,
-        grossPay: gross,
-        deductions,
-        netPay: gross - deductions,
+        grossPay: Math.round(gross),
+        deductions: Math.round(deductions),
+        netPay: Math.round(gross - deductions),
         status: 'Published' as const,
         createdAt: new Date().toISOString(),
       };
@@ -142,27 +191,12 @@ export default function HRPayrollPage() {
 
   const handlePrintPayslip = (p: Payslip) => {
     setSelectedPayslip(p);
-    setTimeout(() => {
-      window.print();
-    }, 200);
+    setTimeout(() => { window.print(); }, 200);
   };
 
   const handlePrintAll = () => {
     setSelectedPayslip(null);
-    setTimeout(() => {
-      window.print();
-    }, 200);
-  };
-
-  const handleSearchPayslip = () => {
-    if (!payrollNumberSearch.trim()) { toast.error('Enter a payroll number'); return; }
-    const found = getPayslipByEmployee(payrollNumberSearch.trim());
-    if (found) {
-      setSelectedPayslip(found);
-      setShowPayslipModal(true);
-    } else {
-      toast.error('No payslip found for that payroll number');
-    }
+    setTimeout(() => { window.print(); }, 200);
   };
 
   const currentPeriodPayslips = getPayslipsByPeriod(period);
@@ -185,10 +219,8 @@ export default function HRPayrollPage() {
         description={pageTab === 'setup' ? 'Configure and publish payroll' : 'View and print payslips'}
       >
         {pageTab === 'setup' ? (
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
-          >
+          <button onClick={() => setShowAddModal(true)}
+            className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Plus className="w-4 h-4" /> Add to Payroll
           </button>
         ) : (
@@ -234,26 +266,35 @@ export default function HRPayrollPage() {
             </button>
           </div>
 
-          {/* Period selector */}
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-muted-foreground">Pay Period:</label>
-            <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-input bg-background text-sm" />
+          {/* Period + summary */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-muted-foreground">Pay Period:</label>
+              <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-input bg-background text-sm" />
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="w-4 h-4" />
+              <span>{workingDays} working days</span>
+              <span className="text-xs">(Mon-Fri)</span>
+            </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             {tab === 'hourly' ? (
               <>
                 <StatCard title="Hourly Workers" value={String(hourlyEmployees.length)} description="Active employees" icon={Clock} />
-                <StatCard title="Est. Monthly Cost" value={formatCurrency(totalHourlyCost)} description="Based on entered hours" icon={DollarSign} iconColor="gradient-primary" />
+                <StatCard title="Est. Monthly Cost" value={formatCurrency(totalHourlyCost)} description="Prorated by active days" icon={DollarSign} iconColor="gradient-primary" />
                 <StatCard title="Avg Hourly Rate" value={hourlyEmployees.length ? formatCurrency(Math.round(hourlyEmployees.reduce((s, e) => s + (e.hourlyRate || 0), 0) / hourlyEmployees.length)) : 'KSh 0'} description="Across all hourly workers" icon={Users} />
+                <StatCard title="Working Days" value={`${workingDays}`} description="Mon-Fri this period" icon={Calendar} />
               </>
             ) : (
               <>
                 <StatCard title="Basic/Salary Workers" value={String(basicEmployees.length)} description="Active employees" icon={Users} />
-                <StatCard title="Est. Monthly Cost" value={formatCurrency(totalBasicCost)} description="Salaries + allowances" icon={DollarSign} iconColor="gradient-primary" />
+                <StatCard title="Est. Monthly Cost" value={formatCurrency(totalBasicCost)} description="Prorated by active days" icon={DollarSign} iconColor="gradient-primary" />
                 <StatCard title="Avg Salary" value={basicEmployees.length ? formatCurrency(Math.round(basicEmployees.reduce((s, e) => s + (e.baseSalary || 0), 0) / basicEmployees.length)) : 'KSh 0'} description="Base salary average" icon={Clock} />
+                <StatCard title="Working Days" value={`${workingDays}`} description="Mon-Fri this period" icon={Calendar} />
               </>
             )}
           </div>
@@ -283,6 +324,11 @@ export default function HRPayrollPage() {
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground">Employee</th>
+                      <th className="text-center px-4 py-3 font-medium text-muted-foreground">
+                        <span className="flex items-center justify-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" /> Active / {workingDays}
+                        </span>
+                      </th>
                       {tab === 'hourly' ? (
                         <>
                           <th className="text-center px-4 py-3 font-medium text-muted-foreground">Hourly Rate</th>
@@ -297,7 +343,7 @@ export default function HRPayrollPage() {
                           <th className="text-center px-4 py-3 font-medium text-muted-foreground">Transport</th>
                           <th className="text-center px-4 py-3 font-medium text-muted-foreground">Medical</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Other</th>
-                          <th className="text-right px-4 py-3 font-medium text-muted-foreground">Total</th>
+                          <th className="text-right px-4 py-3 font-medium text-muted-foreground">Prorated Total</th>
                         </>
                       )}
                       <th className="text-center px-4 py-3 font-medium text-muted-foreground">Actions</th>
@@ -306,10 +352,18 @@ export default function HRPayrollPage() {
                   <tbody>
                     {currentList.map((e) => {
                       const isEditing = editingId === e.id;
-                      const gross = tab === 'hourly'
+                      const { active, absent } = getActiveDaysFor(e.id);
+                      const effectiveDays = active || workingDays;
+                      const isExpanded = expandedId === e.id && isEditing;
+
+                      const rawGross = tab === 'hourly'
                         ? ((hoursWorked[e.id] || 160) * (e.hourlyRate || 0)) + ((overtime[e.id] || 0) * (e.hourlyRate || 0) * 1.5)
                         : (e.baseSalary || 0) + (e.housingAllowance || 0) + (e.transportAllowance || 0) + (e.medicalAllowance || 0) + (e.otherAllowances || 0);
-                      const isExpanded = expandedId === e.id && isEditing;
+
+                      const proratedGross = tab === 'hourly'
+                        ? ((hoursWorked[e.id] || 160) * (e.hourlyRate || 0)) * (effectiveDays / workingDays) + ((overtime[e.id] || 0) * (e.hourlyRate || 0) * 1.5)
+                        : prorate(rawGross, effectiveDays);
+
                       return (
                         <tr key={e.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                           <td className="px-4 py-3">
@@ -360,6 +414,27 @@ export default function HRPayrollPage() {
                               </div>
                             </div>
                           </td>
+
+                          {/* Active Days Column */}
+                          <td className="px-4 py-3 text-center">
+                            <div className="flex flex-col items-center gap-0.5">
+                              {active > 0 || absent > 0 ? (
+                                <>
+                                  <span className="font-medium text-sm flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3 text-success" /> {active}
+                                  </span>
+                                  {absent > 0 && (
+                                    <span className="text-[10px] flex items-center gap-0.5 text-destructive">
+                                      <XCircle className="w-2.5 h-2.5" /> {absent} absent
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">{workingDays}</span>
+                              )}
+                            </div>
+                          </td>
+
                           {tab === 'hourly' ? (
                             <>
                               <td className="px-4 py-3 text-center">
@@ -381,7 +456,12 @@ export default function HRPayrollPage() {
                                   onChange={(ev) => setOvertime({ ...overtime, [e.id]: Number(ev.target.value) })}
                                   className="w-20 px-2 py-1 rounded border border-input bg-background text-sm text-center" min={0} />
                               </td>
-                              <td className="px-4 py-3 text-right font-medium text-primary">{formatCurrency(gross)}</td>
+                              <td className="px-4 py-3 text-right">
+                                <span className="font-medium text-primary">{formatCurrency(proratedGross)}</span>
+                                {effectiveDays !== workingDays && (
+                                  <p className="text-[10px] text-muted-foreground">prorated</p>
+                                )}
+                              </td>
                             </>
                           ) : (
                             <>
@@ -420,9 +500,15 @@ export default function HRPayrollPage() {
                                     className="w-20 px-2 py-1 rounded border border-input bg-background text-sm text-center" min={0} />
                                 ) : (<span className="text-sm">{formatCurrency(e.otherAllowances || 0)}</span>)}
                               </td>
-                              <td className="px-4 py-3 text-right font-medium text-primary">{formatCurrency(gross)}</td>
+                              <td className="px-4 py-3 text-right">
+                                <span className="font-medium text-primary">{formatCurrency(proratedGross)}</span>
+                                {effectiveDays !== workingDays && (
+                                  <p className="text-[10px] text-muted-foreground">prorated</p>
+                                )}
+                              </td>
                             </>
                           )}
+
                           <td className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-1">
                               {isEditing ? (
@@ -444,6 +530,7 @@ export default function HRPayrollPage() {
                     <tfoot>
                       <tr className="bg-muted/30 font-bold">
                         <td className="px-4 py-3">Total</td>
+                        <td className="px-4 py-3" />
                         <td className="px-4 py-3 text-center">{formatCurrency(basicEmployees.reduce((s, e) => s + (e.baseSalary || 0), 0))}</td>
                         <td className="px-4 py-3 text-center">{formatCurrency(basicEmployees.reduce((s, e) => s + (e.housingAllowance || 0), 0))}</td>
                         <td className="px-4 py-3 text-center">{formatCurrency(basicEmployees.reduce((s, e) => s + (e.transportAllowance || 0), 0))}</td>
@@ -463,8 +550,8 @@ export default function HRPayrollPage() {
           {currentList.length > 0 && (
             <div className="glass rounded-xl p-6 text-center">
               <p className="text-muted-foreground mb-2">
-                Publish this {tab === 'hourly' ? 'hourly' : 'basic'} payroll data for period <strong>{period}</strong>.
-                Accounting will process payments and generate payslips.
+                Publish this {tab === 'hourly' ? 'hourly' : 'basic'} payroll for <strong>{period}</strong>.
+                Pay is prorated by active days from attendance. Accounting will process payments and generate payslips.
               </p>
               <button onClick={handlePublish}
                 className="gradient-primary text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium inline-flex items-center gap-2 hover:opacity-90 transition-opacity">
@@ -551,9 +638,7 @@ export default function HRPayrollPage() {
             <div className="glass rounded-xl p-12 text-center">
               <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Payslips Yet</h3>
-              <p className="text-muted-foreground">
-                Payslips appear here once Accounting processes the published payroll and generates them.
-              </p>
+              <p className="text-muted-foreground">Payslips appear here once Accounting processes the published payroll and generates them.</p>
             </div>
           ) : (
             <div className="glass rounded-xl overflow-hidden">
@@ -598,7 +683,6 @@ export default function HRPayrollPage() {
             </div>
           )}
 
-          {/* Payslip View Modal */}
           {showPayslipModal && selectedPayslip && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
               <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-2xl m-4 max-h-[90vh] overflow-y-auto">
@@ -612,7 +696,7 @@ export default function HRPayrollPage() {
                     <button onClick={() => setShowPayslipModal(false)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
                   </div>
                 </div>
-                <div ref={printRef} className="p-6">
+                <div ref={printRef} id="print-pslip-area" className="p-6">
                   <PayslipDocument payslip={selectedPayslip} />
                 </div>
               </div>
@@ -621,9 +705,15 @@ export default function HRPayrollPage() {
         </div>
       )}
 
-      {/* Hidden print-all container */}
+      <style>{`
+@media print {
+  body > *:not(#print-pslip-area):not(#print-pslip-all) { display: none !important; }
+  #print-pslip-area, #print-pslip-all { display: block !important; position: absolute; top: 0; left: 0; width: 100%; }
+  #print-pslip-area > *, #print-pslip-all > * { page-break-inside: avoid; }
+}
+`}</style>
       {pageTab === 'payslips' && !selectedPayslip && filteredPayslips.length > 0 && (
-        <div className="hidden print:block">
+        <div id="print-pslip-all" className="hidden print:block">
           {filteredPayslips.map((p) => (
             <div key={p.id} className="p-6 mb-8 border-b border-gray-300">
               <PayslipDocument payslip={p} />
@@ -643,7 +733,6 @@ function PayslipDocument({ payslip: p }: { payslip: Payslip }) {
         <p className="text-muted-foreground">KRA PIN: {p.companyKraPin || 'A123456789Z'}</p>
         <h3 className="text-lg font-semibold mt-2">PAYSLIP — {p.period}</h3>
       </div>
-
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div>
           <p><span className="text-muted-foreground">Employee:</span> <strong>{p.employeeName}</strong></p>
@@ -655,10 +744,9 @@ function PayslipDocument({ payslip: p }: { payslip: Payslip }) {
           <p><span className="text-muted-foreground">Payslip #:</span> <strong>{p.payslipNumber}</strong></p>
           <p><span className="text-muted-foreground">Period:</span> {p.period}</p>
           <p><span className="text-muted-foreground">Payment Date:</span> {p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : '-'}</p>
-          <p><span className="text-muted-foreground">Leave Days:</span> {p.paidLeaveDays} paid / {p.unpaidLeaveDays} absent / {p.sickLeaveDays} sick</p>
+          <p><span className="text-muted-foreground">Leave:</span> {p.paidLeaveDays}p / {p.unpaidLeaveDays}a / {p.sickLeaveDays}s</p>
         </div>
       </div>
-
       <div className="grid grid-cols-2 gap-6 mb-6">
         <div>
           <h4 className="font-semibold mb-2 border-b pb-1">EARNINGS</h4>
@@ -686,7 +774,6 @@ function PayslipDocument({ payslip: p }: { payslip: Payslip }) {
           </table>
         </div>
       </div>
-
       <div className="border-t pt-4 text-right">
         <p className="text-lg font-bold">NET PAY: <span className="text-primary">{formatCurrency(p.netPay)}</span></p>
         <p className="text-xs text-muted-foreground mt-1">Generated on {new Date(p.generatedAt).toLocaleString()}</p>

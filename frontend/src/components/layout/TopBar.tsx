@@ -1,6 +1,6 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/store/authStore';
-import { Bell, Search, ChevronDown, Settings, LogOut, User } from 'lucide-react';
+import { Bell, Search, ChevronDown, Settings, LogOut, User, Shield } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { countries } from '@/utils/countries';
 import { useNavigate } from 'react-router-dom';
@@ -90,8 +90,12 @@ export function TopBar() {
       {/* User Avatar + Dropdown */}
       <div className="relative" ref={userRef}>
         <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-2 sm:gap-2.5 pl-2 border-l border-border hover:bg-muted/30 rounded-lg py-1 pr-2 transition-colors">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-xs sm:text-sm font-semibold">
-            {user?.name?.charAt(0) || 'H'}
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden gradient-primary flex items-center justify-center text-primary-foreground text-xs sm:text-sm font-semibold">
+            {user?.avatar ? (
+              <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              user?.name?.charAt(0) || 'H'
+            )}
           </div>
           <div className="hidden sm:block text-left">
             <p className="text-sm font-medium leading-none">{user?.name || 'User'}</p>
@@ -115,6 +119,12 @@ export function TopBar() {
                 className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted/50 transition-colors text-left">
                 <User className="w-4 h-4 text-muted-foreground" /> Profile
               </button>
+              {user?.role === 'admin' && (
+                <button onClick={() => { setShowUserMenu(false); navigate('/admin'); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted/50 transition-colors text-left">
+                  <Shield className="w-4 h-4 text-muted-foreground" /> Admin Panel
+                </button>
+              )}
               <button onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-destructive/10 text-destructive transition-colors text-left">
                 <LogOut className="w-4 h-4" /> Logout
