@@ -152,18 +152,37 @@ app.post('/api/payroll/export-payslips', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'No payroll items to export' });
     }
 
-    // Expected fields (coming from frontend PayrollPage computed rows)
-    // We'll export a safe subset with fallback defaults.
     const fields = [
       { key: 'employeeNo', header: 'Employee No' },
+      { key: 'payrollNumber', header: 'Payroll Number' },
       { key: 'firstName', header: 'First Name' },
       { key: 'lastName', header: 'Last Name' },
       { key: 'department', header: 'Department' },
-      { key: 'gross', header: 'Gross' },
+      { key: 'position', header: 'Position' },
+      { key: 'payType', header: 'Pay Type' },
+      { key: 'employmentType', header: 'Employment Type' },
+      { key: 'basicPay', header: 'Basic Pay' },
+      { key: 'housingAllowance', header: 'Housing Allowance' },
+      { key: 'transportAllowance', header: 'Transport Allowance' },
+      { key: 'medicalAllowance', header: 'Medical Allowance' },
+      { key: 'otherAllowances', header: 'Other Allowances' },
+      { key: 'hourlyRate', header: 'Hourly Rate' },
+      { key: 'hoursWorked', header: 'Hours Worked' },
+      { key: 'overtime', header: 'Overtime' },
+      { key: 'gross', header: 'Gross Pay' },
       { key: 'paye', header: 'PAYE' },
       { key: 'nssf', header: 'NSSF' },
       { key: 'nhif', header: 'NHIF' },
+      { key: 'otherDeductions', header: 'Other Deductions' },
+      { key: 'totalDeductions', header: 'Total Deductions' },
       { key: 'netPay', header: 'Net Pay' },
+      { key: 'paidLeaveDays', header: 'Paid Leave Days' },
+      { key: 'unpaidLeaveDays', header: 'Unpaid Absent Days' },
+      { key: 'sickLeaveDays', header: 'Sick Leave Days' },
+      { key: 'status', header: 'Status' },
+      { key: 'period', header: 'Period' },
+      { key: 'paymentDate', header: 'Payment Date' },
+      { key: 'createdAt', header: 'Created At' },
     ];
 
     const escapeCsv = (v) => {
@@ -192,6 +211,64 @@ app.post('/api/payroll/export-payslips', requireAuth, async (req, res) => {
   }
 });
 
+// --- Payslip generation ---
+app.post('/api/payroll/generate-payslip', requireAuth, async (req, res) => {
+  try {
+    const { recordId } = req.body;
+    if (!recordId) return res.status(400).json({ error: 'recordId is required' });
+
+    const records = await db.find('payroll', (r) => r.id === recordId);
+    if (records.length === 0) return res.status(404).json({ error: 'Payroll record not found' });
+    const record = records[0];
+
+    const employees = await db.find('employees', (e) => e.id === record.employeeId);
+    const emp = employees[0] || {};
+
+    const gross = record.grossPay || 0;
+    const paye = Math.max(0, (gross - 24000) * 0.3);
+    const nssf = Math.min(gross * 0.06, 2160);
+    const nhif = 1700;
+
+    const payslip = {
+      id: `ps-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      payrollRecordId: recordId,
+      employeeId: record.employeeId,
+      payslipNumber: `PSL-${record.period.replace('-', '')}-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+      period: record.period,
+      employeeName: `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || record.employeeId,
+      payrollNumber: emp.payrollNumber || record.employeeId,
+      department: emp.department || '',
+      position: emp.position || '',
+      basicPay: record.basicPay || 0,
+      housingAllowance: emp.housingAllowance || 0,
+      transportAllowance: emp.transportAllowance || 0,
+      medicalAllowance: emp.medicalAllowance || 0,
+      otherAllowances: emp.otherAllowances || 0,
+      overtime: record.overtime || 0,
+      grossPay: gross,
+      paye,
+      nssf,
+      nhif,
+      totalDeductions: record.deductions || 0,
+      netPay: record.netPay || 0,
+      paidLeaveDays: emp.paidLeaveDays || 0,
+      unpaidLeaveDays: emp.unpaidLeaveDays || 0,
+      sickLeaveDays: emp.sickLeaveDays || 0,
+      paymentDate: record.paidAt || new Date().toISOString(),
+      companyName: 'HEYLA OS SOLUTIONS LTD',
+      companyKraPin: 'A123456789Z',
+      generatedAt: new Date().toISOString(),
+    };
+
+    const created = await db.insert('payslips', payslip);
+    await db.update('payroll', recordId, { payslipGeneratedAt: new Date().toISOString() });
+    res.status(201).json(created);
+  } catch (e) {
+    console.error('Generate payslip error:', e);
+    res.status(500).json({ error: 'Failed to generate payslip' });
+  }
+});
+
 // Generic CRUD modules
 const crudCollections = [
   // HR
@@ -201,6 +278,7 @@ const crudCollections = [
   'leads', 'customers', 'tickets',
   // Accounting
   'invoices', 'expenses', 'payments', 'payroll',
+  'payslips',
   // Inventory
   'products',
   // Transport / fuel

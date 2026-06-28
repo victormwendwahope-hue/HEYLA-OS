@@ -2,6 +2,7 @@ export type PayType = 'Hourly' | 'Salary' | 'Basic';
 
 export interface Employee {
   id: string;
+  payrollNumber: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -30,6 +31,9 @@ export interface Employee {
   emergencyPhone: string;
   bankName: string;
   bankAccount: string;
+  paidLeaveDays: number;
+  unpaidLeaveDays: number;
+  sickLeaveDays: number;
 }
 
 export interface PayrollRecord {
@@ -44,10 +48,41 @@ export interface PayrollRecord {
   grossPay: number;
   deductions: number;
   netPay: number;
-  status: 'Draft' | 'Approved' | 'Paid';
-  approvedBy?: string;
+  status: 'Draft' | 'Published' | 'Paid';
   paidAt?: string;
+  payslipGeneratedAt?: string;
   createdAt: string;
+}
+
+export interface Payslip {
+  id: string;
+  payrollRecordId: string;
+  employeeId: string;
+  payslipNumber: string;
+  period: string;
+  employeeName: string;
+  payrollNumber: string;
+  department: string;
+  position: string;
+  basicPay: number;
+  housingAllowance: number;
+  transportAllowance: number;
+  medicalAllowance: number;
+  otherAllowances: number;
+  overtime: number;
+  grossPay: number;
+  paye: number;
+  nssf: number;
+  nhif: number;
+  totalDeductions: number;
+  netPay: number;
+  paidLeaveDays: number;
+  unpaidLeaveDays: number;
+  sickLeaveDays: number;
+  paymentDate: string;
+  companyName: string;
+  companyKraPin: string;
+  generatedAt: string;
 }
 
 export interface Lead {
