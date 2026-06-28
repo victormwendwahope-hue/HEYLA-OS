@@ -39,6 +39,7 @@ export default function HRPayrollPage() {
   const [editValues, setEditValues] = useState<Record<string, number>>({});
   const [hoursWorked, setHoursWorked] = useState<Record<string, number>>({});
   const [overtime, setOvertime] = useState<Record<string, number>>({});
+  const [overtime2, setOvertime2] = useState<Record<string, number>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({ employeeId: '', rate: 0, transport: 0, housing: 0, medical: 0, other: 0 });
@@ -87,7 +88,8 @@ export default function HRPayrollPage() {
     const effectiveDays = active || workingDays;
     const hrs = prorate(hoursWorked[e.id] || 160, effectiveDays);
     const ot = overtime[e.id] || 0;
-    return s + (e.hourlyRate || 0) * Math.min(hrs, 208) + (e.hourlyRate || 0) * 1.5 * ot;
+    const ot2 = overtime2[e.id] || 0;
+    return s + (e.hourlyRate || 0) * Math.min(hrs, 208) + (e.hourlyRate || 0) * 1.5 * ot + (e.hourlyRate || 0) * 2.0 * ot2;
   }, 0);
 
   const totalBasicCost = basicEmployees.reduce((s, e) => {
@@ -162,8 +164,9 @@ export default function HRPayrollPage() {
       const effectiveDays = active || workingDays;
       const hrs = tab === 'hourly' ? prorate(hoursWorked[e.id] || 160, effectiveDays) : 0;
       const ot = overtime[e.id] || 0;
+      const ot2 = overtime2[e.id] || 0;
       const gross = tab === 'hourly'
-        ? (e.hourlyRate || 0) * Math.min(hrs, 208) + (e.hourlyRate || 0) * 1.5 * ot
+        ? (e.hourlyRate || 0) * Math.min(hrs, 208) + (e.hourlyRate || 0) * 1.5 * ot + (e.hourlyRate || 0) * 2.0 * ot2
         : prorate((e.baseSalary || 0) + (e.housingAllowance || 0) + (e.transportAllowance || 0) + (e.medicalAllowance || 0) + (e.otherAllowances || 0), effectiveDays);
       const deductions = Math.max(0, (gross - 24000) * 0.3) + Math.min(gross * 0.06, 2160) + 1700;
       return {
@@ -179,6 +182,7 @@ export default function HRPayrollPage() {
         medicalAllowance: tab === 'hourly' ? 0 : Math.round(prorate(e.medicalAllowance || 0, effectiveDays)),
         otherAllowances: tab === 'hourly' ? 0 : Math.round(prorate(e.otherAllowances || 0, effectiveDays)),
         overtime: ot,
+        overtime2: ot2,
         grossPay: Math.round(gross),
         deductions: Math.round(deductions),
         netPay: Math.round(gross - deductions),
@@ -342,7 +346,8 @@ export default function HRPayrollPage() {
                         <>
                           <th className="text-center px-4 py-3 font-medium text-muted-foreground">Hourly Rate</th>
                           <th className="text-center px-4 py-3 font-medium text-muted-foreground">Hours/Month</th>
-                          <th className="text-center px-4 py-3 font-medium text-muted-foreground">Overtime</th>
+                          <th className="text-center px-4 py-3 font-medium text-muted-foreground">OT1</th>
+                          <th className="text-center px-4 py-3 font-medium text-muted-foreground">OT2 (Public)</th>
                           <th className="text-right px-4 py-3 font-medium text-muted-foreground">Est. Gross</th>
                         </>
                       ) : (
@@ -366,11 +371,11 @@ export default function HRPayrollPage() {
                       const isExpanded = expandedId === e.id && isEditing;
 
                       const rawGross = tab === 'hourly'
-                        ? ((hoursWorked[e.id] || 160) * (e.hourlyRate || 0)) + ((overtime[e.id] || 0) * (e.hourlyRate || 0) * 1.5)
+                        ? ((hoursWorked[e.id] || 160) * (e.hourlyRate || 0)) + ((overtime[e.id] || 0) * (e.hourlyRate || 0) * 1.5) + ((overtime2[e.id] || 0) * (e.hourlyRate || 0) * 2.0)
                         : (e.baseSalary || 0) + (e.housingAllowance || 0) + (e.transportAllowance || 0) + (e.medicalAllowance || 0) + (e.otherAllowances || 0);
 
                       const proratedGross = tab === 'hourly'
-                        ? ((hoursWorked[e.id] || 160) * (e.hourlyRate || 0)) * (effectiveDays / workingDays) + ((overtime[e.id] || 0) * (e.hourlyRate || 0) * 1.5)
+                        ? ((hoursWorked[e.id] || 160) * (e.hourlyRate || 0)) * (effectiveDays / workingDays) + ((overtime[e.id] || 0) * (e.hourlyRate || 0) * 1.5) + ((overtime2[e.id] || 0) * (e.hourlyRate || 0) * 2.0)
                         : prorate(rawGross, effectiveDays);
 
                       return (
@@ -463,7 +468,12 @@ export default function HRPayrollPage() {
                               <td className="px-4 py-3 text-center">
                                 <input type="number" value={overtime[e.id] ?? 0}
                                   onChange={(ev) => setOvertime({ ...overtime, [e.id]: Number(ev.target.value) })}
-                                  className="w-20 px-2 py-1 rounded border border-input bg-background text-sm text-center" min={0} />
+                                  className="w-20 px-2 py-1 rounded border border-input bg-background text-sm text-center" min={0} title="OT1: Regular overtime (×1.5)" />
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <input type="number" value={overtime2[e.id] ?? 0}
+                                  onChange={(ev) => setOvertime2({ ...overtime2, [e.id]: Number(ev.target.value) })}
+                                  className="w-20 px-2 py-1 rounded border border-input bg-background text-sm text-center" min={0} title="OT2: Public holiday duty (×2.0)" />
                               </td>
                               <td className="px-4 py-3 text-right">
                                 <span className="font-medium text-primary">{formatCurrency(proratedGross)}</span>
@@ -787,7 +797,8 @@ function buildPayslipHtml(p: Payslip): string {
         ${row('Transport Allowance', formatCurrency(p.transportAllowance))}
         ${row('Medical Allowance', formatCurrency(p.medicalAllowance))}
         ${row('Other Allowances', formatCurrency(p.otherAllowances))}
-        ${p.overtime > 0 ? row('Overtime', formatCurrency(p.overtime)) : ''}
+        ${p.overtime > 0 ? row('Overtime (OT1 ×1.5)', formatCurrency(p.overtime)) : ''}
+        ${p.overtime2 > 0 ? row('Public Holiday (OT2 ×2.0)', formatCurrency(p.overtime2)) : ''}
         ${boldRow('GROSS PAY', formatCurrency(p.grossPay), '#2563eb')}
       </table>
     </div>
@@ -840,7 +851,8 @@ function PayslipDocument({ payslip: p }: { payslip: Payslip }) {
               <tr><td className="py-1">Transport Allowance</td><td className="text-right">{formatCurrency(p.transportAllowance)}</td></tr>
               <tr><td className="py-1">Medical Allowance</td><td className="text-right">{formatCurrency(p.medicalAllowance)}</td></tr>
               <tr><td className="py-1">Other Allowances</td><td className="text-right">{formatCurrency(p.otherAllowances)}</td></tr>
-              {p.overtime > 0 && <tr><td className="py-1">Overtime</td><td className="text-right">{formatCurrency(p.overtime)}</td></tr>}
+              {p.overtime > 0 && <tr><td className="py-1">Overtime (OT1 ×1.5)</td><td className="text-right">{formatCurrency(p.overtime)}</td></tr>}
+              {p.overtime2 > 0 && <tr><td className="py-1">Public Holiday (OT2 ×2.0)</td><td className="text-right">{formatCurrency(p.overtime2)}</td></tr>}
               <tr className="border-t font-bold"><td className="py-2">GROSS PAY</td><td className="text-right text-primary">{formatCurrency(p.grossPay)}</td></tr>
             </tbody>
           </table>
@@ -869,13 +881,13 @@ function exportPayslipsCsv(payslips: Payslip[]): string {
   const headers = [
     'PayslipNumber', 'Period', 'EmployeeName', 'PayrollNumber', 'Department', 'Position',
     'BasicPay', 'HousingAllowance', 'TransportAllowance', 'MedicalAllowance', 'OtherAllowances',
-    'Overtime', 'GrossPay', 'PAYE', 'NSSF', 'NHIF', 'TotalDeductions', 'NetPay',
+    'Overtime1', 'Overtime2', 'GrossPay', 'PAYE', 'NSSF', 'NHIF', 'TotalDeductions', 'NetPay',
     'PaidLeaveDays', 'UnpaidLeaveDays', 'SickLeaveDays', 'PaymentDate'
   ];
   const rows = payslips.map((p) => [
     p.payslipNumber, p.period, p.employeeName, p.payrollNumber, p.department, p.position,
     p.basicPay, p.housingAllowance, p.transportAllowance, p.medicalAllowance, p.otherAllowances,
-    p.overtime, p.grossPay, p.paye, p.nssf, p.nhif, p.totalDeductions, p.netPay,
+    p.overtime, p.overtime2, p.grossPay, p.paye, p.nssf, p.nhif, p.totalDeductions, p.netPay,
     p.paidLeaveDays, p.unpaidLeaveDays, p.sickLeaveDays, p.paymentDate
   ].join(','));
   return [headers.join(','), ...rows].join('\n');

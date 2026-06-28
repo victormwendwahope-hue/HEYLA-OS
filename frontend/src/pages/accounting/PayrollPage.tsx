@@ -383,7 +383,8 @@ function buildPayslipHtml(p: Payslip): string {
         ${row('Transport Allowance', formatCurrency(p.transportAllowance))}
         ${row('Medical Allowance', formatCurrency(p.medicalAllowance))}
         ${row('Other Allowances', formatCurrency(p.otherAllowances))}
-        ${p.overtime > 0 ? row('Overtime', formatCurrency(p.overtime)) : ''}
+        ${p.overtime > 0 ? row('Overtime (OT1 ×1.5)', formatCurrency(p.overtime)) : ''}
+        ${p.overtime2 > 0 ? row('Public Holiday (OT2 ×2.0)', formatCurrency(p.overtime2)) : ''}
         ${boldRow('GROSS PAY', formatCurrency(p.grossPay), '#2563eb')}
       </table>
     </div>
@@ -438,7 +439,8 @@ function PayslipDetail({ payslip: p }: { payslip: Payslip }) {
               <tr><td className="py-1">Transport Allowance</td><td className="text-right">{formatCurrency(p.transportAllowance)}</td></tr>
               <tr><td className="py-1">Medical Allowance</td><td className="text-right">{formatCurrency(p.medicalAllowance)}</td></tr>
               <tr><td className="py-1">Other Allowances</td><td className="text-right">{formatCurrency(p.otherAllowances)}</td></tr>
-              {p.overtime > 0 && <tr><td className="py-1">Overtime</td><td className="text-right">{formatCurrency(p.overtime)}</td></tr>}
+              {p.overtime > 0 && <tr><td className="py-1">Overtime (OT1 ×1.5)</td><td className="text-right">{formatCurrency(p.overtime)}</td></tr>}
+              {p.overtime2 > 0 && <tr><td className="py-1">Public Holiday (OT2 ×2.0)</td><td className="text-right">{formatCurrency(p.overtime2)}</td></tr>}
               <tr className="border-t font-bold"><td className="py-2">GROSS PAY</td><td className="text-right text-primary">{formatCurrency(p.grossPay)}</td></tr>
             </tbody>
           </table>

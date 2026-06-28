@@ -49,6 +49,7 @@ export interface PayrollRecord {
   medicalAllowance: number;
   otherAllowances: number;
   overtime: number;
+  overtime2: number;
   grossPay: number;
   deductions: number;
   netPay: number;
@@ -74,6 +75,7 @@ export interface Payslip {
   medicalAllowance: number;
   otherAllowances: number;
   overtime: number;
+  overtime2: number;
   grossPay: number;
   paye: number;
   nssf: number;
