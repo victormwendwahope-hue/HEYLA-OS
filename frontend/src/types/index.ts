@@ -133,6 +133,19 @@ export interface Invoice {
   currency: string;
 }
 
+export interface EmployeeDocument {
+  id: string;
+  employeeId: string;
+  originalName: string;
+  filename: string;
+  mime: string;
+  size: number;
+  category: string;
+  description: string;
+  uploadedBy: string;
+  uploadedAt: string;
+}
+
 export interface User {
   id: string;
   email: string;

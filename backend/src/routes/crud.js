@@ -71,6 +71,12 @@ export function crudRouter(collection, opts = {}) {
     const { id, ownerId, createdAt, ...patch } = req.body;
     const row = await db.update(collection, req.params.id, patch);
     await audit(req, `${collection}.update`, `${collection}/${row.id}`);
+    // Post-update hook
+    if (opts.afterUpdate) {
+      opts.afterUpdate(existing, patch, row, req).catch((e) =>
+        console.error(`[crud] afterUpdate hook error for ${collection}:`, e)
+      );
+    }
     res.json(row);
   });
 

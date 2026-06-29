@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import path from 'node:path';
+import * as fs from 'node:fs/promises';
 
 import { db } from './db.js';
 import authRouter from './routes/auth.js';
@@ -16,6 +17,7 @@ import adminRouter from './routes/admin.js';
 import paymentRouter from './routes/payment.js';
 import { requireAuth } from './auth.js';
 import { crudRouter } from './routes/crud.js';
+import employeeDocumentsRouter from './routes/employee-documents.js';
 import { rateLimit, securityHeaders } from './security.js';
 
 
@@ -137,6 +139,9 @@ app.use('/api/ai', aiRouter);
 
 // Uploads
 app.use('/api/upload', uploadRouter);
+
+// Employee documents (per-employee file storage with auth)
+app.use('/api/employee-documents', employeeDocumentsRouter);
 
 // Admin
 app.use('/api/admin', adminRouter);
@@ -274,7 +279,7 @@ app.post('/api/payroll/generate-payslip', requireAuth, async (req, res) => {
 // Generic CRUD modules
 const crudCollections = [
   // HR
-  'employees', 'attendance', 'leave', 'performance',
+  'attendance', 'leave', 'performance',
   'wiba', 'injuries', 'blacklist', 'documents',
   // CRM
   'leads', 'customers', 'tickets',
@@ -303,6 +308,23 @@ const crudCollections = [
 for (const name of crudCollections) {
   app.use(`/api/${name}`, crudRouter(name));
 }
+
+// Employees with auto-delete on termination
+app.use('/api/employees', crudRouter('employees', {
+  afterUpdate: async (existing, patch, _updated, req) => {
+    if (patch.status === 'Terminated' && existing.status !== 'Terminated') {
+      const employeeDir = path.join(db.uploadsDir, 'employees', existing.id);
+      const docs = await db.find('employee-documents', (d) => d.employeeId === existing.id);
+      for (const doc of docs) {
+        const fp = path.join(employeeDir, doc.filename);
+        await fs.unlink(fp).catch(() => {});
+        await db.remove('employee-documents', doc.id);
+      }
+      await fs.rm(employeeDir, { recursive: true, force: true }).catch(() => {});
+      console.log(`[auto-clean] Deleted ${docs.length} document(s) for terminated employee ${existing.id}`);
+    }
+  },
+}));
 
 // 404
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));

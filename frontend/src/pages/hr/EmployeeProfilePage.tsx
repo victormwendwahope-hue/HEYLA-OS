@@ -2,9 +2,11 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEmployeeStore } from '@/store/employeeStore';
 import { StatusBadge } from '@/components/shared/CommonUI';
 import { formatCurrency } from '@/utils/countries';
-import { ArrowLeft, Mail, Phone, MapPin, Building2, Calendar, Trash2, Download, FileText } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Mail, Phone, MapPin, Building2, Calendar, Trash2, Download, FileText, Upload, Loader2, Trash } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { getToken, apiBaseUrl } from '@/lib/api';
+import { EmployeeDocument } from '@/types';
 
 export default function EmployeeProfilePage() {
   const { id } = useParams();
@@ -12,6 +14,86 @@ export default function EmployeeProfilePage() {
   const removeEmployee = useEmployeeStore((s) => s.removeEmployee);
   const navigate = useNavigate();
   const [tab, setTab] = useState('overview');
+  const [docs, setDocs] = useState<EmployeeDocument[]>([]);
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const token = getToken();
+  const baseUrl = apiBaseUrl();
+
+  const fetchDocs = async () => {
+    setDocsLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/employee-documents/list/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setDocs(await res.json());
+    } catch {} finally {
+      setDocsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tab === 'documents') fetchDocs();
+  }, [tab]);
+
+  const handleDocUpload = async () => {
+    if (uploadingFiles.length === 0) return;
+    setIsUploading(true);
+    try {
+      const fd = new FormData();
+      uploadingFiles.forEach((f) => fd.append('files', f));
+      const res = await fetch(`${baseUrl}/employee-documents/upload-multiple/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      if (!res.ok) throw new Error();
+      await fetchDocs();
+      setUploadingFiles([]);
+      toast.success('Documents uploaded');
+    } catch {
+      toast.error('Upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDocDelete = async (docId: string) => {
+    if (!confirm('Delete this document?')) return;
+    try {
+      const res = await fetch(`${baseUrl}/employee-documents/${docId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error();
+      setDocs((prev) => prev.filter((d) => d.id !== docId));
+      toast.success('Document deleted');
+    } catch {
+      toast.error('Delete failed');
+    }
+  };
+
+  const handleDocDownload = async (doc: EmployeeDocument) => {
+    try {
+      const res = await fetch(`${baseUrl}/employee-documents/download/${doc.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.originalName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Download failed');
+    }
+  };
 
   if (!employee) return (
     <div className="flex items-center justify-center h-96 text-muted-foreground">Employee not found.</div>
@@ -196,36 +278,67 @@ export default function EmployeeProfilePage() {
         );
       })()}
 
-      {tab === 'documents' && (() => {
-        const employeeDocs = [
-          { name: 'Employment Contract.pdf', type: 'Contract', date: '2023-01-15', size: '890 KB' },
-          { name: 'KRA PIN Certificate.pdf', type: 'Certificate', date: '2023-01-15', size: '450 KB' },
-          { name: 'National ID Copy.pdf', type: 'ID Document', date: '2023-01-10', size: '320 KB' },
-          { name: 'Performance Review Q4 2024.pdf', type: 'Review', date: '2025-01-10', size: '1.2 MB' },
-        ];
-        return (
-          <div className="glass rounded-xl p-5">
-            <h3 className="font-semibold mb-4">Documents</h3>
-            <div className="space-y-2">
-              {employeeDocs.map((doc) => (
-                <div key={doc.name} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-8 h-8 text-primary/60" />
-                    <div>
-                      <p className="text-sm font-medium">{doc.name}</p>
-                      <p className="text-xs text-muted-foreground">{doc.type} · {doc.date} · {doc.size}</p>
-                    </div>
-                  </div>
-                  <button onClick={() => toast.success(`Downloading ${doc.name}`)}
-                    className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                    <Download className="w-4 h-4" />
-                  </button>
+      {tab === 'documents' && (
+        <div className="glass rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Documents</h3>
+            <div className="flex items-center gap-2">
+              {uploadingFiles.length > 0 && (
+                <button onClick={handleDocUpload} disabled={isUploading}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg gradient-primary text-primary-foreground text-xs font-medium hover:opacity-90 disabled:opacity-50">
+                  {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                  Upload {uploadingFiles.length}
+                </button>
+              )}
+              <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted cursor-pointer">
+                <Upload className="w-3.5 h-3.5" /> Add Files
+                <input type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.csv,.txt"
+                  onChange={(e) => setUploadingFiles(Array.from(e.target.files || []))}
+                  className="hidden" />
+              </label>
+            </div>
+          </div>
+          {uploadingFiles.length > 0 && (
+            <div className="mb-4 p-3 rounded-lg bg-muted space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground">{uploadingFiles.length} pending</p>
+              {uploadingFiles.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs">
+                  <FileText className="w-3.5 h-3.5 text-muted-foreground" /> {f.name}
                 </div>
               ))}
             </div>
-          </div>
-        );
-      })()}
+          )}
+          {docsLoading ? (
+            <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+          ) : docs.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">No documents uploaded yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {docs.map((doc) => (
+                <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <FileText className="w-8 h-8 text-primary/60 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{doc.originalName}</p>
+                      <p className="text-xs text-muted-foreground">{doc.category} · {(doc.size / 1024).toFixed(0)} KB · {new Date(doc.uploadedAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => handleDocDownload(doc)}
+                      className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                      <Download className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDocDelete(doc.id)}
+                      className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
