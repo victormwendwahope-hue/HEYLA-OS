@@ -41,6 +41,7 @@ type Step = 'form' | 'documents';
 
 export default function AddEmployeeDialog({ open, onClose }: Props) {
   const addEmployee = useEmployeeStore((s) => s.addEmployee);
+  const employees = useEmployeeStore((s) => s.employees);
   const [step, setStep] = useState<Step>('form');
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -60,6 +61,14 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
   const gross = (Number(form.baseSalary) || 0) + (Number(form.housingAllowance) || 0) + (Number(form.transportAllowance) || 0) + (Number(form.medicalAllowance) || 0) + (Number(form.otherAllowances) || 0);
 
   const update = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
+
+  const generatePayrollNumber = () => {
+    const max = employees.reduce((m, e) => {
+      const num = parseInt((e.payrollNumber || '').replace('PAY-', ''), 10);
+      return isNaN(num) ? m : Math.max(m, num);
+    }, 0);
+    return `PAY-${String(max + 1).padStart(3, '0')}`;
+  };
 
   const reset = () => {
     setForm({
@@ -86,6 +95,7 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
     const emp = {
       ...form,
       id: Date.now().toString(),
+      payrollNumber: generatePayrollNumber(),
       baseSalary: Number(form.baseSalary) || 0,
       hourlyRate: Number(form.hourlyRate) || 0,
       housingAllowance: Number(form.housingAllowance) || 0,

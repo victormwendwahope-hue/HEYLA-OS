@@ -118,6 +118,7 @@ export default function EmployeeProfilePage() {
             <div className="flex flex-wrap items-center gap-3 mb-1">
               <h1 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h1>
               <StatusBadge status={employee.status} variant={employee.status === 'Active' ? 'success' : 'warning'} />
+              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{employee.payrollNumber}</span>
             </div>
             <p className="text-muted-foreground">{employee.position} · {employee.department}</p>
             <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">

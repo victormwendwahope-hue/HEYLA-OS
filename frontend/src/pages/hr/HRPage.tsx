@@ -70,6 +70,7 @@ export default function HRPage() {
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Employee</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">ID</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Department</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">Position</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Status</th>
@@ -78,7 +79,7 @@ export default function HRPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((e, i) => {
+                {filtered.map((e, i) => {
                 const gross = e.baseSalary + e.housingAllowance + e.transportAllowance + e.medicalAllowance + e.otherAllowances;
                 return (
                   <tr key={e.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors animate-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
@@ -93,6 +94,7 @@ export default function HRPage() {
                         </div>
                       </div>
                     </td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{e.payrollNumber || '-'}</td>
                     <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{e.department}</td>
                     <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{e.position}</td>
                     <td className="px-4 py-3 hidden sm:table-cell"><StatusBadge status={e.status} variant={statusVariant(e.status)} /></td>
