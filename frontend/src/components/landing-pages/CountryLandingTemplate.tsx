@@ -28,7 +28,7 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5" />
         <nav className="relative z-10 flex items-center justify-between px-4 sm:px-8 lg:px-16 py-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">H</div>
+            <img src="/logo.png?v=2" alt="HEYLA" className="w-8 h-8 rounded-lg" />
             <span className="text-lg font-bold">HEYLA<span className="text-primary"> OS</span></span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
@@ -50,7 +50,7 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
                 With One Platform
               </h1>
               <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
-                HEYLA OS is the all-in-one business management platform designed for {country.name}. 
+                HEYLA is the all-in-one business management platform designed for {country.name}. 
                 HR, CRM, Accounting, Inventory — all with {country.currency} support and local compliance.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
@@ -95,7 +95,7 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
       {/* Highlights */}
       <section className="px-4 sm:px-8 lg:px-16 py-12 bg-muted/20">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-xl sm:text-2xl font-bold text-center mb-8">Why Businesses in {country.name} Choose HEYLA OS</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-center mb-8">Why Businesses in {country.name} Choose HEYLA</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {highlights.map((h, i) => (
               <div key={i} className="flex items-start gap-3 bg-card border border-border rounded-xl p-4">
@@ -170,7 +170,7 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
       <section className="px-4 sm:px-8 lg:px-16 py-16">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Grow Your Business in {country.name}?</h2>
-          <p className="text-muted-foreground mb-8">Join thousands of businesses using HEYLA OS. Start free today.</p>
+          <p className="text-muted-foreground mb-8">Join thousands of businesses using HEYLA. Start free today.</p>
           <button onClick={() => navigate('/register')} className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors inline-flex items-center gap-2">
             Get Started Free <ArrowRight className="w-4 h-4" />
           </button>
@@ -182,9 +182,9 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">H</div>
-            <span className="text-sm font-semibold">HEYLA OS</span>
+            <span className="text-sm font-semibold">HEYLA</span>
           </div>
-          <p className="text-xs text-muted-foreground">© 2026 HEYLA OS. All rights reserved. {country.flag} {country.name}</p>
+          <p className="text-xs text-muted-foreground">© 2026 HEYLA. All rights reserved. {country.flag} {country.name}</p>
         </div>
       </footer>
     </div>

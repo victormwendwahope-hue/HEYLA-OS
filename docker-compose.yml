@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+  odoo:
+    image: odoo:18
+    container_name: heyla_odoo
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo-data:/var/lib/odoo
+      - ./heyla_os_addon:/mnt/extra-addons/heyla_os_addon
+      - ./frontend/dist:/var/www/html
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+      - ADDONS_PATH=/mnt/extra-addons
+    command: >
+      odoo --dev=all
+      -d heyla_os
+      --db_host=db --db_user=odoo --db_password=odoo --db_port=5432
+      --http-port=8069
+      --load=base,heyla_os_addon
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    container_name: heyla_postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: heyla_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./frontend/dist:/usr/share/nginx/html
+    depends_on:
+      - odoo
+    restart: unless-stopped
+
+volumes:
+  odoo-data:
+  postgres-data:

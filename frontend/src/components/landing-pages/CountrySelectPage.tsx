@@ -9,7 +9,7 @@ export default function CountrySelectPage() {
     <div className="min-h-screen bg-background">
       <nav className="flex items-center justify-between px-4 sm:px-8 lg:px-16 py-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">H</div>
+          <img src="/logo.png?v=2" alt="HEYLA" className="w-8 h-8 rounded-lg" />
           <span className="text-lg font-bold">HEYLA<span className="text-primary"> OS</span></span>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
@@ -27,7 +27,7 @@ export default function CountrySelectPage() {
             One Platform. <span className="text-primary">Every Country.</span>
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            HEYLA OS is built for global business. Choose your country to see how we support local compliance, currency, and regulations.
+            HEYLA is built for global business. Choose your country to see how we support local compliance, currency, and regulations.
           </p>
         </div>
 
@@ -63,9 +63,9 @@ export default function CountrySelectPage() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">H</div>
-            <span className="text-sm font-semibold">HEYLA OS</span>
+            <span className="text-sm font-semibold">HEYLA</span>
           </div>
-          <p className="text-xs text-muted-foreground">© 2026 HEYLA OS. Global Business Management Platform.</p>
+          <p className="text-xs text-muted-foreground">© 2026 HEYLA. Global Business Management Platform.</p>
         </div>
       </footer>
     </div>

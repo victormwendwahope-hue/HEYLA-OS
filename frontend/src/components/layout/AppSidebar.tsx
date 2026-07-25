@@ -78,7 +78,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border">
-        <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">H</div>
+        <img src="/logo.png?v=2" alt="HEYLA" className="w-8 h-8 rounded-lg shrink-0" />
         {!collapsed && (
           <span className="text-lg font-bold text-sidebar-primary-foreground tracking-tight">
             HEYLA<span className="text-sidebar-primary"> OS</span>

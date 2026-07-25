@@ -29,7 +29,7 @@ export default function RegisterPage() {
     if (!name || !email || !password) { toast.error('Please fill in all fields'); return; }
     if (password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     await register({ email, password, name, company: company || name });
-    toast.success('Account created! Welcome to HEYLA OS');
+    toast.success('Account created! Welcome to HEYLA');
     navigate('/dashboard');
   };
 
@@ -37,8 +37,8 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-md animate-fade-in">
         <div className="flex items-center gap-2 mb-8 justify-center">
-          <img src="/logo.png" alt="HEYLA" className="w-10 h-10 rounded-xl shrink-0" />
-          <span className="text-xl font-bold">HEYLA OS</span>
+          <img src="/logo.png?v=2" alt="HEYLA" className="w-10 h-10 rounded-xl shrink-0" />
+          <span className="text-xl font-bold">HEYLA</span>
         </div>
 
         <div className="glass rounded-2xl p-8">

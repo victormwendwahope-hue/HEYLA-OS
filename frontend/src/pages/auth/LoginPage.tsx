@@ -38,8 +38,8 @@ export default function LoginPage() {
           ))}
         </div>
         <div className="relative z-10 text-center max-w-md flex flex-col items-center">
-          <img src="/logo.png" alt="HEYLA" className="w-28 h-28 rounded-2xl shadow-lg mb-6 mx-auto block shrink-0" />
-          <h1 className="text-4xl font-bold text-primary-foreground mb-4">HEYLA OS</h1>
+          <img src="/logo.png?v=2" alt="HEYLA" className="w-28 h-28 rounded-2xl shadow-lg mb-6 mx-auto block shrink-0" />
+          <h1 className="text-4xl font-bold text-primary-foreground mb-4">HEYLA</h1>
           <p className="text-primary-foreground/70 text-lg">The global business operating system. Start in Kenya, scale everywhere. 🌍</p>
         </div>
       </div>
@@ -48,8 +48,8 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-sm animate-fade-in">
           <div className="lg:hidden flex flex-col items-center gap-2 mb-8">
-            <img src="/logo.png" alt="HEYLA" className="w-16 h-16 rounded-xl shadow-lg mb-2 mx-auto block shrink-0" />
-            <h1 className="text-2xl font-bold text-primary-foreground mb-0">HEYLA OS</h1>
+            <img src="/logo.png?v=2" alt="HEYLA" className="w-16 h-16 rounded-xl shadow-lg mb-2 mx-auto block shrink-0" />
+            <h1 className="text-2xl font-bold text-primary-foreground mb-0">HEYLA</h1>
           </div>
 
           <h2 className="text-2xl font-bold mb-1">Welcome back</h2>
