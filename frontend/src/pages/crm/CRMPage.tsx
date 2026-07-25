@@ -86,9 +86,9 @@ export default function CRMPage() {
   };
 
   const tabs = [
-    { key: 'sales' as const, label: '💼 Sales Portal', icon: Target },
-    { key: 'service' as const, label: '🎧 Service Portal', icon: Headphones },
-    { key: 'pipeline' as const, label: '📊 Pipeline', icon: TrendingUp },
+    { key: 'sales' as const, label: 'Sales Portal', icon: Target },
+    { key: 'service' as const, label: 'Service Portal', icon: Headphones },
+    { key: 'pipeline' as const, label: 'Pipeline', icon: TrendingUp },
   ];
 
   return (

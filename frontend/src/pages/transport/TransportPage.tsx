@@ -184,7 +184,7 @@ export default function TransportPage() {
             <div key={d.id} className="glass rounded-xl p-5 hover:shadow-elevated transition-shadow">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
-                  {d.name.charAt(0)}
+                  {(d.name || 'D').charAt(0)}
                 </div>
                 <div>
                   <p className="font-semibold">{d.name}</p>
@@ -194,7 +194,7 @@ export default function TransportPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Status</span><StatusBadge status={d.status} variant={d.status === 'Available' ? 'success' : d.status === 'On Trip' ? 'info' : 'default'} /></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Trips</span><span className="font-medium">{d.trips}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Rating</span><span className="font-medium">⭐ {d.rating}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Rating</span><span className="font-medium">{d.rating} / 5</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">License</span><span className="font-mono text-xs">{d.license}</span></div>
               </div>
             </div>

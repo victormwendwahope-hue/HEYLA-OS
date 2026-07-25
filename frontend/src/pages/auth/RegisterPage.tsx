@@ -65,7 +65,7 @@ export default function RegisterPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('google') === '1') {
-      const state = (location.state as any)?.googleCredential;
+      const state = (location.state as Record<string, unknown>)?.googleCredential as string | undefined;
       if (state) setGoogleCredential(state);
     }
   }, []);
@@ -85,8 +85,9 @@ export default function RegisterPage() {
         facilityLogo: facilityLogo || undefined,
       });
       navigate('/dashboard');
-    } catch (err: any) {
-      toast.error(err?.message || 'Google sign-up failed');
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      toast.error(e?.message || 'Google sign-up failed');
     }
   }, [googleRegister, password, facilityName, facilityLogo, company, name, navigate, clearError]);
 

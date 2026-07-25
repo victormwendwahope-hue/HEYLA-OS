@@ -93,7 +93,7 @@ export default function HRPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-sm font-semibold shrink-0">
-                          {e.firstName[0]}{e.lastName[0]}
+                          {(e.firstName || '?')[0]}{(e.lastName || '?')[0]}
                         </div>
                         <div>
                           <p className="font-medium">{e.firstName} {e.lastName}</p>

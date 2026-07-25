@@ -61,7 +61,7 @@ export default function NetworkingPage() {
         {(['feed', 'jobs'] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 py-2 rounded-md text-sm font-medium capitalize transition-all ${tab === t ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}>
-            {t === 'feed' ? '📢 Feed' : '💼 Jobs'}
+            {t === 'feed' ? 'Feed' : 'Jobs'}
           </button>
         ))}
       </div>

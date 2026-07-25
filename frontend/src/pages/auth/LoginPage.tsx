@@ -61,11 +61,12 @@ export default function LoginPage() {
     try {
       await googleLogin(credential);
       navigate('/dashboard');
-    } catch (err: any) {
-      if (err?.status === 404 || err?.message?.toLowerCase().includes('not found')) {
+    } catch (err: unknown) {
+      const e = err as { status?: number; message?: string };
+      if (e?.status === 404 || e?.message?.toLowerCase().includes('not found')) {
         navigate('/register?google=1', { state: { googleCredential: credential } });
       } else {
-        toast.error(err?.message || 'Google sign-in failed');
+        toast.error(e?.message || 'Google sign-in failed');
       }
     }
   }, [googleLogin, navigate]);

@@ -1,7 +1,7 @@
 import { PageHeader } from '@/components/shared/CommonUI';
 import { useAuthStore } from '@/store/authStore';
 import { useState, useRef, useEffect } from 'react';
-import { Check, Camera, Loader2 } from 'lucide-react';
+import { User, Building2, Bell, Shield, Palette, Check, Camera, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -10,7 +10,7 @@ export default function SettingsPage() {
   const updateProfile = useAuthStore((s) => s.updateProfile);
   const changePassword = useAuthStore((s) => s.changePassword);
   const [tab, setTab] = useState('profile');
-  const [profile, setProfile] = useState({ name: user?.name || '', email: user?.email || '', company: user?.company || '', phone: '+254 712 345 678' });
+  const [profile, setProfile] = useState({ name: user?.name || '', email: user?.email || '', company: user?.company || '', phone: '' });
   const [notifications, setNotifications] = useState({ email: true, push: true, sms: false, weeklyReport: true });
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [passwordForm, setPasswordForm] = useState({ current: '', newPass: '', confirm: '' });
@@ -139,10 +139,10 @@ export default function SettingsPage() {
               <h3 className="text-lg font-semibold">Company Settings</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { label: 'Company Name', value: 'Heyla Corp' },
-                  { label: 'Industry', value: 'Technology' },
-                  { label: 'Country', value: 'Kenya' },
-                  { label: 'Tax ID (KRA PIN)', value: 'P051234567Z' },
+                  { label: 'Company Name', value: user?.company || user?.facilityName || '' },
+                  { label: 'Industry', value: '' },
+                  { label: 'Country', value: '' },
+                  { label: 'Tax ID', value: '' },
                 ].map((f) => (
                   <div key={f.label}>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">{f.label}</label>

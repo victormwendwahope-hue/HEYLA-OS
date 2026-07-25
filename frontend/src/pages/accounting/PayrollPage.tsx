@@ -3,7 +3,6 @@ import { PageHeader, StatCard, StatusBadge, EmptyState } from '@/components/shar
 import { useEmployeeStore } from '@/store/employeeStore';
 import { usePayrollStore } from '@/store/payrollStore';
 import { formatCurrency } from '@/utils/countries';
-import { apiBaseUrl } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { DollarSign, Calculator, Download, Receipt, CheckCircle, FileText, Printer, X } from 'lucide-react';
 import { toast } from 'sonner';

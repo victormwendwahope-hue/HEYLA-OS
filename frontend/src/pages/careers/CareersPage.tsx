@@ -135,7 +135,7 @@ export default function CareersPage() {
               <h1 className="text-3xl font-bold mb-2">Find Your Next Opportunity</h1>
               <p className="text-muted-foreground">
                 {profile.skills.length > 0
-                  ? `🎯 Jobs are sorted by match to your skills: ${profile.skills.slice(0, 3).join(', ')}${profile.skills.length > 3 ? '...' : ''}`
+                  ? `Jobs are sorted by match to your skills: ${profile.skills.slice(0, 3).join(', ')}${profile.skills.length > 3 ? '...' : ''}`
                   : 'Complete your profile to get personalized job matches'}
               </p>
             </div>

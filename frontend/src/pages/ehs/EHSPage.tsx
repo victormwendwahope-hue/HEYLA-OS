@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  AlertTriangle, Shield, ClipboardCheck, Bell, Plus, Search,
+  AlertTriangle, Shield, Bell, Plus, Search,
   ShieldCheck, ShieldAlert, ShieldX, Activity, FileWarning, Eye,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';

@@ -36,7 +36,7 @@ export default function MarketplacePage() {
         {(['jobs', 'freelancers'] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 py-2 rounded-md text-sm font-medium capitalize transition-all ${tab === t ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}>
-            {t === 'jobs' ? '💼 Job Listings' : '👥 Freelancers'}
+            {t === 'jobs' ? 'Job Listings' : 'Freelancers'}
           </button>
         ))}
       </div>
