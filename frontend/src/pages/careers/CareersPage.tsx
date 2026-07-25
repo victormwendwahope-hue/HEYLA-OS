@@ -1,6 +1,6 @@
 import { useNetworkStore } from '@/store/networkStore';
 import { useAuthStore } from '@/store/authStore';
-import { Briefcase, MapPin, Clock, Search, Filter, Star, Send, ChevronDown, LogOut, User, Settings } from 'lucide-react';
+import { Briefcase, MapPin, Clock, Search, Send, ChevronDown, LogOut, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';

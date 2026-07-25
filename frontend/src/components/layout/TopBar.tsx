@@ -1,7 +1,7 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/store/authStore';
 import { useEmployeeStore } from '@/store/employeeStore';
-import { Bell, Search, ChevronDown, Settings, LogOut, User, Shield, X, Loader2, FileText, Users, CheckCheck, Trash2 } from 'lucide-react';
+import { Bell, Search, ChevronDown, Settings, LogOut, Shield, X, Loader2, FileText, Users, CheckCheck, Trash2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { countries } from '@/utils/countries';
 import { useNavigate } from 'react-router-dom';

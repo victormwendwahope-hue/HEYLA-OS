@@ -3,7 +3,7 @@ import { useEmployeeStore } from '@/store/employeeStore';
 import { useAttendanceStore } from '@/store/attendanceStore';
 import { StatusBadge } from '@/components/shared/CommonUI';
 import { formatCurrency } from '@/utils/countries';
-import { ArrowLeft, Mail, Phone, MapPin, Building2, Calendar, Trash2, Download, FileText, Upload, Loader2, Trash, Edit2 } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Trash2, Download, FileText, Upload, Loader2, Trash, Edit2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { api, apiBaseUrl, getToken } from '@/lib/api';

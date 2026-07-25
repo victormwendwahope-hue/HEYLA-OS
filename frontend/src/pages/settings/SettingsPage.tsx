@@ -1,7 +1,7 @@
 import { PageHeader } from '@/components/shared/CommonUI';
 import { useAuthStore } from '@/store/authStore';
 import { useState, useRef, useEffect } from 'react';
-import { User, Building2, Bell, Shield, Palette, Check, Camera, Loader2 } from 'lucide-react';
+import { Check, Camera, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -100,7 +100,7 @@ export default function SettingsPage() {
                   {avatarPreview ? (
                     <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    profile.name.charAt(0)
+                    (profile?.name?.charAt(0) || 'U')
                   )}
                   <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer" onClick={() => photoInputRef.current?.click()}>
                     <Camera className="w-5 h-5 text-white" />

@@ -62,7 +62,7 @@ export default function CountrySelectPage() {
       <footer className="border-t border-border px-4 sm:px-8 lg:px-16 py-8 mt-12">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">H</div>
+            <img src="/logo.png" alt="HEYLA" className="w-6 h-6" />
             <span className="text-sm font-semibold">HEYLA</span>
           </div>
           <p className="text-xs text-muted-foreground">© 2026 HEYLA. Global Business Management Platform.</p>
