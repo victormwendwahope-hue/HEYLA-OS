@@ -153,6 +153,9 @@ export interface User {
   company: string;
   role: 'admin' | 'manager' | 'employee' | 'individual';
   avatar?: string;
+  facilityName?: string;
+  facilityLogo?: string;
+  accountId?: string;
 }
 
 export interface AttendanceRecord {

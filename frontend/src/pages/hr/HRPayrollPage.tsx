@@ -5,6 +5,10 @@ import { useAttendanceStore } from '@/store/attendanceStore';
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
 import { formatCurrency } from '@/utils/countries';
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   DollarSign, Clock, Users, Receipt, Save, Edit3, Trash2, Plus, X, ArrowRight,
   Calendar, Ban, Stethoscope, Printer, FileText, Search, Send, Download, CheckCircle2, XCircle
 } from 'lucide-react';
@@ -47,9 +51,11 @@ export default function HRPayrollPage() {
   const [payrollNumberSearch, setPayrollNumberSearch] = useState('');
   const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(null);
   const [showPayslipModal, setShowPayslipModal] = useState(false);
+  const [resetConfirmId, setResetConfirmId] = useState<string | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
   const employees = useEmployeeStore((s) => s.employees);
+  const fetchEmployees = useEmployeeStore((s) => s.fetchEmployees);
   const updateEmployee = useEmployeeStore((s) => s.updateEmployee);
   const { records, payslips, publishPayroll, fetchRecords, fetchPayslips, getRecordsByPeriod, getPayslipsByPeriod, getPayslipByEmployee } = usePayrollStore();
   const { records: attendanceRecords, fetchRecords: fetchAttendance, getRecordsByEmployeeAndPeriod } = useAttendanceStore();
@@ -58,6 +64,7 @@ export default function HRPayrollPage() {
   const employeeMap = Object.fromEntries(employees.map((e) => [e.id, e]));
 
   useEffect(() => {
+    fetchEmployees();
     fetchRecords();
     fetchPayslips();
     fetchAttendance();
@@ -130,11 +137,16 @@ export default function HRPayrollPage() {
   };
 
   const resetEmployeePay = (id: string) => {
-    if (!confirm('Reset pay data for this employee?')) return;
-    updateEmployee(id, {
+    setResetConfirmId(id);
+  };
+
+  const confirmReset = () => {
+    if (!resetConfirmId) return;
+    updateEmployee(resetConfirmId, {
       hourlyRate: 0, baseSalary: 0, transportAllowance: 0,
       housingAllowance: 0, medicalAllowance: 0, otherAllowances: 0,
     });
+    setResetConfirmId(null);
     toast.success('Pay data reset');
   };
 
@@ -629,6 +641,19 @@ export default function HRPayrollPage() {
               </div>
             </div>
           )}
+
+          <AlertDialog open={!!resetConfirmId} onOpenChange={() => setResetConfirmId(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset Pay Data</AlertDialogTitle>
+                <AlertDialogDescription>Are you sure you want to reset this employee's pay data to zero? This cannot be undone.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmReset}>Reset</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       ) : (
         /* ========== PAYSLIPS TAB ========== */

@@ -60,6 +60,7 @@ export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
+  const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -78,10 +79,10 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border">
-        <img src="/logo.png?v=2" alt="HEYLA" className="w-8 h-8 rounded-lg shrink-0" />
+        <img src={user?.facilityLogo || '/logo.png?v=2'} alt={user?.facilityName || 'HEYLA'} className="w-8 h-8 rounded-lg shrink-0 object-cover" />
         {!collapsed && (
-          <span className="text-lg font-bold text-sidebar-primary-foreground tracking-tight">
-            HEYLA<span className="text-sidebar-primary"> OS</span>
+          <span className="text-lg font-bold text-sidebar-primary-foreground tracking-tight truncate">
+            {user?.facilityName || 'HEYLA'}<span className="text-sidebar-primary">{user?.facilityName ? '' : ' OS'}</span>
           </span>
         )}
         {!collapsed && (

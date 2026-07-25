@@ -1,6 +1,7 @@
 import { CountryConfig } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Users, TrendingUp, Package, DollarSign, Globe, Shield, Zap, CheckCircle } from 'lucide-react';
+import { AdBanner } from '@/components/ui/AdBanner';
 
 interface CountryLandingProps {
   country: CountryConfig;
@@ -13,8 +14,8 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
   const navigate = useNavigate();
 
   const features = [
-    { icon: Users, title: 'HR & People', desc: `Manage your ${country.name} workforce with local compliance built in.` },
-    { icon: TrendingUp, title: 'CRM & Sales', desc: `Track leads and close deals in ${country.currency}.` },
+    { icon: Users, title: 'HR and People', desc: `Manage your ${country.name} workforce with local compliance built in.` },
+    { icon: TrendingUp, title: 'CRM and Sales', desc: `Track leads and close deals in ${country.currency}.` },
     { icon: DollarSign, title: 'Accounting', desc: `Invoicing, payroll, and tax reports with ${country.currencySymbol} formatting.` },
     { icon: Package, title: 'Inventory', desc: 'Real-time stock management across locations.' },
     { icon: Globe, title: 'Networking', desc: `Connect with businesses across ${country.name}.` },
@@ -23,6 +24,8 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
 
   return (
     <div className="min-h-screen bg-background">
+      <AdBanner position="top" />
+
       {/* Hero */}
       <header className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5" />
@@ -32,7 +35,6 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
             <span className="text-lg font-bold">HEYLA<span className="text-primary"> OS</span></span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <span className="text-2xl">{country.flag}</span>
             <button onClick={() => navigate('/login')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Log in</button>
             <button onClick={() => navigate('/register')} className="text-sm bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">Get Started</button>
           </div>
@@ -42,7 +44,7 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
             <div className="flex-1 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-                <span className="text-lg">{country.flag}</span> Built for {country.name}
+                Built for {country.name}
               </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-4">
                 Run Your Business in{' '}
@@ -51,7 +53,7 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
               </h1>
               <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
                 HEYLA is the all-in-one business management platform designed for {country.name}. 
-                HR, CRM, Accounting, Inventory — all with {country.currency} support and local compliance.
+                HR, CRM, Accounting, Inventory -- all with {country.currency} support and local compliance.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <button onClick={() => navigate('/register')} className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
@@ -106,6 +108,11 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
           </div>
         </div>
       </section>
+
+      {/* Ad placement between sections */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-16 py-4">
+        <AdBanner position="sidebar" />
+      </div>
 
       {/* Features */}
       <section className="px-4 sm:px-8 lg:px-16 py-16">
@@ -177,14 +184,18 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer with Privacy & Terms links */}
       <footer className="border-t border-border px-4 sm:px-8 lg:px-16 py-8">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">H</div>
+            <img src="/logo.png" alt="HEYLA" className="w-6 h-6" />
             <span className="text-sm font-semibold">HEYLA</span>
           </div>
-          <p className="text-xs text-muted-foreground">© 2026 HEYLA. All rights reserved. {country.flag} {country.name}</p>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <a href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
+            <a href="/terms" className="hover:text-foreground transition-colors">Terms of Use</a>
+            <span>&copy; 2026 HEYLA. All rights reserved.</span>
+          </div>
         </div>
       </footer>
     </div>

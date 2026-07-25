@@ -166,8 +166,12 @@ export const api = {
     logoutAll: () => request<{ ok: true }>('POST', '/auth/logout-all'),
     changePassword: (currentPassword: string, newPassword: string) =>
       request<{ ok: true }>('POST', '/auth/change-password', { currentPassword, newPassword }),
-    updateProfile: (data: { name?: string; company?: string; avatar?: string }) =>
+    updateProfile: (data: { name?: string; company?: string; avatar?: string; facilityName?: string; facilityLogo?: string }) =>
       request<{ user: any }>('PATCH', '/auth/profile', data),
+    googleLogin: (credential: string) =>
+      request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/google/login', { credential }),
+    googleRegister: (data: { credential: string; password: string; facilityName?: string; facilityLogo?: string }) =>
+      request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/google/register', data),
   },
 
   admin: {

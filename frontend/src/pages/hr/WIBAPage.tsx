@@ -1,28 +1,14 @@
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
-import { Shield, Users, DollarSign, FileText, Plus, X, AlertTriangle } from 'lucide-react';
+import { Shield, Users, DollarSign, FileText, Plus, X, AlertTriangle, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/utils/countries';
-import { useState } from 'react';
+import { useWibaStore, type WIBAClaim } from '@/store/wibaStore';
+import { useEmployeeStore } from '@/store/employeeStore';
+import { useEffect, useState } from 'react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-
-interface WIBAClaim {
-  id: string;
-  employee: string;
-  department: string;
-  claimType: 'Medical' | 'Disability' | 'Death' | 'Rehabilitation';
-  description: string;
-  amount: number;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Processing';
-  dateOfIncident: string;
-  dateFiled: string;
-  insurerRef: string;
-}
-
-const mockClaims: WIBAClaim[] = [
-  { id: '1', employee: 'James Mwangi', department: 'Logistics', claimType: 'Medical', description: 'Workplace injury - back strain from heavy lifting', amount: 85000, status: 'Approved', dateOfIncident: '2024-01-15', dateFiled: '2024-01-18', insurerRef: 'WIBA-2024-001' },
-  { id: '2', employee: 'Grace Wanjiku', department: 'Engineering', claimType: 'Medical', description: 'Repetitive strain injury - carpal tunnel', amount: 45000, status: 'Processing', dateOfIncident: '2024-01-28', dateFiled: '2024-02-01', insurerRef: 'WIBA-2024-002' },
-  { id: '3', employee: 'Peter Oduor', department: 'Logistics', claimType: 'Disability', description: 'Temporary disability from vehicle accident on duty', amount: 250000, status: 'Pending', dateOfIncident: '2024-02-05', dateFiled: '2024-02-08', insurerRef: 'WIBA-2024-003' },
-  { id: '4', employee: 'Alice Kamau', department: 'Manufacturing', claimType: 'Rehabilitation', description: 'Physiotherapy for workplace fall injury', amount: 32000, status: 'Approved', dateOfIncident: '2023-12-10', dateFiled: '2023-12-15', insurerRef: 'WIBA-2024-004' },
-];
 
 const statusVariant = (s: string) => {
   const m: Record<string, 'success' | 'warning' | 'info' | 'destructive'> = { Approved: 'success', Pending: 'warning', Processing: 'info', Rejected: 'destructive' };
@@ -30,9 +16,13 @@ const statusVariant = (s: string) => {
 };
 
 export default function WIBAPage() {
-  const [claims, setClaims] = useState(mockClaims);
+  const { claims, loading, fetchClaims, addClaim, updateClaim, removeClaim } = useWibaStore();
+  const employees = useEmployeeStore((s) => s.employees);
+  const fetchEmployees = useEmployeeStore((s) => s.fetchEmployees);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ employee: '', department: '', claimType: 'Medical' as WIBAClaim['claimType'], description: '', amount: 0, dateOfIncident: '' });
+  const [form, setForm] = useState({ employee: '', department: '', claimType: 'Medical' as WIBAClaim['claimType'], description: '', amount: 0, dateOfIncident: '', insurerRef: '' });
+
+  useEffect(() => { fetchEmployees(); fetchClaims(); }, []);
 
   const totalClaimed = claims.reduce((s, c) => s + c.amount, 0);
   const approved = claims.filter(c => c.status === 'Approved');
@@ -41,92 +31,94 @@ export default function WIBAPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.employee || !form.description) { toast.error('Employee and description required'); return; }
-    setClaims(prev => [...prev, { ...form, id: Date.now().toString(), status: 'Pending', dateFiled: new Date().toISOString().split('T')[0], insurerRef: `WIBA-${Date.now().toString().slice(-7)}` }]);
+    addClaim(form);
     setShowForm(false);
-    setForm({ employee: '', department: '', claimType: 'Medical', description: '', amount: 0, dateOfIncident: '' });
-    toast.success('WIBA claim filed');
+    setForm({ employee: '', department: '', claimType: 'Medical', description: '', amount: 0, dateOfIncident: '', insurerRef: '' });
   };
 
+  const handleProcess = (id: string) => updateClaim(id, { status: 'Processing' });
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <PageHeader title="WIBA Benefits" description="Work Injury Benefits Act — manage claims and insurance coverage">
-        <button onClick={() => setShowForm(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
-          <Plus className="w-4 h-4" /> File Claim
-        </button>
+    <div className="p-6 space-y-6">
+      <PageHeader title="WIBA Claims" description="Work Injury Benefits Act — 2007" icon={Shield} actions={
+        <button onClick={() => setShowForm(true)} className="btn-primary"><Plus className="w-4 h-4" /> File WIBA Claim</button>
+      }>
+        <div className="mt-3 flex items-start gap-3 p-4 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-800">
+          <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div><strong>WIBA Compliance:</strong> All workplace injuries must be reported within 24 hours. Claims must be filed with the insurer within 7 days of the incident as per the WIBA 2007 Act.</div>
+        </div>
       </PageHeader>
 
-      <div className="glass rounded-xl p-5 border-l-4 border-info">
-        <h3 className="font-semibold mb-2 flex items-center gap-2"><Shield className="w-4 h-4 text-info" /> WIBA Compliance Note</h3>
-        <p className="text-sm text-muted-foreground">Under the Work Injury Benefits Act (WIBA) 2007, employers in Kenya are required to compensate employees for work-related injuries, diseases, and death. All employees must be covered regardless of contract type. Employer must report injuries to DOSH within 24 hours.</p>
-      </div>
+      {loading && <div className="flex items-center justify-center py-4 text-muted-foreground">Loading...</div>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Claims" value={String(claims.length)} change="This year" changeType="neutral" icon={FileText} />
-        <StatCard title="Total Claimed" value={formatCurrency(totalClaimed)} change={`${claims.filter(c => c.status === 'Pending').length} pending`} changeType="neutral" icon={DollarSign} iconColor="gradient-primary" />
-        <StatCard title="Approved Amount" value={formatCurrency(totalApproved)} change={`${approved.length} claims`} changeType="positive" icon={Shield} />
-        <StatCard title="Coverage Rate" value="100%" change="All employees" changeType="positive" icon={Users} />
+      <div className="grid grid-cols-4 gap-4">
+        <StatCard title="Total Claims" value={claims.length.toString()} icon={FileText} />
+        <StatCard title="Total Claimed" value={formatCurrency(totalClaimed)} icon={DollarSign} />
+        <StatCard title="Approved Amount" value={formatCurrency(totalApproved)} icon={Shield} />
+        <StatCard title="Coverage Rate" value={claims.length ? `${((approved.length / claims.length) * 100).toFixed(0)}%` : '0%'} icon={Users} />
       </div>
-
-      <div className="glass rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-border"><h3 className="font-semibold">Claims History</h3></div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="border-b border-border bg-muted/30">
-              {['Ref', 'Employee', 'Dept', 'Type', 'Description', 'Amount', 'Status', 'Incident Date', 'Action'].map(h => <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>)}
-            </tr></thead>
-            <tbody>
-              {claims.map(c => (
-                <tr key={c.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                  <td className="px-4 py-3 font-mono text-xs text-primary">{c.insurerRef}</td>
-                  <td className="px-4 py-3 font-medium">{c.employee}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{c.department}</td>
-                  <td className="px-4 py-3"><span className="px-2 py-0.5 bg-muted rounded-full text-xs">{c.claimType}</span></td>
-                  <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">{c.description}</td>
-                  <td className="px-4 py-3 font-semibold">{formatCurrency(c.amount)}</td>
-                  <td className="px-4 py-3"><StatusBadge status={c.status} variant={statusVariant(c.status)} /></td>
-                  <td className="px-4 py-3 text-muted-foreground">{c.dateOfIncident}</td>
-                  <td className="px-4 py-3">
-                    {c.status === 'Pending' && (
-                      <button onClick={() => { setClaims(p => p.map(x => x.id === c.id ? { ...x, status: 'Processing' } : x)); toast.success('Claim processing started'); }} className="text-xs text-primary font-medium hover:underline">Process</button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="rounded-xl bg-card border overflow-hidden">
+        <table className="w-full">
+          <thead><tr className="border-b bg-muted/50"><th className="text-left p-3 text-sm font-medium">Ref</th><th className="text-left p-3 text-sm font-medium">Employee</th><th className="text-left p-3 text-sm font-medium">Dept</th><th className="text-left p-3 text-sm font-medium">Type</th><th className="text-left p-3 text-sm font-medium">Description</th><th className="text-right p-3 text-sm font-medium">Amount</th><th className="text-left p-3 text-sm font-medium">Incident Date</th><th className="text-left p-3 text-sm font-medium">Status</th><th className="text-left p-3 text-sm font-medium">Action</th></tr></thead>
+          <tbody>
+            {claims.map((c) => (
+              <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30">
+                <td className="p-3 text-xs font-mono">{c.insurerRef}</td>
+                <td className="p-3">{c.employee}</td>
+                <td className="p-3 text-sm">{c.department}</td>
+                <td className="p-3">{c.claimType}</td>
+                <td className="p-3 text-sm max-w-xs truncate">{c.description}</td>
+                <td className="p-3 text-right font-medium">{formatCurrency(c.amount)}</td>
+                <td className="p-3 text-sm">{c.dateOfIncident}</td>
+                <td className="p-3"><StatusBadge status={c.status} variant={statusVariant(c.status)} /></td>
+                <td className="p-3">
+                  <div className="flex items-center gap-2">
+                    {c.status === 'Pending' && <button onClick={() => handleProcess(c.id)} className="text-xs text-blue-600 hover:underline">Process</button>}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="text-xs text-destructive hover:underline"><Trash2 className="w-3.5 h-3.5 inline" /></button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete WIBA Claim</AlertDialogTitle>
+                          <AlertDialogDescription>Are you sure you want to delete this claim? This cannot be undone.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => removeClaim(c.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
-          <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-lg m-4">
-            <div className="flex items-center justify-between p-5 border-b border-border">
-              <h2 className="text-lg font-bold">File WIBA Claim</h2>
-              <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
-            </div>
-            <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-card rounded-xl border p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-semibold">File WIBA Claim</h2><button onClick={() => setShowForm(false)}><X className="w-5 h-5" /></button></div>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Employee Name*</label>
-                  <input value={form.employee} onChange={e => setForm({ ...form, employee: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
-                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Department</label>
-                  <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+                <div><label className="text-xs text-muted-foreground mb-1 block">Employee *</label>
+                  <select value={form.employee} onChange={(e) => { const emp = employees.find(em => em.id === e.target.value); setForm({ ...form, employee: emp ? `${emp.firstName} ${emp.lastName}` : '', department: emp?.department || '' }); }} className="w-full rounded-lg border p-2.5 text-sm bg-background">
+                    <option value="">Select employee</option>
+                    {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>)}
+                  </select>
+                </div>
+                <div><label className="text-xs text-muted-foreground mb-1 block">Department</label><input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} className="w-full rounded-lg border p-2.5 text-sm bg-background" /></div>
               </div>
+              <select value={form.claimType} onChange={(e) => setForm({ ...form, claimType: e.target.value as any })} className="w-full rounded-lg border p-2.5 text-sm bg-background">
+                {['Medical', 'Disability', 'Death', 'Rehabilitation'].map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description of injury/incident *" className="w-full rounded-lg border p-2.5 text-sm bg-background" rows={3} />
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Claim Type</label>
-                  <select value={form.claimType} onChange={e => setForm({ ...form, claimType: e.target.value as any })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
-                    {['Medical', 'Disability', 'Death', 'Rehabilitation'].map(t => <option key={t}>{t}</option>)}
-                  </select></div>
-                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Incident Date</label>
-                  <input type="date" value={form.dateOfIncident} onChange={e => setForm({ ...form, dateOfIncident: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+                <div><label className="text-xs text-muted-foreground mb-1 block">Amount (KES)</label><input type="number" value={form.amount || ''} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} className="w-full rounded-lg border p-2.5 text-sm bg-background" /></div>
+                <div><label className="text-xs text-muted-foreground mb-1 block">Date of Incident</label><input type="date" value={form.dateOfIncident} onChange={(e) => setForm({ ...form, dateOfIncident: e.target.value })} className="w-full rounded-lg border p-2.5 text-sm bg-background" /></div>
               </div>
-              <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Description*</label>
-                <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" /></div>
-              <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Claim Amount (KES)</label>
-                <input type="number" value={form.amount || ''} onChange={e => setForm({ ...form, amount: +e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
-                <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">File Claim</button>
-              </div>
+              <button type="submit" className="btn-primary w-full">Submit Claim</button>
             </form>
           </div>
         </div>

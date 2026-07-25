@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useEmployeeStore } from '@/store/employeeStore';
 import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Search, Plus, Download, Filter, Eye, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/utils/countries';
 import { Link } from 'react-router-dom';
@@ -10,7 +14,10 @@ import AddEmployeeDialog from '@/components/hr/AddEmployeeDialog';
 export default function HRPage() {
   const employees = useEmployeeStore((s) => s.employees);
   const removeEmployee = useEmployeeStore((s) => s.removeEmployee);
+  const fetchEmployees = useEmployeeStore((s) => s.fetchEmployees);
   const [search, setSearch] = useState('');
+
+  useEffect(() => { fetchEmployees(); }, []);
   const [deptFilter, setDeptFilter] = useState('All');
   const [showAdd, setShowAdd] = useState(false);
 
@@ -104,9 +111,23 @@ export default function HRPage() {
                         <Link to={`/hr/employee/${e.id}`} className="inline-flex items-center gap-1 text-primary text-xs font-medium hover:underline">
                           <Eye className="w-3.5 h-3.5" /> View
                         </Link>
-                        <button onClick={() => { if (confirm('Delete employee?')) { removeEmployee(e.id); toast.success('Employee deleted'); } }} className="inline-flex items-center gap-1 text-destructive text-xs font-medium hover:underline">
-                          <Trash2 className="w-3.5 h-3.5" /> Delete
-                        </button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button className="inline-flex items-center gap-1 text-destructive text-xs font-medium hover:underline">
+                              <Trash2 className="w-3.5 h-3.5" /> Delete
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Employee</AlertDialogTitle>
+                              <AlertDialogDescription>Are you sure you want to delete {e.firstName} {e.lastName}? This cannot be undone.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => removeEmployee(e.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </td>
                   </tr>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User, Minimize2 } from 'lucide-react';
+import { MessageCircle, X, Send, User, Minimize2 } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -45,10 +45,10 @@ const RESPONSES: Record<string, string> = {
 };
 
 const FALLBACKS = [
-  "I'm here to help with **HEYLAOS** — your all-in-one business management platform. I can assist with HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, Fuel, Jobs, and Networking. Try asking something like \"How does payroll work?\" or \"Tell me about HR features.\"",
-  "That's outside my scope — I specialize in **HEYLAOS** business tools. Ask me about managing employees, tracking inventory, processing payroll, or any HEYLAOS module!",
-  "I focus on **HEYLAOS** features only. Want to learn about attendance tracking, leave management, CRM leads, or engineering project management? Just ask!",
-  "I can only answer questions about **HEYLAOS** — your business management suite. Try: \"How do I create an invoice?\" or \"What EHS features are available?\"",
+  "I am here to help with **HEYLAOS**, the all-in-one business management platform for SMEs and enterprises. I can assist with HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, Fuel, Jobs, and Networking. Try asking something like \"How does payroll work?\" or \"Tell me about HR features.\"",
+  "I specialize in **HEYLAOS** business tools. Ask me about managing employees, tracking inventory, processing payroll, or any HEYLAOS module.",
+  "I focus on **HEYLAOS** features only. You can ask about attendance tracking, leave management, CRM leads, or engineering project management.",
+  "I can answer questions about **HEYLAOS** business management suite. Try \"How do I create an invoice?\" or \"What EHS features are available?\"",
 ];
 
 function getResponse(input: string): string {
@@ -61,35 +61,46 @@ function getResponse(input: string): string {
   }
 
   if (/\b(hi|hello|hey|greetings?|sup|howdy)\b/.test(lower)) {
-    return "Hello! Welcome to **HEYLAOS** support. Ask me about any module — HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, Fuel, Jobs, or Networking. How can I help?";
+    return "Hello. Welcome to **HEYLAOS** support. Ask me about any module including HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, Fuel, Jobs, or Networking. How can I help?";
   }
 
   if (/\b(thank|thanks|appreciate|helpful|great|awesome)\b/.test(lower)) {
-    return "You're welcome! If you have more questions about **HEYLAOS** features, just ask. Happy to help!";
+    return "You are welcome. If you have more questions about **HEYLAOS** features, feel free to ask.";
   }
 
   if (/\b(bye|goodbye|see you|later|exit)\b/.test(lower)) {
-    return "Thanks for chatting! If you need help with **HEYLAOS** later, I'm just a click away. Have a great day!";
+    return "Thank you for chatting. If you need help with **HEYLAOS** later, I am available. Have a productive day.";
   }
 
   return FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
 }
 
+const SUGGESTIONS = [
+  'How does HR work?',
+  'Tell me about Payroll',
+  'What is CRM?',
+  'Explain Inventory',
+  'EHS features',
+  'Engineering tools',
+];
+
 export function HeyleyBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: '0', role: 'bot', content: "Hi! I'm the **HEYLAOS** assistant. I can help you with HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, Fuel, Jobs, and Networking. What would you like to know?" },
+    { id: '0', role: 'bot', content: "Hello. I am the **HEYLAOS** assistant. I can help you with HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, Fuel, Jobs, and Networking. What would you like to know?" },
   ]);
   const [input, setInput] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEnd = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     messagesEnd.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = () => {
-    const msg = input.trim();
+  const handleSend = (text?: string) => {
+    const msg = (text || input).trim();
     if (!msg) return;
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: msg };
@@ -97,6 +108,7 @@ export function HeyleyBot() {
 
     setMessages(prev => [...prev, userMsg, botMsg]);
     setInput('');
+    setShowSuggestions(false);
   };
 
   return (
@@ -104,22 +116,19 @@ export function HeyleyBot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 z-50 w-14 h-14 rounded-full gradient-primary text-primary-foreground shadow-lg flex items-center justify-center hover:opacity-90 hover:scale-105 transition-all active:scale-95"
+          className="fixed bottom-4 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
           aria-label="Open HEYLAOS chat"
         >
-          <MessageCircle className="w-6 h-6" />
+          <img src="/logo.png" alt="HEYLA" className="w-7 h-7" />
           <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
         </button>
       )}
 
       {isOpen && (
-        <div className={`fixed z-50 flex flex-col bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden transition-all duration-300
-          bottom-0 right-0 sm:bottom-4 sm:right-4 sm:rounded-2xl sm:w-[360px]
-          w-full h-full sm:h-[520px]`}>
+        <div className={`fixed z-50 flex flex-col bg-white dark:bg-gray-900 shadow-2xl overflow-hidden transition-all duration-300
+          inset-0 sm:inset-auto sm:bottom-4 sm:right-4 sm:rounded-2xl sm:w-[380px] sm:max-h-[600px]`}>
           <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-br from-blue-600 to-indigo-700 text-white shrink-0 sm:rounded-t-2xl">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-              <Bot className="w-5 h-5" />
-            </div>
+            <img src="/logo.png" alt="HEYLA" className="w-8 h-8" />
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm truncate">HEYLAOS Assistant</p>
               <p className="text-xs text-white/70">Online</p>
@@ -137,8 +146,16 @@ export function HeyleyBot() {
               <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-950">
                 {messages.map(msg => (
                   <div key={msg.id} className={`flex gap-2.5 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-1 ${msg.role === 'bot' ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>
-                      {msg.role === 'bot' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-1 ${
+                      msg.role === 'bot'
+                        ? 'bg-gradient-to-br from-blue-600 to-indigo-700'
+                        : 'bg-gray-200 dark:bg-gray-700'
+                    }`}>
+                      {msg.role === 'bot' ? (
+                        <img src="/logo.png" alt="HEYLA" className="w-4 h-4" />
+                      ) : (
+                        <User className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+                      )}
                     </div>
                     <div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                       msg.role === 'user'
@@ -149,19 +166,33 @@ export function HeyleyBot() {
                     </div>
                   </div>
                 ))}
+                {showSuggestions && messages.length === 1 && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {SUGGESTIONS.map(s => (
+                      <button
+                        key={s}
+                        onClick={() => handleSend(s)}
+                        className="px-3 py-1.5 text-xs rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-900/20 dark:hover:border-blue-600 transition-colors"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div ref={messagesEnd} />
               </div>
 
               <div className="border-t border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900 shrink-0">
                 <div className="flex gap-2">
                   <input
+                    ref={inputRef}
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                     placeholder="Ask about HEYLAOS..."
                     className="flex-1 px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-shadow"
                   />
-                  <button onClick={handleSend} disabled={!input.trim()} className="p-2.5 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+                  <button onClick={() => handleSend()} disabled={!input.trim()} className="p-2.5 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
                     <Send className="w-4 h-4" />
                   </button>
                 </div>

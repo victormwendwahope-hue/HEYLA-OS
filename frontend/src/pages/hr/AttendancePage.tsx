@@ -2,18 +2,23 @@ import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
 import { useEmployeeStore } from '@/store/employeeStore';
 import { useAttendanceStore } from '@/store/attendanceStore';
 import { useState, useEffect } from 'react';
-import { Clock, CheckCircle2, XCircle, Coffee, Calendar } from 'lucide-react';
-import { toast } from 'sonner';
+import { Clock, CheckCircle2, XCircle, Coffee, Calendar, Trash2 } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { AttendanceRecord } from '@/types';
 
 const today = new Date().toISOString().split('T')[0];
 
 export default function AttendancePage() {
   const employees = useEmployeeStore((s) => s.employees);
-  const { records, fetchRecords, addRecord, updateRecord, getRecordsByDate } = useAttendanceStore();
+  const fetchEmployees = useEmployeeStore((s) => s.fetchEmployees);
+  const { records, loading, fetchRecords, addRecord, updateRecord, removeRecord, getRecordsByDate } = useAttendanceStore();
   const [selectedDate, setSelectedDate] = useState(today);
 
   useEffect(() => {
+    fetchEmployees();
     fetchRecords();
   }, []);
 
@@ -31,7 +36,6 @@ export default function AttendancePage() {
       updateRecord(existing.id, { status, checkIn: status !== 'Absent' ? now : '' });
     } else {
       addRecord({
-        id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         employeeId,
         date: selectedDate,
         checkIn: status !== 'Absent' ? now : '',
@@ -45,6 +49,7 @@ export default function AttendancePage() {
   const present = dayRecords.filter((r) => r.status === 'Present').length;
   const late = dayRecords.filter((r) => r.status === 'Late').length;
   const absent = dayRecords.filter((r) => r.status === 'Absent').length;
+  const halfDay = dayRecords.filter((r) => r.status === 'Half Day').length;
   const onLeave = dayRecords.filter((r) => r.status === 'On Leave').length;
 
   return (
@@ -57,11 +62,14 @@ export default function AttendancePage() {
         </div>
       </PageHeader>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {loading && <div className="flex items-center justify-center py-4 text-muted-foreground">Loading...</div>}
+
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {[
           { label: 'Present', count: present, icon: CheckCircle2, color: 'text-success' },
           { label: 'Late', count: late, icon: Clock, color: 'text-warning' },
           { label: 'Absent', count: absent, icon: XCircle, color: 'text-destructive' },
+          { label: 'Half Day', count: halfDay, icon: Clock, color: 'text-info' },
           { label: 'On Leave', count: onLeave, icon: Coffee, color: 'text-info' },
         ].map((s) => (
           <div key={s.label} className="glass rounded-xl p-4 text-center">
@@ -105,12 +113,31 @@ export default function AttendancePage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
-                        {(['Present', 'Late', 'Absent'] as const).map((s) => (
+                        {(['Present', 'Late', 'Absent', 'Half Day', 'On Leave'] as const).map((s) => (
                           <button key={s} onClick={() => markAttendance(emp.id, s)}
                             className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                               record?.status === s ? 'gradient-primary text-primary-foreground' : 'bg-muted hover:bg-accent text-muted-foreground'
                             }`}>{s}</button>
                         ))}
+                        {record && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Attendance Record</AlertDialogTitle>
+                                <AlertDialogDescription>Are you sure you want to delete this attendance record?</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => removeRecord(record.id)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                       </div>
                     </td>
                   </tr>

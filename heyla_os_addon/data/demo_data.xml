@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Demo Admin User -->
+        <record id="heyla_user_admin" model="heyla.user">
+            <field name="name">Hydan Cheruiyot</field>
+            <field name="email">hydancheru@gmail.com</field>
+            <field name="password">8a723c435774dc9b367a9e5dd90d10a9ba2dba23e7788e5f5d13f65ffe8cfb97</field>
+            <field name="company">HEYLA OS</field>
+            <field name="role">admin</field>
+        </record>
+
+        <!-- Demo Manager -->
+        <record id="heyla_user_manager" model="heyla.user">
+            <field name="name">Hydan Manager</field>
+            <field name="email">hydan254@gmail.com</field>
+            <field name="password">024e7547b1146d92ae1b49a2bc6473ac5bc77dc906145032e125844b083f1ffe</field>
+            <field name="company">HEYLA OS</field>
+            <field name="role">manager</field>
+        </record>
+
+        <!-- Demo Employees -->
+        <record id="heyla_emp_1" model="heyla.employee">
+            <field name="first_name">James</field>
+            <field name="last_name">Mwangi</field>
+            <field name="email">james.mwangi@heyla.com</field>
+            <field name="phone">+254712345678</field>
+            <field name="national_id">12345678</field>
+            <field name="kra_pin">P123456789X</field>
+            <field name="nssf_no">NSSF001234</field>
+            <field name="nhif_no">NHIF005678</field>
+            <field name="department">Engineering</field>
+            <field name="position">Senior Engineer</field>
+            <field name="employment_type">Full-time</field>
+            <field name="pay_type">Salary</field>
+            <field name="status">Active</field>
+            <field name="start_date">2022-01-15</field>
+            <field name="base_salary">250000</field>
+            <field name="housing_allowance">50000</field>
+            <field name="transport_allowance">20000</field>
+            <field name="medical_allowance">15000</field>
+            <field name="address">123 Kenyatta Avenue</field>
+            <field name="city">Nairobi</field>
+            <field name="country">Kenya</field>
+            <field name="emergency_contact">Mary Mwangi</field>
+            <field name="emergency_phone">+254723456789</field>
+            <field name="bank_name">KCB Bank</field>
+            <field name="bank_account">1234567890</field>
+        </record>
+
+        <record id="heyla_emp_2" model="heyla.employee">
+            <field name="first_name">Sarah</field>
+            <field name="last_name">Wanjiku</field>
+            <field name="email">sarah.wanjiku@heyla.com</field>
+            <field name="phone">+254723456789</field>
+            <field name="national_id">23456789</field>
+            <field name="kra_pin">P234567890X</field>
+            <field name="nssf_no">NSSF002345</field>
+            <field name="nhif_no">NHIF006789</field>
+            <field name="department">Human Resources</field>
+            <field name="position">HR Manager</field>
+            <field name="employment_type">Full-time</field>
+            <field name="pay_type">Salary</field>
+            <field name="status">Active</field>
+            <field name="start_date">2021-06-01</field>
+            <field name="base_salary">180000</field>
+            <field name="housing_allowance">30000</field>
+            <field name="transport_allowance">15000</field>
+            <field name="medical_allowance">10000</field>
+            <field name="address">456 River Road</field>
+            <field name="city">Nairobi</field>
+            <field name="country">Kenya</field>
+            <field name="emergency_contact">John Wanjiku</field>
+            <field name="emergency_phone">+254734567890</field>
+            <field name="bank_name">Equity Bank</field>
+            <field name="bank_account">2345678901</field>
+        </record>
+
+        <!-- Demo Leads -->
+        <record id="heyla_lead_1" model="heyla.lead">
+            <field name="name">Safaricom PLC</field>
+            <field name="email">info@safaricom.co.ke</field>
+            <field name="phone">+254711000000</field>
+            <field name="company">Safaricom</field>
+            <field name="status">Won</field>
+            <field name="value">5000000</field>
+            <field name="source">Referral</field>
+            <field name="assigned_to">James Mwangi</field>
+            <field name="notes">Enterprise solution deal</field>
+        </record>
+
+        <record id="heyla_lead_2" model="heyla.lead">
+            <field name="name">KCB Group</field>
+            <field name="email">info@kcb.co.ke</field>
+            <field name="phone">+254722000000</field>
+            <field name="company">KCB Bank</field>
+            <field name="status">Proposal</field>
+            <field name="value">3500000</field>
+            <field name="source">Conference</field>
+            <field name="assigned_to">Sarah Wanjiku</field>
+        </record>
+
+        <!-- Demo Products -->
+        <record id="heyla_product_1" model="heyla.product">
+            <field name="name">Office Desk Pro</field>
+            <field name="sku">ODP-001</field>
+            <field name="category">Furniture</field>
+            <field name="price">45000</field>
+            <field name="cost">28000</field>
+            <field name="stock">50</field>
+            <field name="min_stock">10</field>
+        </record>
+
+        <record id="heyla_product_2" model="heyla.product">
+            <field name="name">Ergonomic Chair</field>
+            <field name="sku">ECH-002</field>
+            <field name="category">Furniture</field>
+            <field name="price">35000</field>
+            <field name="cost">20000</field>
+            <field name="stock">25</field>
+            <field name="min_stock">5</field>
+        </record>
+
+        <!-- Demo Invoice -->
+        <record id="heyla_invoice_1" model="heyla.invoice">
+            <field name="client_name">Safaricom PLC</field>
+            <field name="client_email">billing@safaricom.co.ke</field>
+            <field name="tax">500000</field>
+            <field name="status">Sent</field>
+            <field name="due_date">2025-02-28</field>
+            <field name="currency">KES</field>
+        </record>
+
+        <record id="heyla_invoice_line_1" model="heyla.invoice.line">
+            <field name="invoice_id" ref="heyla_invoice_1"/>
+            <field name="description">Enterprise Software License</field>
+            <field name="quantity">1</field>
+            <field name="unit_price">5000000</field>
+        </record>
+
+        <!-- Demo Attendance -->
+        <record id="heyla_att_1" model="heyla.attendance">
+            <field name="employee_id" ref="heyla_emp_1"/>
+            <field name="date">2025-01-20</field>
+            <field name="check_in">08:00</field>
+            <field name="check_out">17:30</field>
+            <field name="status">Present</field>
+        </record>
+
+        <record id="heyla_att_2" model="heyla.attendance">
+            <field name="employee_id" ref="heyla_emp_2"/>
+            <field name="date">2025-01-20</field>
+            <field name="check_in">08:15</field>
+            <field name="check_out">17:00</field>
+            <field name="status">Present</field>
+        </record>
+
+        <!-- Demo Leave -->
+        <record id="heyla_leave_1" model="heyla.leave">
+            <field name="employee_id" ref="heyla_emp_1"/>
+            <field name="leave_type">Annual</field>
+            <field name="start_date">2025-02-10</field>
+            <field name="end_date">2025-02-14</field>
+            <field name="reason">Family vacation</field>
+            <field name="status">Approved</field>
+        </record>
+
+        <!-- Demo Payroll -->
+        <record id="heyla_payroll_1" model="heyla.payroll.record">
+            <field name="employee_id" ref="heyla_emp_1"/>
+            <field name="period">2025-01</field>
+            <field name="pay_type">Salary</field>
+            <field name="basic_pay">250000</field>
+            <field name="housing_allowance">50000</field>
+            <field name="transport_allowance">20000</field>
+            <field name="medical_allowance">15000</field>
+            <field name="overtime">0</field>
+            <field name="overtime2">0</field>
+            <field name="deductions">97500</field>
+            <field name="status">Published</field>
+        </record>
+
+        <!-- Demo EHS Incident -->
+        <record id="heyla_ehs_incident_1" model="heyla.ehs.incident">
+            <field name="incident_type">Near-miss</field>
+            <field name="location">Workshop Area A</field>
+            <field name="description">Forklift near-miss with pedestrian</field>
+            <field name="severity">High</field>
+            <field name="status">Investigating</field>
+            <field name="reported_by">James Mwangi</field>
+            <field name="assigned_to">Sarah Wanjiku</field>
+        </record>
+
+        <!-- Demo Engineering Project -->
+        <record id="heyla_eng_project_1" model="heyla.engineering.project">
+            <field name="name">Thika Road Bypass</field>
+            <field name="client">Kenya National Highways Authority</field>
+            <field name="status">In Progress</field>
+            <field name="progress">65.0</field>
+            <field name="budget">2500000000</field>
+            <field name="spent">1625000000</field>
+            <field name="start_date">2023-06-01</field>
+            <field name="end_date">2025-12-31</field>
+            <field name="manager">James Mwangi</field>
+        </record>
+
+        <!-- Demo Transport -->
+        <record id="heyla_vehicle_1" model="heyla.transport.vehicle">
+            <field name="name">Truck 001</field>
+            <field name="plate">KCA 001T</field>
+            <field name="vehicle_type">Truck</field>
+            <field name="status">Active</field>
+            <field name="driver">John Driver</field>
+            <field name="mileage">45000</field>
+            <field name="fuel_type">Diesel</field>
+        </record>
+
+        <!-- Demo Fuel Entry -->
+        <record id="heyla_fuel_1" model="heyla.fuel.entry">
+            <field name="vehicle_name">Truck 001</field>
+            <field name="plate">KCA 001T</field>
+            <field name="driver">John Driver</field>
+            <field name="date">2025-01-15</field>
+            <field name="liters">200</field>
+            <field name="cost_per_liter">195</field>
+            <field name="mileage">45000</field>
+            <field name="station">Total Energies - Mombasa Rd</field>
+            <field name="fuel_type">Diesel</field>
+            <field name="trip_distance">800</field>
+        </record>
+
+        <!-- Demo Job -->
+        <record id="heyla_job_1" model="heyla.job">
+            <field name="title">Senior Software Engineer</field>
+            <field name="department">Engineering</field>
+            <field name="location">Nairobi, Kenya</field>
+            <field name="job_type">Full-time</field>
+            <field name="status">Open</field>
+            <field name="salary">KES 300,000 - 500,000</field>
+            <field name="description">We are looking for a Senior Software Engineer to join our team.</field>
+            <field name="requirements">5+ years experience\nReact, TypeScript\nPython/Odoo\nAWS</field>
+        </record>
+
+        <!-- Demo Network Post -->
+        <record id="heyla_network_post_1" model="heyla.network.post">
+            <field name="author">HEYLA OS</field>
+            <field name="role">System</field>
+            <field name="content">Welcome to HEYLA OS — your complete business management solution!</field>
+            <field name="time">2 hours ago</field>
+            <field name="likes">15</field>
+            <field name="comments">3</field>
+        </record>
+
+    </data>
+</odoo>

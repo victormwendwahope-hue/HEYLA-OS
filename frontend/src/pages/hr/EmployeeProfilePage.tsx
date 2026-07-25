@@ -1,38 +1,85 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEmployeeStore } from '@/store/employeeStore';
+import { useAttendanceStore } from '@/store/attendanceStore';
 import { StatusBadge } from '@/components/shared/CommonUI';
 import { formatCurrency } from '@/utils/countries';
-import { ArrowLeft, Mail, Phone, MapPin, Building2, Calendar, Trash2, Download, FileText, Upload, Loader2, Trash } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Building2, Calendar, Trash2, Download, FileText, Upload, Loader2, Trash, Edit2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { getToken, apiBaseUrl } from '@/lib/api';
+import { api, apiBaseUrl, getToken } from '@/lib/api';
 import { EmployeeDocument } from '@/types';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 export default function EmployeeProfilePage() {
   const { id } = useParams();
-  const employee = useEmployeeStore((s) => s.employees.find((e) => e.id === id));
+  const employees = useEmployeeStore((s) => s.employees);
+  const fetchEmployees = useEmployeeStore((s) => s.fetchEmployees);
+  const employee = employees.find((e) => e.id === id);
   const removeEmployee = useEmployeeStore((s) => s.removeEmployee);
+  const updateEmployee = useEmployeeStore((s) => s.updateEmployee);
+  const { records: attRecords, fetchRecords: fetchAttRecords } = useAttendanceStore();
   const navigate = useNavigate();
   const [tab, setTab] = useState('overview');
   const [docs, setDocs] = useState<EmployeeDocument[]>([]);
   const [docsLoading, setDocsLoading] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState<Record<string, any>>({});
 
-  const token = getToken();
-  const baseUrl = apiBaseUrl();
+  const openEdit = () => {
+    if (!employee) return;
+    setEditForm({
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      email: employee.email,
+      phone: employee.phone,
+      position: employee.position,
+      department: employee.department,
+      baseSalary: employee.baseSalary,
+      hourlyRate: employee.hourlyRate,
+      housingAllowance: employee.housingAllowance,
+      transportAllowance: employee.transportAllowance,
+      medicalAllowance: employee.medicalAllowance,
+      otherAllowances: employee.otherAllowances,
+      address: employee.address,
+      city: employee.city,
+      country: employee.country,
+      emergencyContact: employee.emergencyContact,
+      emergencyPhone: employee.emergencyPhone,
+      bankName: employee.bankName,
+      bankAccount: employee.bankAccount,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const saveEdit = () => {
+    if (!employee) return;
+    updateEmployee(employee.id, editForm);
+    setEditDialogOpen(false);
+  };
 
   const fetchDocs = async () => {
     setDocsLoading(true);
     try {
-      const res = await fetch(`${baseUrl}/employee-documents/list/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) setDocs(await res.json());
+      const data = await api.get<EmployeeDocument[]>(`/employee-documents/list/${id}`);
+      setDocs(data);
     } catch {} finally {
       setDocsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchEmployees();
+    fetchAttRecords();
+  }, []);
 
   useEffect(() => {
     if (tab === 'documents') fetchDocs();
@@ -42,14 +89,11 @@ export default function EmployeeProfilePage() {
     if (uploadingFiles.length === 0) return;
     setIsUploading(true);
     try {
-      const fd = new FormData();
-      uploadingFiles.forEach((f) => fd.append('files', f));
-      const res = await fetch(`${baseUrl}/employee-documents/upload-multiple/${id}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd,
-      });
-      if (!res.ok) throw new Error();
+      for (const file of uploadingFiles) {
+        const fd = new FormData();
+        fd.append('file', file);
+        await api.post(`/employee-documents/upload-multiple/${id}`, fd);
+      }
       await fetchDocs();
       setUploadingFiles([]);
       toast.success('Documents uploaded');
@@ -61,13 +105,8 @@ export default function EmployeeProfilePage() {
   };
 
   const handleDocDelete = async (docId: string) => {
-    if (!confirm('Delete this document?')) return;
     try {
-      const res = await fetch(`${baseUrl}/employee-documents/${docId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error();
+      await api.delete(`/employee-documents/${docId}`);
       setDocs((prev) => prev.filter((d) => d.id !== docId));
       toast.success('Document deleted');
     } catch {
@@ -77,8 +116,8 @@ export default function EmployeeProfilePage() {
 
   const handleDocDownload = async (doc: EmployeeDocument) => {
     try {
-      const res = await fetch(`${baseUrl}/employee-documents/download/${doc.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch(`${apiBaseUrl()}/employee-documents/download/${doc.id}`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       if (!res.ok) throw new Error();
       const blob = await res.blob();
@@ -128,11 +167,59 @@ export default function EmployeeProfilePage() {
               <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Joined {employee.startDate}</span>
             </div>
           </div>
-          <button onClick={() => { if (confirm('Delete employee?')) { removeEmployee(employee.id); toast.success('Employee deleted'); navigate('/hr'); } }} className="shrink-0 px-4 py-2 rounded-lg text-sm font-medium border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2">
-            <Trash2 className="w-4 h-4" /> Delete Employee
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={openEdit} className="shrink-0 px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors flex items-center gap-2">
+              <Edit2 className="w-4 h-4" /> Edit
+            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="shrink-0 px-4 py-2 rounded-lg text-sm font-medium border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2">
+                  <Trash2 className="w-4 h-4" /> Delete
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Employee</AlertDialogTitle>
+                  <AlertDialogDescription>Are you sure you want to delete {employee.firstName} {employee.lastName}? This cannot be undone.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => { removeEmployee(employee.id); navigate('/hr'); }}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit Employee</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>First Name</Label><Input value={editForm.firstName || ''} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} /></div>
+            <div><Label>Last Name</Label><Input value={editForm.lastName || ''} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} /></div>
+            <div className="col-span-2"><Label>Email</Label><Input value={editForm.email || ''} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} /></div>
+            <div><Label>Phone</Label><Input value={editForm.phone || ''} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} /></div>
+            <div><Label>Position</Label><Input value={editForm.position || ''} onChange={(e) => setEditForm({ ...editForm, position: e.target.value })} /></div>
+            <div><Label>Department</Label><Input value={editForm.department || ''} onChange={(e) => setEditForm({ ...editForm, department: e.target.value })} /></div>
+            <div><Label>Base Salary</Label><Input type="number" value={editForm.baseSalary || 0} onChange={(e) => setEditForm({ ...editForm, baseSalary: Number(e.target.value) })} /></div>
+            <div><Label>Hourly Rate</Label><Input type="number" value={editForm.hourlyRate || 0} onChange={(e) => setEditForm({ ...editForm, hourlyRate: Number(e.target.value) })} /></div>
+            <div><Label>Housing Allowance</Label><Input type="number" value={editForm.housingAllowance || 0} onChange={(e) => setEditForm({ ...editForm, housingAllowance: Number(e.target.value) })} /></div>
+            <div><Label>Transport Allowance</Label><Input type="number" value={editForm.transportAllowance || 0} onChange={(e) => setEditForm({ ...editForm, transportAllowance: Number(e.target.value) })} /></div>
+            <div><Label>Medical Allowance</Label><Input type="number" value={editForm.medicalAllowance || 0} onChange={(e) => setEditForm({ ...editForm, medicalAllowance: Number(e.target.value) })} /></div>
+            <div><Label>Other Allowances</Label><Input type="number" value={editForm.otherAllowances || 0} onChange={(e) => setEditForm({ ...editForm, otherAllowances: Number(e.target.value) })} /></div>
+            <div className="col-span-2"><Label>Address</Label><Input value={editForm.address || ''} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} /></div>
+            <div><Label>City</Label><Input value={editForm.city || ''} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} /></div>
+            <div><Label>Country</Label><Input value={editForm.country || ''} onChange={(e) => setEditForm({ ...editForm, country: e.target.value })} /></div>
+            <div><Label>Emergency Contact</Label><Input value={editForm.emergencyContact || ''} onChange={(e) => setEditForm({ ...editForm, emergencyContact: e.target.value })} /></div>
+            <div><Label>Emergency Phone</Label><Input value={editForm.emergencyPhone || ''} onChange={(e) => setEditForm({ ...editForm, emergencyPhone: e.target.value })} /></div>
+            <div><Label>Bank Name</Label><Input value={editForm.bankName || ''} onChange={(e) => setEditForm({ ...editForm, bankName: e.target.value })} /></div>
+            <div><Label>Bank Account</Label><Input value={editForm.bankAccount || ''} onChange={(e) => setEditForm({ ...editForm, bankAccount: e.target.value })} /></div>
+          </div>
+          <Button onClick={saveEdit} className="w-full mt-2">Save Changes</Button>
+        </DialogContent>
+      </Dialog>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-muted rounded-lg p-1">
@@ -235,13 +322,10 @@ export default function EmployeeProfilePage() {
       )}
 
       {tab === 'attendance' && (() => {
-        const employeeAttendance = [
-          { date: '2026-06-26', status: 'Present', timeIn: '08:00', timeOut: '17:00' },
-          { date: '2026-06-25', status: 'Present', timeIn: '08:15', timeOut: '17:30' },
-          { date: '2026-06-24', status: 'Late', timeIn: '09:30', timeOut: '17:00' },
-          { date: '2026-06-23', status: 'Present', timeIn: '07:45', timeOut: '16:45' },
-          { date: '2026-06-20', status: 'Absent', timeIn: '-', timeOut: '-' },
-        ];
+        const employeeAttendance = attRecords
+          .filter(r => r.employeeId === employee.id)
+          .slice(-30)
+          .reverse();
         return (
           <div className="glass rounded-xl p-5">
             <h3 className="font-semibold mb-4">Attendance Records</h3>
@@ -263,13 +347,14 @@ export default function EmployeeProfilePage() {
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                           record.status === 'Present' ? 'bg-green-500/10 text-green-500' :
                           record.status === 'Late' ? 'bg-yellow-500/10 text-yellow-500' :
-                          'bg-red-500/10 text-red-500'
+                          record.status === 'Absent' ? 'bg-red-500/10 text-red-500' :
+                          'bg-blue-500/10 text-blue-500'
                         }`}>
                           {record.status}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3">{record.timeIn}</td>
-                      <td className="py-2.5 px-3">{record.timeOut}</td>
+                      <td className="py-2.5 px-3">{record.checkIn || '-'}</td>
+                      <td className="py-2.5 px-3">{record.checkOut || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -329,10 +414,23 @@ export default function EmployeeProfilePage() {
                       className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                       <Download className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDocDelete(doc.id)}
-                      className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
-                      <Trash className="w-4 h-4" />
-                    </button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                          <Trash className="w-4 h-4" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Document</AlertDialogTitle>
+                          <AlertDialogDescription>Are you sure you want to delete {doc.originalName}?</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDocDelete(doc.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ))}

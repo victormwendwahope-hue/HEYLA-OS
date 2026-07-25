@@ -52,10 +52,13 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
     }
   },
   fetchPayslips: async () => {
+    set({ loading: true });
     try {
       const data = await api.get<Payslip[]>('/payroll/payslips');
-      set({ payslips: data });
-    } catch { /* ignore */ }
+      set({ payslips: data, loading: false });
+    } catch {
+      set({ loading: false });
+    }
   },
   computePayroll: (employee: Employee, hoursWorked: number, overtime: number, period: string): PayrollRecord => {
     const grossPay = computeGross(employee, hoursWorked, overtime);
@@ -68,7 +71,12 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       hourlyRate: employee.hourlyRate,
       hoursWorked,
       basicPay: employee.payType === 'Hourly' ? 0 : employee.baseSalary,
+      housingAllowance: employee.housingAllowance,
+      transportAllowance: employee.transportAllowance,
+      medicalAllowance: employee.medicalAllowance,
+      otherAllowances: employee.otherAllowances,
       overtime,
+      overtime2: 0,
       grossPay,
       deductions,
       netPay: grossPay - deductions,
@@ -88,7 +96,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       toast.success(`${results.length} payroll record(s) published`);
     } catch {
       set((s) => ({ records: [...s.records, ...published] }));
-      toast.success(`${published.length} payroll record(s) published (offline)`);
+      toast.warning(`${published.length} payroll record(s) published (offline)`);
     }
   },
   addRecord: async (record) => {
@@ -123,7 +131,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
           r.id === id ? { ...r, status: 'Paid' as const, paidAt: now } : r
         ),
       }));
-      toast.success('Payment recorded (offline)');
+      toast.warning('Payment recorded (offline)');
     }
   },
   removeRecord: async (id) => {

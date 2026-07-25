@@ -248,11 +248,11 @@ export function TopBar() {
         <div className="relative" ref={userRef}>
           <button onClick={() => setShowUserMenu(!showUserMenu)}
             className="flex items-center gap-1.5 pl-2 border-l border-border hover:bg-muted/30 rounded-lg py-1 pr-2 transition-colors">
-            <div className="w-7 h-7 rounded-full overflow-hidden gradient-primary flex items-center justify-center text-primary-foreground text-xs font-semibold shrink-0">
+            <div className="w-7 h-7 rounded-full overflow-hidden shrink-0">
               {user?.avatar ? (
                 <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                user?.name?.charAt(0) || 'H'
+                <img src={user?.facilityLogo || '/logo.png'} alt="HEYLA" className="w-full h-full object-cover" />
               )}
             </div>
             <div className="hidden md:block text-left max-w-[100px]">

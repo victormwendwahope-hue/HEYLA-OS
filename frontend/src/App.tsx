@@ -35,8 +35,10 @@ import CareersPage from "@/pages/careers/CareersPage";
 import EHSPage from "@/pages/ehs/EHSPage";
 import EngineeringPage from "@/pages/engineering/EngineeringPage";
 import NotFound from "@/pages/NotFound";
-import CountrySelectPage from "@/components/landing-pages/CountrySelectPage";
 import GeoLanding from "@/components/landing-pages/GeoLanding";
+import PrivacyPage from "@/pages/legal/PrivacyPage";
+import TermsPage from "@/pages/legal/TermsPage";
+import { CookieConsent } from "@/components/ui/CookieConsent";
 import { lazy, Suspense } from "react";
 
 const KenyaLanding = lazy(() => import("@/components/landing-pages/ke/KenyaLanding"));
@@ -88,11 +90,14 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <CookieConsent />
         <Suspense fallback={<CountryFallback />}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/" element={<GeoLanding />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             <Route path="/careers" element={<CareersPage />} />
             <Route path="/payment" element={<PaymentPage />} />
             
@@ -117,7 +122,6 @@ const App = () => (
             <Route path="/country/jp" element={<JapanLanding />} />
             <Route path="/country/au" element={<AustraliaLanding />} />
             <Route path="/country/ca" element={<CanadaLanding />} />
-            <Route path="/countries" element={<CountrySelectPage />} />
 
             {/* Protected App Routes */}
             <Route element={<ProtectedRoute><AppLayoutWithBot /></ProtectedRoute>}>

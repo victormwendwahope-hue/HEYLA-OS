@@ -3,14 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HEYLAOS</title>
-    <meta name="description" content="HEYLAOS - All-in-one business management platform. HR, Payroll, CRM, Accounting, Inventory, EHS, Transport, Engineering, Jobs & Networking for SMEs globally." />
+    <title>HEYLAOS - Enterprise Business Management Platform</title>
+    <meta name="description" content="HEYLAOS is an all-in-one business management platform for small and medium-sized enterprises (SMEs) and large enterprises globally. HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, and more in one integrated system." />
     <meta name="author" content="HEYLAOS" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="canonical" href="https://heylaos.com" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
     <link rel="apple-touch-icon" href="/logo.png">
 
-    <meta property="og:title" content="HEYLAOS" />
-    <meta property="og:description" content="HEYLAOS - All-in-one business management platform. HR, Payroll, CRM, Accounting, Inventory, EHS, Transport, Engineering, Jobs & Networking for SMEs globally." />
+    <meta property="og:title" content="HEYLAOS - Enterprise Business Management Platform" />
+    <meta property="og:description" content="All-in-one business management platform for SMEs and enterprises. HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, and more." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://heylaos.com" />
     <meta property="og:image" content="https://heylaos.com/logo.png" />
@@ -18,18 +21,53 @@
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@HEYLAOS" />
-    <meta name="twitter:title" content="HEYLAOS" />
-    <meta name="twitter:description" content="HEYLAOS - All-in-one business management platform. HR, Payroll, CRM, Accounting, Inventory, EHS, Transport, Engineering, Jobs & Networking for SMEs globally." />
+    <meta name="twitter:title" content="HEYLAOS - Enterprise Business Management Platform" />
+    <meta name="twitter:description" content="All-in-one business management platform for SMEs and enterprises. HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, and more." />
     <meta name="twitter:image" content="https://heylaos.com/logo.png" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "HEYLAOS",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "All-in-one business management platform for small and medium-sized enterprises (SMEs) and large enterprises. HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, and more in one integrated system.",
+      "url": "https://heylaos.com",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "HEYLAOS"
+      }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "HEYLAOS",
+      "url": "https://heylaos.com",
+      "logo": "https://heylaos.com/logo.png",
+      "description": "All-in-one business management platform for SMEs and enterprises globally.",
+      "foundingDate": "2024",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "contact@heylaos.com",
+        "contactType": "sales"
+      }
+    }
+    </script>
   </head>
 
   <body>
     <div id="root"></div>
 
     <script>
-      // Runtime API base override (used by src/lib/api.ts)
-      // Odoo Backend: use same-origin proxy via nginx (recommended for production)
-      // To use local Odoo directly, set: http://localhost:8069
       window.__VITE_API_URL__ = window.location.origin + "/api";
     </script>
 

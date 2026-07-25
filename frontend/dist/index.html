@@ -3,31 +3,74 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>HEYLA OS — Global Business Management</title>
-    <meta name="description" content="Modern business operating system for SMEs. HR, CRM, Accounting, Inventory — Kenya to global." />
-    <meta name="author" content="HEYLA" />
+    <title>HEYLAOS - Enterprise Business Management Platform</title>
+    <meta name="description" content="HEYLAOS is an all-in-one business management platform for small and medium-sized enterprises (SMEs) and large enterprises globally. HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, and more in one integrated system." />
+    <meta name="author" content="HEYLAOS" />
+    <link rel="canonical" href="https://heylaos.com" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
 
-    <meta property="og:title" content="HEYLA OS — Global Business Management" />
-    <meta property="og:description" content="Modern business operating system for SMEs. HR, CRM, Accounting, Inventory — Kenya to global." />
+    <meta property="og:title" content="HEYLAOS - Enterprise Business Management Platform" />
+    <meta property="og:description" content="All-in-one business management platform for SMEs and enterprises. HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, and more." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://heyla-os.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://heylaos.com" />
+    <meta property="og:image" content="https://heylaos.com/logo.png" />
+    <meta property="og:site_name" content="HEYLAOS" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@HEYLA OS" />
-    <meta name="twitter:image" content="https://heyla-os.dev/opengraph-image-p98pqg.png" />
-    <script type="module" crossorigin src="/assets/index-DnT4lFC9.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CxCcQWhv.css">
+    <meta name="twitter:site" content="@HEYLAOS" />
+    <meta name="twitter:title" content="HEYLAOS - Enterprise Business Management Platform" />
+    <meta name="twitter:description" content="All-in-one business management platform for SMEs and enterprises. HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, and more." />
+    <meta name="twitter:image" content="https://heylaos.com/logo.png" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "HEYLAOS",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "All-in-one business management platform for small and medium-sized enterprises (SMEs) and large enterprises. HR, Payroll, CRM, Accounting, Inventory, EHS, Engineering, Transport, and more in one integrated system.",
+      "url": "https://heylaos.com",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "HEYLAOS"
+      }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "HEYLAOS",
+      "url": "https://heylaos.com",
+      "logo": "https://heylaos.com/logo.png",
+      "description": "All-in-one business management platform for SMEs and enterprises globally.",
+      "foundingDate": "2024",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "contact@heylaos.com",
+        "contactType": "sales"
+      }
+    }
+    </script>
+    <script type="module" crossorigin src="/assets/index-ndFqClVU.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DzfDgXqO.css">
   </head>
 
   <body>
     <div id="root"></div>
 
     <script>
-      // Runtime API base override (used by src/lib/api.ts)
-      // Backend: https://heyla-backend.onrender.com
-      // Include /api because backend mounts routes under /api (e.g., /api/auth/login)
-      window.__VITE_API_URL__ = "https://heyla-backend.onrender.com/api";
+      window.__VITE_API_URL__ = window.location.origin + "/api";
     </script>
 
   </body>

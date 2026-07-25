@@ -1,47 +1,36 @@
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
-import { HeartPulse, AlertTriangle, Clock, CheckCircle, Plus, X, FileText } from 'lucide-react';
-import { useState } from 'react';
+import { useInjuryStore, type Injury } from '@/store/injuryStore';
+import { useEmployeeStore } from '@/store/employeeStore';
+import { HeartPulse, AlertTriangle, Clock, CheckCircle, Plus, X, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-
-interface Injury {
-  id: string;
-  employee: string;
-  department: string;
-  type: 'Minor' | 'Moderate' | 'Severe' | 'Critical';
-  bodyPart: string;
-  cause: string;
-  location: string;
-  date: string;
-  daysLost: number;
-  status: 'Open' | 'Under Investigation' | 'Resolved' | 'Closed';
-  reportedBy: string;
-  correctiveAction: string;
-}
-
-const mockInjuries: Injury[] = [
-  { id: '1', employee: 'James Mwangi', department: 'Logistics', type: 'Moderate', bodyPart: 'Lower Back', cause: 'Manual lifting — improper technique', location: 'Warehouse B', date: '2024-01-15', daysLost: 5, status: 'Resolved', reportedBy: 'Supervisor K. Ouma', correctiveAction: 'Ergonomics training scheduled, lifting equipment ordered' },
-  { id: '2', employee: 'Grace Wanjiku', department: 'Engineering', type: 'Minor', bodyPart: 'Right Wrist', cause: 'Repetitive strain from typing', location: 'Office 3A', date: '2024-01-28', daysLost: 2, status: 'Open', reportedBy: 'Self-reported', correctiveAction: 'Ergonomic keyboard provided, break reminders set' },
-  { id: '3', employee: 'Peter Oduor', department: 'Logistics', type: 'Severe', bodyPart: 'Left Leg', cause: 'Vehicle collision during delivery', location: 'Mombasa Road', date: '2024-02-05', daysLost: 21, status: 'Under Investigation', reportedBy: 'Fleet Manager J. Kamau', correctiveAction: 'DOSH report filed, driver retraining, vehicle inspection' },
-  { id: '4', employee: 'Brian Kipchoge', department: 'Manufacturing', type: 'Minor', bodyPart: 'Right Hand', cause: 'Cut from sharp edge', location: 'Production Floor', date: '2024-02-10', daysLost: 1, status: 'Closed', reportedBy: 'Line Supervisor A. Njeri', correctiveAction: 'Guards installed on equipment, PPE compliance check' },
-];
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const COLORS = ['hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(24, 95%, 53%)', 'hsl(0, 84%, 60%)'];
 const typeVariant = (t: string) => ({ Minor: 'success' as const, Moderate: 'warning' as const, Severe: 'destructive' as const, Critical: 'destructive' as const }[t] || 'default' as const);
 const statusVariant = (s: string) => ({ Open: 'warning' as const, 'Under Investigation': 'info' as const, Resolved: 'success' as const, Closed: 'default' as const }[s] || 'default' as const);
 
 export default function InjuryPage() {
-  const [injuries, setInjuries] = useState(mockInjuries);
+  const { injuries, loading, fetchInjuries, addInjury, updateInjury, removeInjury } = useInjuryStore();
+  const employees = useEmployeeStore((s) => s.employees);
+  const fetchEmployees = useEmployeeStore((s) => s.fetchEmployees);
   const [showForm, setShowForm] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [form, setForm] = useState({ employee: '', department: '', type: 'Minor' as Injury['type'], bodyPart: '', cause: '', location: '', daysLost: 0, correctiveAction: '' });
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [form, setForm] = useState({ employee: '', department: '', injuryType: 'Minor' as Injury['injuryType'], bodyPart: '', cause: '', location: '', daysLost: 0, correctiveAction: '' });
+
+  useEffect(() => { fetchEmployees(); fetchInjuries(); }, []);
 
   const totalDaysLost = injuries.reduce((s, i) => s + i.daysLost, 0);
   const byType = [
-    { name: 'Minor', value: injuries.filter(i => i.type === 'Minor').length },
-    { name: 'Moderate', value: injuries.filter(i => i.type === 'Moderate').length },
-    { name: 'Severe', value: injuries.filter(i => i.type === 'Severe').length },
-    { name: 'Critical', value: injuries.filter(i => i.type === 'Critical').length },
+    { name: 'Minor', value: injuries.filter(i => i.injuryType === 'Minor').length },
+    { name: 'Moderate', value: injuries.filter(i => i.injuryType === 'Moderate').length },
+    { name: 'Severe', value: injuries.filter(i => i.injuryType === 'Severe').length },
+    { name: 'Critical', value: injuries.filter(i => i.injuryType === 'Critical').length },
   ];
   const byDept: Record<string, number> = {};
   injuries.forEach(i => { byDept[i.department] = (byDept[i.department] || 0) + 1; });
@@ -50,10 +39,9 @@ export default function InjuryPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.employee || !form.cause) { toast.error('Employee and cause required'); return; }
-    setInjuries(prev => [...prev, { ...form, id: Date.now().toString(), date: new Date().toISOString().split('T')[0], status: 'Open', reportedBy: 'Admin' }]);
+    addInjury(form);
     setShowForm(false);
-    setForm({ employee: '', department: '', type: 'Minor', bodyPart: '', cause: '', location: '', daysLost: 0, correctiveAction: '' });
-    toast.success('Injury reported');
+    setForm({ employee: '', department: '', injuryType: 'Minor', bodyPart: '', cause: '', location: '', daysLost: 0, correctiveAction: '' });
   };
 
   return (
@@ -63,6 +51,8 @@ export default function InjuryPage() {
           <Plus className="w-4 h-4" /> Report Injury
         </button>
       </PageHeader>
+
+      {loading && <div className="flex items-center justify-center py-4 text-muted-foreground">Loading...</div>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Incidents" value={String(injuries.length)} change="This year" changeType="neutral" icon={HeartPulse} iconColor="gradient-primary" />
@@ -103,8 +93,8 @@ export default function InjuryPage() {
             <div className="p-5 cursor-pointer hover:bg-muted/10 transition-colors" onClick={() => setExpanded(expanded === inj.id ? null : inj.id)}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${inj.type === 'Minor' ? 'bg-success/10' : inj.type === 'Moderate' ? 'bg-warning/10' : 'bg-destructive/10'}`}>
-                    <HeartPulse className={`w-5 h-5 ${inj.type === 'Minor' ? 'text-success' : inj.type === 'Moderate' ? 'text-warning' : 'text-destructive'}`} />
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${inj.injuryType === 'Minor' ? 'bg-success/10' : inj.injuryType === 'Moderate' ? 'bg-warning/10' : 'bg-destructive/10'}`}>
+                    <HeartPulse className={`w-5 h-5 ${inj.injuryType === 'Minor' ? 'text-success' : inj.injuryType === 'Moderate' ? 'text-warning' : 'text-destructive'}`} />
                   </div>
                   <div>
                     <p className="font-semibold">{inj.employee}</p>
@@ -112,7 +102,7 @@ export default function InjuryPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <StatusBadge status={inj.type} variant={typeVariant(inj.type)} />
+                  <StatusBadge status={inj.injuryType} variant={typeVariant(inj.injuryType)} />
                   <StatusBadge status={inj.status} variant={statusVariant(inj.status)} />
                   <span className="text-xs text-muted-foreground">{inj.daysLost}d lost</span>
                 </div>
@@ -130,12 +120,29 @@ export default function InjuryPage() {
                   <p className="text-xs font-medium text-muted-foreground mb-1">Corrective Action</p>
                   <p>{inj.correctiveAction}</p>
                 </div>
-                {inj.status === 'Open' && (
-                  <button onClick={() => { setInjuries(p => p.map(x => x.id === inj.id ? { ...x, status: 'Under Investigation' } : x)); toast.success('Investigation started'); }} className="text-sm text-primary font-medium hover:underline">Start Investigation →</button>
-                )}
-                {inj.status === 'Under Investigation' && (
-                  <button onClick={() => { setInjuries(p => p.map(x => x.id === inj.id ? { ...x, status: 'Resolved' } : x)); toast.success('Marked resolved'); }} className="text-sm text-success font-medium hover:underline">Mark Resolved →</button>
-                )}
+                <div className="flex items-center gap-2">
+                  {inj.status === 'Open' && (
+                    <button onClick={() => updateInjury(inj.id, { status: 'Under Investigation' })} className="text-sm text-primary font-medium hover:underline">Start Investigation →</button>
+                  )}
+                  {inj.status === 'Under Investigation' && (
+                    <button onClick={() => updateInjury(inj.id, { status: 'Resolved' })} className="text-sm text-success font-medium hover:underline">Mark Resolved →</button>
+                  )}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="text-sm text-destructive font-medium hover:underline ml-auto">Delete</button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Injury Record</AlertDialogTitle>
+                        <AlertDialogDescription>Are you sure you want to delete this injury record for {inj.employee}? This cannot be undone.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => removeInjury(inj.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
             )}
           </div>
@@ -152,13 +159,19 @@ export default function InjuryPage() {
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Employee*</label>
-                  <input value={form.employee} onChange={e => setForm({ ...form, employee: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+                  <select value={form.employee} onChange={e => setForm({ ...form, employee: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
+                    <option value="">Select employee</option>
+                    {employees.map(emp => <option key={emp.id} value={`${emp.firstName} ${emp.lastName}`}>{emp.firstName} {emp.lastName}</option>)}
+                  </select></div>
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Department</label>
-                  <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+                  <select value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
+                    <option value="">Select department</option>
+                    {[...new Set(employees.map(e => e.department).filter(Boolean))].map(d => <option key={d} value={d}>{d}</option>)}
+                  </select></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Severity</label>
-                  <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value as any })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
+                  <select value={form.injuryType} onChange={e => setForm({ ...form, injuryType: e.target.value as any })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
                     {['Minor', 'Moderate', 'Severe', 'Critical'].map(t => <option key={t}>{t}</option>)}
                   </select></div>
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Body Part</label>

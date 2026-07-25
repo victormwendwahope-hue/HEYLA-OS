@@ -1,41 +1,32 @@
 import { PageHeader } from '@/components/shared/CommonUI';
 import { useEmployeeStore } from '@/store/employeeStore';
-import { useState } from 'react';
+import { usePerformanceStore, type PerformanceReview } from '@/store/performanceStore';
+import { useState, useEffect } from 'react';
 import { Star, TrendingUp, Target, Award, Plus, Edit2, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-
-interface Review {
-  id: string;
-  employeeId: string;
-  quarter: string;
-  rating: number;
-  goals: { title: string; progress: number }[];
-  feedback: string;
-}
-
-const mockReviews: Review[] = [
-  { id: 'r1', employeeId: '1', quarter: 'Q4 2024', rating: 4.5, goals: [{ title: 'Ship M-Pesa integration', progress: 100 }, { title: 'Mentor 2 juniors', progress: 80 }, { title: 'Reduce API latency by 20%', progress: 60 }], feedback: 'Exceptional work on payment systems.' },
-  { id: 'r2', employeeId: '2', quarter: 'Q4 2024', rating: 4.2, goals: [{ title: 'Close 5 enterprise deals', progress: 100 }, { title: 'Grow pipeline by 30%', progress: 90 }], feedback: 'Consistently exceeds targets.' },
-  { id: 'r3', employeeId: '3', quarter: 'Q4 2024', rating: 3.8, goals: [{ title: 'Automate monthly reports', progress: 70 }, { title: 'Implement new tax compliance', progress: 50 }], feedback: 'Good progress, needs to complete automation.' },
-  { id: 'r5', employeeId: '5', quarter: 'Q4 2024', rating: 4.7, goals: [{ title: 'Revamp onboarding process', progress: 100 }, { title: 'Reduce time-to-hire by 25%', progress: 85 }], feedback: 'Outstanding HR leadership.' },
-];
 
 const defaultForm = { employeeId: '', quarter: '', rating: 5, feedback: '' };
 
 export default function PerformancePage() {
   const employees = useEmployeeStore((s) => s.employees);
-  const [reviews, setReviews] = useState<Review[]>(mockReviews);
+  const fetchEmployees = useEmployeeStore((s) => s.fetchEmployees);
+  const { reviews, loading, fetchReviews, addReview, updateReview, deleteReview } = usePerformanceStore();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [editingReview, setEditingReview] = useState<PerformanceReview | null>(null);
   const [form, setForm] = useState(defaultForm);
+  const [goalDialogOpen, setGoalDialogOpen] = useState(false);
+  const [goalReviewId, setGoalReviewId] = useState<string | null>(null);
+  const [goalTitle, setGoalTitle] = useState('');
 
-  const avgRating = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+  useEffect(() => { fetchEmployees(); fetchReviews(); }, []);
+
+  const avgRating = reviews.reduce((s, r) => s + r.rating, 0) / Math.max(reviews.length, 1);
 
   const openAdd = () => {
     setEditingReview(null);
@@ -43,7 +34,7 @@ export default function PerformancePage() {
     setDialogOpen(true);
   };
 
-  const openEdit = (review: Review) => {
+  const openEdit = (review: PerformanceReview) => {
     setEditingReview(review);
     setForm({ employeeId: review.employeeId, quarter: review.quarter, rating: review.rating, feedback: review.feedback });
     setDialogOpen(true);
@@ -51,51 +42,52 @@ export default function PerformancePage() {
 
   const saveReview = () => {
     if (editingReview) {
-      setReviews((prev) =>
-        prev.map((r) => (r.id === editingReview.id ? { ...r, ...form, rating: Number(form.rating) } : r))
-      );
+      updateReview(editingReview.id, { ...form, rating: Number(form.rating) });
     } else {
-      const newReview: Review = {
-        id: `r${Date.now()}`,
+      addReview({
         employeeId: form.employeeId,
         quarter: form.quarter,
         rating: Number(form.rating),
-        goals: [],
         feedback: form.feedback,
-      };
-      setReviews((prev) => [...prev, newReview]);
+        goals: [],
+      });
     }
     setDialogOpen(false);
     setEditingReview(null);
     setForm(defaultForm);
   };
 
-  const deleteReview = (id: string) => {
-    setReviews((prev) => prev.filter((r) => r.id !== id));
+  const addGoal = (reviewId: string) => {
+    setGoalReviewId(reviewId);
+    setGoalTitle('');
+    setGoalDialogOpen(true);
   };
 
-  const addGoal = (reviewId: string) => {
-    const title = prompt('Enter goal title:');
-    if (!title?.trim()) return;
-    setReviews((prev) =>
-      prev.map((r) => (r.id === reviewId ? { ...r, goals: [...r.goals, { title: title.trim(), progress: 0 }] } : r))
-    );
+  const confirmAddGoal = () => {
+    if (!goalTitle.trim() || !goalReviewId) return;
+    const review = reviews.find(r => r.id === goalReviewId);
+    if (!review) return;
+    const updatedGoals = [...review.goals, { title: goalTitle.trim(), progress: 0 }];
+    updateReview(goalReviewId, { goals: updatedGoals });
+    setGoalDialogOpen(false);
+    setGoalReviewId(null);
+    setGoalTitle('');
   };
 
   const deleteGoal = (reviewId: string, goalIndex: number) => {
-    setReviews((prev) =>
-      prev.map((r) => (r.id === reviewId ? { ...r, goals: r.goals.filter((_, i) => i !== goalIndex) } : r))
-    );
+    const review = reviews.find(r => r.id === reviewId);
+    if (!review) return;
+    const updatedGoals = review.goals.filter((_, i) => i !== goalIndex);
+    updateReview(reviewId, { goals: updatedGoals });
   };
 
   const updateGoalProgress = (reviewId: string, goalIndex: number, progress: number) => {
-    setReviews((prev) =>
-      prev.map((r) =>
-        r.id === reviewId
-          ? { ...r, goals: r.goals.map((g, i) => (i === goalIndex ? { ...g, progress: Math.max(0, Math.min(100, progress)) } : g)) }
-          : r
-      )
+    const review = reviews.find(r => r.id === reviewId);
+    if (!review) return;
+    const updatedGoals = review.goals.map((g, i) =>
+      i === goalIndex ? { ...g, progress: Math.max(0, Math.min(100, progress)) } : g
     );
+    updateReview(reviewId, { goals: updatedGoals });
   };
 
   return (
@@ -137,6 +129,22 @@ export default function PerformancePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Goal input dialog (replaces prompt()) */}
+      <Dialog open={goalDialogOpen} onOpenChange={setGoalDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add Goal</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Goal Title</Label>
+              <Input value={goalTitle} onChange={(e) => setGoalTitle(e.target.value)} placeholder="Enter goal title" autoFocus />
+            </div>
+            <Button onClick={confirmAddGoal} className="w-full">Add Goal</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {loading && <div className="flex items-center justify-center py-4 text-muted-foreground">Loading...</div>}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="glass rounded-xl p-4 text-center">

@@ -1,41 +1,26 @@
 import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
-import { useState } from 'react';
+import { useBlacklistStore, type BlacklistEntry } from '@/store/blacklistStore';
+import { useEffect, useState } from 'react';
 import { Plus, X, AlertTriangle, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-
-interface BlacklistEntry {
-  id: string;
-  name: string;
-  email: string;
-  reason: string;
-  addedDate: string;
-  addedBy: string;
-  severity: 'High' | 'Medium' | 'Low';
-}
-
-const mockBlacklist: BlacklistEntry[] = [
-  { id: '1', name: 'James Maina', email: 'james.m@email.com', reason: 'Falsified employment records and qualifications', addedDate: '2024-01-10', addedBy: 'Njeri Kariuki', severity: 'High' },
-  { id: '2', name: 'Lucy Wanjiru', email: 'lucy.w@email.com', reason: 'Gross misconduct - theft of company property', addedDate: '2023-11-20', addedBy: 'Njeri Kariuki', severity: 'High' },
-  { id: '3', name: 'David Ongaro', email: 'david.o@email.com', reason: 'Repeated no-show without communication', addedDate: '2024-02-01', addedBy: 'Ochieng Otieno', severity: 'Medium' },
-];
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export default function BlacklistPage() {
-  const [entries, setEntries] = useState<BlacklistEntry[]>(mockBlacklist);
+  const { entries, loading, fetchEntries, addEntry, removeEntry } = useBlacklistStore();
   const [showAdd, setShowAdd] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', email: '', reason: '', severity: 'Medium' as BlacklistEntry['severity'] });
+
+  useEffect(() => { fetchEntries(); }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.reason) { toast.error('Fill required fields'); return; }
-    setEntries((prev) => [...prev, { ...form, id: Date.now().toString(), addedDate: new Date().toISOString().split('T')[0], addedBy: 'John Kamau' }]);
+    addEntry(form);
     setShowAdd(false);
     setForm({ name: '', email: '', reason: '', severity: 'Medium' });
-    toast.success('Entry added to blacklist');
-  };
-
-  const handleRemove = (id: string) => {
-    setEntries((prev) => prev.filter((e) => e.id !== id));
-    toast.success('Removed from blacklist');
   };
 
   const severityVariant = (s: string) => s === 'High' ? 'destructive' : s === 'Medium' ? 'warning' : 'info';
@@ -52,6 +37,8 @@ export default function BlacklistPage() {
         <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
         <p className="text-sm text-muted-foreground">This list contains individuals flagged for serious policy violations. Handle with confidentiality.</p>
       </div>
+
+      {loading && <div className="flex items-center justify-center py-4 text-muted-foreground">Loading...</div>}
 
       <div className="glass rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
@@ -76,9 +63,23 @@ export default function BlacklistPage() {
                   <td className="px-4 py-3 hidden md:table-cell text-muted-foreground text-xs">{entry.addedDate}<br />by {entry.addedBy}</td>
                   <td className="px-4 py-3"><StatusBadge status={entry.severity} variant={severityVariant(entry.severity)} /></td>
                   <td className="px-4 py-3 text-center">
-                    <button onClick={() => handleRemove(entry.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remove from Blacklist</AlertDialogTitle>
+                          <AlertDialogDescription>Are you sure you want to remove {entry.name} from the blacklist? This cannot be undone.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => removeEntry(entry.id)}>Remove</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </td>
                 </tr>
               ))}
