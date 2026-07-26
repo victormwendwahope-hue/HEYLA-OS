@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Search, Plus, Download, Filter, Eye, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/utils/countries';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import AddEmployeeDialog from '@/components/hr/AddEmployeeDialog';
 

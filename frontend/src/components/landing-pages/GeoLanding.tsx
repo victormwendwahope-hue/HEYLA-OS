@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { countries, getCountry } from '@/utils/countries';
 import { Globe, ShieldAlert, RefreshCw, Loader2 } from 'lucide-react';
 
@@ -13,7 +13,7 @@ export default function GeoLanding() {
   const goTo = (code: string) => {
     const upper = code.toUpperCase();
     const finalCode = SUPPORTED.has(upper) ? upper : 'KE';
-    navigate(`/country/${finalCode.toLowerCase()}`, { replace: true });
+    navigate({ to: `/country/${finalCode.toLowerCase()}`, replace: true });
   };
 
   useEffect(() => {

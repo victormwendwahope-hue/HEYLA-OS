@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CreditCard, Shield, Check, ArrowLeft, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
 export default function PaymentPage() {
@@ -31,14 +31,14 @@ export default function PaymentPage() {
     setTimeout(() => {
       setProcessing(false);
       toast.success('Subscription activated! Redirecting to dashboard...');
-      navigate('/dashboard');
+      navigate({ to: '/dashboard' });
     }, 2000);
   };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
-        <button onClick={() => navigate('/login')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors">
+        <button onClick={() => navigate({ to: '/login' })} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to Login
         </button>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { Shield, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CookiePreferences {

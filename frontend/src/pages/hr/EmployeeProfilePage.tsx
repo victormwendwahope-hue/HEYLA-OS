@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate } from '@tanstack/react-router';
 import { useEmployeeStore } from '@/store/employeeStore';
 import { useAttendanceStore } from '@/store/attendanceStore';
 import { StatusBadge } from '@/components/shared/CommonUI';
@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
 export default function EmployeeProfilePage() {
-  const { id } = useParams();
+  const { id } = useParams({ strict: false }) as { id: string };
   const employees = useEmployeeStore((s) => s.employees);
   const fetchEmployees = useEmployeeStore((s) => s.fetchEmployees);
   const employee = employees.find((e) => e.id === id);
@@ -184,7 +184,7 @@ export default function EmployeeProfilePage() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => { removeEmployee(employee.id); navigate('/hr'); }}>Delete</AlertDialogAction>
+                  <AlertDialogAction onClick={() => { removeEmployee(employee.id); navigate({ to: '/hr' }); }}>Delete</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

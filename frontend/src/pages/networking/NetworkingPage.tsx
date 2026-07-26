@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { useNetworkStore } from '@/store/networkStore';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 
 export default function NetworkingPage() {
   const user = useAuthStore((s) => s.user);

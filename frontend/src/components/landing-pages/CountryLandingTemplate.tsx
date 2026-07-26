@@ -1,5 +1,5 @@
 import { CountryConfig } from '@/types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { ArrowRight, Users, TrendingUp, Package, DollarSign, Globe, Shield, Zap, CheckCircle, Briefcase, MapPin, Clock, Loader2 } from 'lucide-react';
 import { AdBanner } from '@/components/ui/AdBanner';
@@ -55,8 +55,8 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
             <span className="text-lg font-bold">HEYLA<span className="text-primary"> OS</span></span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <button onClick={() => navigate('/login')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Log in</button>
-            <button onClick={() => navigate('/register')} className="text-sm bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">Get Started</button>
+            <button onClick={() => navigate({ to: '/login' })} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Log in</button>
+            <button onClick={() => navigate({ to: '/register' })} className="text-sm bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">Get Started</button>
           </div>
         </nav>
 
@@ -76,10 +76,10 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
                 HR, CRM, Accounting, Inventory -- all with {country.currency} support and local compliance.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-                <button onClick={() => navigate('/register')} className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+                <button onClick={() => navigate({ to: '/register' })} className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
                   Start Free Trial <ArrowRight className="w-4 h-4" />
                 </button>
-                <button onClick={() => navigate('/login')} className="border border-border px-6 py-3 rounded-lg font-medium hover:bg-muted/50 transition-colors">
+                <button onClick={() => navigate({ to: '/login' })} className="border border-border px-6 py-3 rounded-lg font-medium hover:bg-muted/50 transition-colors">
                   View Demo
                 </button>
               </div>
@@ -219,7 +219,7 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
                     </p>
                   </div>
                   <button
-                    onClick={() => navigate('/register?type=individual')}
+                    onClick={() => navigate({ to: '/register/individual' })}
                     className="w-full text-xs bg-primary text-primary-foreground py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
                   >
                     I am Interested
@@ -247,7 +247,7 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Grow Your Business in {country.name}?</h2>
           <p className="text-muted-foreground mb-8">Join thousands of businesses using HEYLA. Start free today.</p>
-          <button onClick={() => navigate('/register')} className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors inline-flex items-center gap-2">
+          <button onClick={() => navigate({ to: '/register' })} className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors inline-flex items-center gap-2">
             Get Started Free <ArrowRight className="w-4 h-4" />
           </button>
         </div>

@@ -1,6 +1,6 @@
 import { NavLink } from '@/components/NavLink';
 import { useAuthStore } from '@/store/authStore';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from '@tanstack/react-router';
 import {
   LayoutDashboard, Users, TrendingUp, DollarSign, Package, Globe, ShoppingBag,
   ChevronLeft, LogOut, Settings, ChevronDown, FileText, Calendar, Award, ShieldBan, FolderOpen, Receipt,
@@ -112,7 +112,7 @@ export function AppSidebar() {
                           if (hasItems && !collapsed) {
                             setExpanded(isExp ? null : item.title);
                           } else {
-                            navigate(item.url);
+                            navigate({ to: item.url });
                           }
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -173,7 +173,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => { logout(); navigate('/login'); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-destructive/20 hover:text-destructive transition-colors cursor-pointer w-full">
+            <SidebarMenuButton onClick={() => { logout(); navigate({ to: '/login' }); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-destructive/20 hover:text-destructive transition-colors cursor-pointer w-full">
               <LogOut className="w-5 h-5 shrink-0" />
               {!collapsed && <span>Logout</span>}
             </SidebarMenuButton>

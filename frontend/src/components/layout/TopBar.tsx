@@ -4,7 +4,7 @@ import { useEmployeeStore } from '@/store/employeeStore';
 import { Bell, Search, ChevronDown, Settings, LogOut, Shield, X, Loader2, FileText, Users, CheckCheck, Trash2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { countries } from '@/utils/countries';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { getToken, apiBaseUrl } from '@/lib/api';
 
 interface Notification {
@@ -141,7 +141,7 @@ export function TopBar() {
           {showSearchResults && (
             <div className="absolute left-0 right-0 top-full mt-1.5 bg-card border border-border rounded-xl shadow-lg z-50 max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2">
               {searchResults.map((r, i) => (
-                <button key={i} onMouseDown={() => { navigate(r.to); setShowSearchResults(false); setSearchQuery(''); setSearchOpen(false); }}
+                <button key={i} onMouseDown={() => { navigate({ to: r.to }); setShowSearchResults(false); setSearchQuery(''); setSearchOpen(false); }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-muted/50 transition-colors text-left">
                   <div className={`p-1.5 rounded-lg ${r.type === 'employee' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
                     {r.type === 'employee' ? <Users className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
@@ -269,17 +269,17 @@ export function TopBar() {
                 <p className="text-xs text-muted-foreground truncate">{user?.email || 'user@heyla.co'}</p>
               </div>
               <div className="p-1">
-                <button onClick={() => { setShowUserMenu(false); navigate('/settings'); }}
+                <button onClick={() => { setShowUserMenu(false); navigate({ to: '/settings' }); }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted/50 transition-colors text-left">
                   <Settings className="w-4 h-4 text-muted-foreground shrink-0" /> Settings
                 </button>
                 {user?.role === 'admin' && (
-                  <button onClick={() => { setShowUserMenu(false); navigate('/admin'); }}
+                  <button onClick={() => { setShowUserMenu(false); navigate({ to: '/admin' }); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted/50 transition-colors text-left">
                     <Shield className="w-4 h-4 text-muted-foreground shrink-0" /> Admin Panel
                   </button>
                 )}
-                <button onClick={() => { logout(); navigate('/login'); }}
+                <button onClick={() => { logout(); navigate({ to: '/login' }); }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-destructive/10 text-destructive transition-colors text-left">
                   <LogOut className="w-4 h-4 shrink-0" /> Logout
                 </button>

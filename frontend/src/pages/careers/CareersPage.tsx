@@ -2,7 +2,7 @@ import { useNetworkStore } from '@/store/networkStore';
 import { useAuthStore } from '@/store/authStore';
 import { Briefcase, MapPin, Clock, Search, Send, ChevronDown, LogOut, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { StatusBadge } from '@/components/shared/CommonUI';
 import { HeyleyBot } from '@/components/chat/HeyleyBot';
@@ -119,7 +119,7 @@ export default function CareersPage() {
                 <button onClick={() => { setTab('profile'); setShowUserMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 text-left">
                   <User className="w-4 h-4 text-muted-foreground" /> My Profile
                 </button>
-                <button onClick={() => { logout(); navigate('/login'); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-destructive/10 text-destructive text-left">
+                <button onClick={() => { logout(); navigate({ to: '/login' }); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-destructive/10 text-destructive text-left">
                   <LogOut className="w-4 h-4" /> Logout
                 </button>
               </div>

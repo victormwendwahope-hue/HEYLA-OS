@@ -1,7 +1,8 @@
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { TopBar } from '@/components/layout/TopBar';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from '@tanstack/react-router';
+import { HeyleyBot } from '@/components/chat/HeyleyBot';
 
 export function AppLayout() {
   return (
@@ -16,5 +17,14 @@ export function AppLayout() {
         </div>
       </div>
     </SidebarProvider>
+  );
+}
+
+export function AppLayoutWithBot() {
+  return (
+    <>
+      <AppLayout />
+      <HeyleyBot />
+    </>
   );
 }
