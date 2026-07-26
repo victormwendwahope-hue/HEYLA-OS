@@ -119,7 +119,7 @@ export function HeyleyBot() {
           className="fixed bottom-4 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg flex items-center justify-center hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
           aria-label="Open HEYLAOS chat"
         >
-          <img src="/logo.png" alt="HEYLA" className="w-7 h-7" />
+          <img src="/logo.png?v=3" alt="HEYLA" className="w-7 h-7" />
           <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
         </button>
       )}
@@ -128,7 +128,7 @@ export function HeyleyBot() {
         <div className={`fixed z-50 flex flex-col bg-white dark:bg-gray-900 shadow-2xl overflow-hidden transition-all duration-300
           inset-0 sm:inset-auto sm:bottom-4 sm:right-4 sm:rounded-2xl sm:w-[380px] sm:max-h-[600px]`}>
           <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-br from-blue-600 to-indigo-700 text-white shrink-0 sm:rounded-t-2xl">
-            <img src="/logo.png" alt="HEYLA" className="w-8 h-8" />
+            <img src="/logo.png?v=3" alt="HEYLA" className="w-8 h-8" />
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm truncate">HEYLAOS Assistant</p>
               <p className="text-xs text-white/70">Online</p>
@@ -152,7 +152,7 @@ export function HeyleyBot() {
                         : 'bg-gray-200 dark:bg-gray-700'
                     }`}>
                       {msg.role === 'bot' ? (
-                        <img src="/logo.png" alt="HEYLA" className="w-4 h-4" />
+                        <img src="/logo.png?v=3" alt="HEYLA" className="w-4 h-4" />
                       ) : (
                         <User className="w-4 h-4 text-gray-700 dark:text-gray-200" />
                       )}

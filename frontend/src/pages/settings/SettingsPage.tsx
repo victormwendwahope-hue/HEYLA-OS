@@ -44,8 +44,8 @@ export default function SettingsPage() {
     if (f.size > 2 * 1024 * 1024) { toast.error('Max 2MB'); return; }
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      setAvatarPreview(dataUrl);
+      const result = ev.target?.result;
+      if (typeof result === 'string') setAvatarPreview(result);
     };
     reader.readAsDataURL(f);
   };
@@ -66,8 +66,8 @@ export default function SettingsPage() {
     try {
       await changePassword(passwordForm.current, passwordForm.newPass);
       setPasswordForm({ current: '', newPass: '', confirm: '' });
-    } catch (e: any) {
-      toast.error(e?.message || 'Failed to change password');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to change password');
     }
     setChangingPassword(false);
   };

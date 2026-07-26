@@ -24,6 +24,8 @@ class HeylaUser(models.Model):
     refresh_token = fields.Char(string='Refresh Token')
     active = fields.Boolean(string='Active', default=True)
     last_login = fields.Datetime(string='Last Login')
+    facility_name = fields.Char(string='Facility Name', tracking=True)
+    facility_logo = fields.Char(string='Facility Logo URL')
 
     _sql_constraints = [
         ('email_unique', 'unique(email)', 'Email must be unique!'),

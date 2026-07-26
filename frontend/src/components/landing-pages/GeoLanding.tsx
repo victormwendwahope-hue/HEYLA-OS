@@ -77,7 +77,7 @@ export default function GeoLanding() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background px-6 text-center">
       <div className="flex items-center gap-3">
-        <img src="/logo.png" alt="HEYLA" className="w-10 h-10" />
+        <img src="/logo.png?v=3" alt="HEYLA" className="w-10 h-10" />
         <span className="text-xl font-bold">HEYLA<span className="text-primary"> OS</span></span>
       </div>
 

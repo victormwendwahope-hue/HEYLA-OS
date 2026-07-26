@@ -9,7 +9,7 @@ export default function TermsPage() {
           Back to HEYLAOS
         </Link>
         <div className="flex items-center gap-3 mb-8">
-          <img src="/logo.png" alt="HEYLA" className="w-10 h-10" />
+          <img src="/logo.png?v=3" alt="HEYLA" className="w-10 h-10" />
           <span className="text-xl font-bold">HEYLA<span className="text-primary"> OS</span></span>
         </div>
         <h1 className="text-3xl font-bold mb-6">Terms of Use</h1>

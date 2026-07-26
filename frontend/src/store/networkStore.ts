@@ -40,7 +40,7 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
   fetchPosts: async () => {
     set({ loading: true, error: null });
     try { set({ posts: await api.get<Post[]>('/network-posts'), loading: false }); }
-    catch (err) { set({ error: (err as Error).message, loading: false }); toast.error('Failed to fetch posts'); }
+    catch (err: unknown) { set({ error: err instanceof Error ? err.message : 'Unknown error', loading: false }); toast.error('Failed to fetch posts'); }
   },
   fetchJobs: async () => {
     try { set({ jobs: await api.get<JobPost[]>('/network-jobs') }); }

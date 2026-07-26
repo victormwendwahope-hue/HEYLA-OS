@@ -252,7 +252,7 @@ export function TopBar() {
               {user?.avatar ? (
                 <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                <img src={user?.facilityLogo || '/logo.png'} alt="HEYLA" className="w-full h-full object-cover" />
+                <img src={user?.facilityLogo || '/logo.png?v=3'} alt="HEYLA" className="w-full h-full object-cover" />
               )}
             </div>
             <div className="hidden md:block text-left max-w-[100px]">

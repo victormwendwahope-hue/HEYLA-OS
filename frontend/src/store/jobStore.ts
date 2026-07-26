@@ -46,7 +46,7 @@ export const useJobStore = create<JobState>((set) => ({
   fetchJobs: async () => {
     set({ loading: true, error: null });
     try { set({ jobs: await api.get<Job[]>('/jobs'), loading: false }); }
-    catch (err) { set({ error: (err as Error).message, loading: false }); toast.error('Failed to fetch jobs'); }
+    catch (err: unknown) { set({ error: err instanceof Error ? err.message : 'Unknown error', loading: false }); toast.error('Failed to fetch jobs'); }
   },
   fetchApplicants: async () => {
     try { set({ applicants: await api.get<Applicant[]>('/applicants') }); }

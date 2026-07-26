@@ -75,7 +75,7 @@ export const useEngineeringStore = create<EngStore>((set) => ({
   fetchProjects: async () => {
     set({ loading: true, error: null });
     try { set({ projects: await api.get<Project[]>('/engineering-projects'), loading: false }); }
-    catch (err) { set({ error: (err as Error).message, loading: false }); toast.error('Failed to fetch projects'); }
+    catch (err: unknown) { set({ error: err instanceof Error ? err.message : 'Unknown error', loading: false }); toast.error('Failed to fetch projects'); }
   },
   fetchContracts: async () => {
     try { set({ contracts: await api.get<Contract[]>('/engineering-contracts') }); }

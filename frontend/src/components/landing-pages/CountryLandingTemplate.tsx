@@ -51,7 +51,7 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5" />
         <nav className="relative z-10 flex items-center justify-between px-4 sm:px-8 lg:px-16 py-4">
           <div className="flex items-center gap-2">
-            <img src="/logo.png?v=2" alt="HEYLA" className="w-8 h-8 rounded-lg" />
+            <img src="/logo.png?v=3" alt="HEYLA" className="w-8 h-8 rounded-lg" />
             <span className="text-lg font-bold">HEYLA<span className="text-primary"> OS</span></span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
@@ -257,7 +257,7 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
       <footer className="border-t border-border px-4 sm:px-8 lg:px-16 py-8">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="HEYLA" className="w-6 h-6" />
+            <img src="/logo.png?v=3" alt="HEYLA" className="w-6 h-6" />
             <span className="text-sm font-semibold">HEYLA</span>
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">

@@ -50,7 +50,7 @@ export const useTransportStore = create<TransportState>((set) => ({
   fetchVehicles: async () => {
     set({ loading: true, error: null });
     try { set({ vehicles: await api.get<Vehicle[]>('/vehicles'), loading: false }); }
-    catch (err) { set({ error: (err as Error).message, loading: false }); toast.error('Failed to fetch vehicles'); }
+    catch (err: unknown) { set({ error: err instanceof Error ? err.message : 'Unknown error', loading: false }); toast.error('Failed to fetch vehicles'); }
   },
   fetchDrivers: async () => {
     try { set({ drivers: await api.get<Driver[]>('/drivers') }); }

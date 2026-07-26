@@ -94,7 +94,7 @@ export default function CareersPage() {
       {/* Navbar */}
       <header className="h-14 border-b border-border bg-card/80 backdrop-blur-xl flex items-center px-4 sm:px-8 gap-4 sticky top-0 z-30">
         <Link to="/" className="flex items-center gap-2">
-          <img src="/logo.png?v=2" alt="HEYLA" className="w-8 h-8 rounded-lg" />
+          <img src="/logo.png?v=3" alt="HEYLA" className="w-8 h-8 rounded-lg" />
           <span className="text-lg font-bold">HEYLA<span className="text-primary"> Careers</span></span>
         </Link>
         <div className="flex-1" />

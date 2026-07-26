@@ -50,7 +50,7 @@ export const useEHSStore = create<EHSStore>((set) => ({
   fetchIncidents: async () => {
     set({ loading: true, error: null });
     try { set({ incidents: await api.get<Incident[]>('/ehs-incidents'), loading: false }); }
-    catch (err) { set({ error: (err as Error).message, loading: false }); toast.error('Failed to fetch incidents'); }
+    catch (err: unknown) { set({ error: err instanceof Error ? err.message : 'Unknown error', loading: false }); toast.error('Failed to fetch incidents'); }
   },
   fetchCompliance: async () => {
     try { set({ compliance: await api.get<ComplianceItem[]>('/ehs-compliance') }); }

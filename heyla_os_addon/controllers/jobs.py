@@ -15,6 +15,8 @@ class JobsController(http.Controller):
             'requirements': j.requirements.split('\n') if j.requirements else [],
             'postedDate': j.posted_date.isoformat() if j.posted_date else '',
             'applicants': j.applicants or 0,
+            'country': j.country or '',
+            'company': j.company_name or '',
         }
 
     def _applicant_to_json(self, a):
@@ -58,6 +60,8 @@ class JobsController(http.Controller):
             'status': data.get('status', 'Draft'), 'salary': data.get('salary', ''),
             'description': data.get('description', ''),
             'requirements': '\n'.join(data.get('requirements', [])),
+            'country': data.get('country', ''),
+            'company_name': data.get('company', ''),
         })
         return http.Response(json.dumps(self._job_to_json(j)), content_type='application/json', status=201)
 
@@ -75,7 +79,8 @@ class JobsController(http.Controller):
             return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
         field_map = {'title': 'title', 'department': 'department', 'location': 'location',
                      'type': 'job_type', 'status': 'status', 'salary': 'salary',
-                     'description': 'description'}
+                     'description': 'description', 'country': 'country',
+                     'company': 'company_name'}
         vals = {o: data[f] for f, o in field_map.items() if f in data}
         if 'requirements' in data:
             vals['requirements'] = '\n'.join(data['requirements']) if isinstance(data['requirements'], list) else data['requirements']

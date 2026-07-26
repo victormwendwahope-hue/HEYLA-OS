@@ -43,7 +43,7 @@ export default function AdminPage() {
       await api.admin.setRole(id, newRole);
       toast.success('Role updated — user sessions revoked');
       fetchUsers();
-    } catch (e: any) { toast.error(e?.message || 'Failed to update role'); }
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Failed to update role'); }
     setSaving(false);
     setRoleChangeId(null);
   };
@@ -57,7 +57,7 @@ export default function AdminPage() {
       toast.success('Password reset — user sessions revoked');
       setResetUserId(null);
       setResetPassword('');
-    } catch (e: any) { toast.error(e?.message || 'Failed to reset password'); }
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Failed to reset password'); }
     setSaving(false);
   };
 

@@ -94,7 +94,7 @@ export default function RegisterPage() {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) { toast.error('Logo must be under 2MB'); return; }
     const reader = new FileReader();
-    reader.onload = (ev) => setFacilityLogo(ev.target?.result as string);
+    reader.onload = (ev) => { const r = ev.target?.result; if (typeof r === 'string') setFacilityLogo(r); };
     reader.readAsDataURL(file);
   };
 

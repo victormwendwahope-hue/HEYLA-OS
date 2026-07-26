@@ -27,3 +27,5 @@ class HeylaJob(models.Model):
     requirements = fields.Text(string='Requirements')
     posted_date = fields.Date(string='Posted Date', default=fields.Date.today)
     applicants = fields.Integer(string='Applicants Count', default=0)
+    country = fields.Char(string='Country')
+    company_name = fields.Char(string='Company Name')

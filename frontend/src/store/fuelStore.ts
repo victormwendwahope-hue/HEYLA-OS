@@ -26,7 +26,7 @@ export const useFuelStore = create<FuelState>((set) => ({
   fetchEntries: async () => {
     set({ loading: true, error: null });
     try { set({ entries: await api.get<FuelEntry[]>('/fuel'), loading: false }); }
-    catch (err) { set({ error: (err as Error).message, loading: false }); toast.error('Failed to fetch fuel entries'); }
+    catch (err: unknown) { set({ error: err instanceof Error ? err.message : 'Unknown error', loading: false }); toast.error('Failed to fetch fuel entries'); }
   },
 
   addEntry: async (e) => {
