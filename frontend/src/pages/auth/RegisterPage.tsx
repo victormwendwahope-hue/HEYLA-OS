@@ -1,22 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
-import { Eye, EyeOff, ArrowRight, Building2, User, Globe, Search, Upload, X } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Building2, User, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { countries } from '@/utils/countries';
 
 declare global {
   interface Window {
     google?: {
       accounts: {
         id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential: string }) => void;
-            auto_select?: boolean;
-            cancel_on_tap_outside?: boolean;
-          }) => void;
-          prompt: (moment: () => void) => void;
+          initialize: (config: { client_id: string; callback: (response: { credential: string }) => void; auto_select?: boolean; cancel_on_tap_outside?: boolean }) => void;
           renderButton: (element: HTMLElement, options: { theme?: string; size?: string; text?: string; width?: string }) => void;
         };
       };
@@ -26,10 +19,7 @@ declare global {
 
 function loadGoogleScript(): Promise<void> {
   return new Promise((resolve) => {
-    if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
-      resolve();
-      return;
-    }
+    if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) { resolve(); return; }
     const s = document.createElement('script');
     s.src = 'https://accounts.google.com/gsi/client';
     s.async = true;
@@ -40,15 +30,12 @@ function loadGoogleScript(): Promise<void> {
 }
 
 export default function RegisterPage() {
-  const [accountType, setAccountType] = useState<'company' | 'individual'>('company');
+  const [accountType, setAccountType] = useState<'individual' | 'company'>('individual');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState('KE');
-  const [showCountry, setShowCountry] = useState(false);
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [facilityName, setFacilityName] = useState('');
   const [facilityLogo, setFacilityLogo] = useState<string>('');
@@ -58,10 +45,8 @@ export default function RegisterPage() {
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const country = countries.find((c) => c.code === selectedCountry) || countries[0];
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
-  // Check if navigated here from Google login
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('google') === '1') {
@@ -78,12 +63,7 @@ export default function RegisterPage() {
     }
     try {
       clearError();
-      await googleRegister({
-        credential,
-        password,
-        facilityName: facilityName || company || name,
-        facilityLogo: facilityLogo || undefined,
-      });
+      await googleRegister({ credential, password, facilityName: facilityName || company || name, facilityLogo: facilityLogo || undefined });
       navigate('/dashboard');
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -105,20 +85,14 @@ export default function RegisterPage() {
       cancel_on_tap_outside: false,
     });
     window.google?.accounts.id.renderButton(googleBtnRef.current, {
-      theme: 'outline',
-      size: 'large',
-      text: 'signup_with',
-      width: '100%',
+      theme: 'outline', size: 'large', text: 'signup_with', width: '100%',
     });
   }, [googleLoaded, googleClientId, handleGoogleCredential]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Logo must be under 2MB');
-      return;
-    }
+    if (file.size > 2 * 1024 * 1024) { toast.error('Logo must be under 2MB'); return; }
     const reader = new FileReader();
     reader.onload = (ev) => setFacilityLogo(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -131,131 +105,94 @@ export default function RegisterPage() {
     clearError();
 
     if (googleCredential) {
-      await googleRegister({
-        credential: googleCredential,
-        password,
-        facilityName: facilityName || company || name,
-        facilityLogo: facilityLogo || undefined,
-      });
+      await googleRegister({ credential: googleCredential, password, facilityName: facilityName || company || name, facilityLogo: facilityLogo || undefined });
     } else {
-      await register({
-        email, password, name,
-        company: company || facilityName || name,
-        facilityName: facilityName || company || name,
-        facilityLogo: facilityLogo || undefined,
-      });
+      const payload: any = { email, password, name, accountType };
+      if (accountType === 'company') {
+        payload.company = company || facilityName || name;
+        payload.facilityName = facilityName || company || name;
+        payload.facilityLogo = facilityLogo || undefined;
+      }
+      await register(payload);
     }
     navigate('/dashboard');
   };
 
   const pwStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : /[A-Z]/.test(password) && /\d/.test(password) ? 4 : 3;
   const pwLabels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-  const pwColors = ['', 'bg-destructive', 'bg-warning', 'bg-info', 'bg-success'];
+  const pwColors = ['', 'bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <div className="w-full max-w-md animate-fade-in">
-        <div className="flex items-center gap-2 mb-8 justify-center">
-          <img src="/logo.png?v=2" alt="HEYLA" className="w-10 h-10 rounded-xl shrink-0" />
-          <span className="text-xl font-bold">HEYLA</span>
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <img src="/logo.png?v=3" alt="HEYLA" className="w-12 h-12 mx-auto mb-3" />
+          <h1 className="text-2xl font-bold text-slate-800">Create your account</h1>
+          <p className="text-slate-500 mt-1">Choose your account type to get started</p>
         </div>
 
-        <div className="glass rounded-2xl p-8">
-          <h2 className="text-2xl font-bold mb-1">Create your account</h2>
-          <p className="text-muted-foreground mb-6">Start managing your business today</p>
-
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-              {error}
-            </div>
+            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
           )}
 
-          <div className="flex items-center gap-3 mb-6 p-3 bg-muted/50 rounded-lg">
-            <div className="flex-1 max-w-xs relative">
-              {showSearch ? (
-                <input
-                  autoFocus
-                  onBlur={() => setShowSearch(false)}
-                  placeholder="Search…"
-                  className="w-full bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary/30"
-                />
-              ) : (
-                <button onClick={() => setShowSearch(true)} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm">
-                  <Search className="w-3.5 h-3.5" />
-                  <span>Search</span>
-                </button>
-              )}
-            </div>
-
-            <div className="relative">
-              <button
-                onClick={() => setShowCountry(!showCountry)}
-                className="flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-muted text-sm transition-colors"
-              >
-                <span className="text-base">{country.flag}</span>
-                <span className="text-muted-foreground">{country.currency}</span>
-                <Globe className="w-3.5 h-3.5 text-muted-foreground" />
-              </button>
-              {showCountry && (
-                <div className="absolute right-0 top-full mt-1 w-64 bg-card border border-border rounded-lg shadow-elevated z-50 max-h-60 overflow-y-auto">
-                  {countries.map((c) => (
-                    <button
-                      key={c.code}
-                      onClick={() => { setSelectedCountry(c.code); setShowCountry(false); }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent first:rounded-t-lg last:rounded-b-lg ${c.code === selectedCountry ? 'bg-accent text-accent-foreground' : ''}`}
-                    >
-                      <span className="text-lg">{c.flag}</span>
-                      <span className="flex-1 text-left">{c.name}</span>
-                      <span className="text-xs text-muted-foreground">{c.currency}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Account type toggle */}
-          <div className="flex gap-2 mb-6 p-1 bg-muted rounded-lg">
+          <div className="flex gap-2 mb-8 p-1 bg-slate-100 rounded-lg">
             {[
-              { type: 'company' as const, icon: Building2, label: 'Company' },
               { type: 'individual' as const, icon: User, label: 'Individual' },
+              { type: 'company' as const, icon: Building2, label: 'Company' },
             ].map(({ type, icon: Icon, label }) => (
               <button key={type} onClick={() => setAccountType(type)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
-                  accountType === type ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-sm font-medium transition-all ${
+                  accountType === type ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'
                 }`}>
                 <Icon className="w-4 h-4" /> {label}
               </button>
             ))}
           </div>
 
+          {accountType === 'individual' && (
+            <div className="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-100">
+              <p className="text-sm text-blue-700">
+                Looking for a job or opportunity? Create an individual account to apply for vacancies posted by companies on HEYLAOS.
+              </p>
+            </div>
+          )}
+
+          {accountType === 'company' && (
+            <div className="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-100">
+              <p className="text-sm text-blue-700">
+                Register your company to post jobs, manage HR, payroll, inventory, and grow your business with HEYLAOS.
+              </p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Full Name</label>
+              <label className="text-sm font-medium text-slate-700 mb-1.5 block">Full Name</label>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
             </div>
 
             {accountType === 'company' && (
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Company / Facility Name</label>
+                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Company Name</label>
                 <input type="text" value={company} onChange={(e) => setCompany(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
               </div>
             )}
 
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Email</label>
+              <label className="text-sm font-medium text-slate-700 mb-1.5 block">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Password</label>
+              <label className="text-sm font-medium text-slate-700 mb-1.5 block">Password</label>
               <div className="relative">
                 <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 pr-10" />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all pr-10" />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -263,75 +200,74 @@ export default function RegisterPage() {
                 <div className="mt-2">
                   <div className="flex gap-1">
                     {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= pwStrength ? pwColors[pwStrength] : 'bg-muted'}`} />
+                      <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= pwStrength ? pwColors[pwStrength] : 'bg-slate-200'}`} />
                     ))}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{pwLabels[pwStrength]}</p>
+                  <p className="text-xs text-slate-400 mt-1">{pwLabels[pwStrength]}</p>
                 </div>
               )}
             </div>
 
-            {/* Facility Name & Logo */}
-            <div className="border-t border-border pt-4 mt-2">
-              <h3 className="text-sm font-semibold mb-3">Facility Setup</h3>
-
-              <div className="mb-3">
-                <label className="text-sm font-medium mb-1.5 block">Facility Name</label>
-                <input type="text" value={facilityName} onChange={(e) => setFacilityName(e.target.value)}
-                  placeholder="e.g. Hydan Medical Centre"
-                  className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Facility Logo</label>
-                <div className="flex items-center gap-3">
-                  {facilityLogo ? (
-                    <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-border shrink-0">
-                      <img src={facilityLogo} alt="Facility logo" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => setFacilityLogo('')}
-                        className="absolute top-0 right-0 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
-                        <X className="w-3 h-3" />
+            {accountType === 'company' && (
+              <div className="border-t border-slate-200 pt-4 mt-2">
+                <h3 className="text-sm font-semibold text-slate-700 mb-3">Facility Details</h3>
+                <div className="mb-3">
+                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">Facility Name</label>
+                  <input type="text" value={facilityName} onChange={(e) => setFacilityName(e.target.value)}
+                    placeholder="e.g. Hydan Medical Centre"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">Facility Logo</label>
+                  <div className="flex items-center gap-3">
+                    {facilityLogo ? (
+                      <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                        <img src={facilityLogo} alt="Facility logo" className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => setFacilityLogo('')}
+                          className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => fileInputRef.current?.click()}
+                        className="w-16 h-16 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors shrink-0">
+                        <Upload className="w-5 h-5" />
                       </button>
+                    )}
+                    <div className="text-xs text-slate-400">
+                      <p>Upload your facility logo</p>
+                      <p>PNG, JPG or SVG. Max 2MB.</p>
                     </div>
-                  ) : (
-                    <button type="button" onClick={() => fileInputRef.current?.click()}
-                      className="w-16 h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors shrink-0">
-                      <Upload className="w-5 h-5" />
-                    </button>
-                  )}
-                  <div className="text-xs text-muted-foreground">
-                    <p>Upload your facility logo</p>
-                    <p>PNG, JPG or SVG. Max 2MB.</p>
+                    <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml" onChange={handleLogoUpload} className="hidden" />
                   </div>
-                  <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml" onChange={handleLogoUpload} className="hidden" />
                 </div>
               </div>
-            </div>
+            )}
 
             <button type="submit" disabled={isLoading}
-              className="w-full gradient-primary text-primary-foreground py-2.5 rounded-lg font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50">
-              {isLoading ? 'Creating account...' : <><span>Create Account</span><ArrowRight className="w-4 h-4" /></>}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+              {isLoading ? 'Creating account...' : <><span>Create {accountType === 'individual' ? 'Account' : 'Company Account'}</span><ArrowRight className="w-4 h-4" /></>}
             </button>
           </form>
 
           {!googleCredential && (
             <>
               <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-                <div className="relative flex justify-center"><span className="bg-card px-3 text-xs text-muted-foreground">or sign up with</span></div>
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
+                <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-slate-400">or sign up with</span></div>
               </div>
               {googleClientId ? (
                 <div ref={googleBtnRef} className="flex justify-center [&>div]:w-full [&>div>div]:w-full [&_iframe]:!w-full" />
               ) : (
                 <button
                   onClick={() => toast.info('Google sign-up is being configured. Please use the form below.')}
-                  className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-border bg-background text-sm font-medium hover:bg-muted/50 transition-colors"
+                  className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                 >
                   <svg viewBox="0 0 24 24" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.30-4.53 6.16-4.53z" fill="#EA4335"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                   </svg>
                   Sign up with Google
                 </button>
@@ -340,14 +276,14 @@ export default function RegisterPage() {
           )}
 
           {googleCredential && (
-            <p className="text-center text-xs text-muted-foreground mt-3">
-              Signed in with Google. Set your password and facility details above.
+            <p className="text-center text-xs text-slate-400 mt-3">
+              Signed in with Google. Set your password and details above.
             </p>
           )}
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Already have an account? <Link to="/login" className="text-primary font-medium hover:underline">Sign in</Link>
+        <p className="text-center text-sm text-slate-500 mt-6">
+          Already have an account? <Link to="/login" className="text-blue-600 font-medium hover:underline">Sign in</Link>
         </p>
       </div>
     </div>

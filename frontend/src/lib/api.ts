@@ -174,6 +174,13 @@ export const api = {
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/google/register', data),
   },
 
+  public: {
+    jobs: (countryCode?: string) => {
+      const params = countryCode ? `?country=${countryCode}` : '';
+      return request<{ id: string; title: string; company: string; location: string; type: string; salary: string; description: string; postedDate: string }[]>('GET', `/public/jobs${params}`);
+    },
+  },
+
   admin: {
     auditLogs: (q?: { limit?: number; offset?: number; q?: string }) => {
       const params = new URLSearchParams(q as Record<string, string>).toString();

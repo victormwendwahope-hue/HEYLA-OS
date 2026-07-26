@@ -1,7 +1,14 @@
 import { CountryConfig } from '@/types';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Users, TrendingUp, Package, DollarSign, Globe, Shield, Zap, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowRight, Users, TrendingUp, Package, DollarSign, Globe, Shield, Zap, CheckCircle, Briefcase, MapPin, Clock, Loader2 } from 'lucide-react';
 import { AdBanner } from '@/components/ui/AdBanner';
+import { api } from '@/lib/api';
+
+interface PublicJob {
+  id: string; title: string; company: string; location: string;
+  type: string; salary: string; description: string; postedDate: string;
+}
 
 interface CountryLandingProps {
   country: CountryConfig;
@@ -12,6 +19,19 @@ interface CountryLandingProps {
 
 export function CountryLandingTemplate({ country, highlights, industries, testimonial }: CountryLandingProps) {
   const navigate = useNavigate();
+  const [jobs, setJobs] = useState<PublicJob[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setJobsLoading(true);
+    api.public.jobs(country.code).then((data) => {
+      if (!cancelled) { setJobs(data); setJobsLoading(false); }
+    }).catch(() => {
+      if (!cancelled) setJobsLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [country.code]);
 
   const features = [
     { icon: Users, title: 'HR and People', desc: `Manage your ${country.name} workforce with local compliance built in.` },
@@ -159,6 +179,55 @@ export function CountryLandingTemplate({ country, highlights, industries, testim
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Vacancies */}
+      <section className="px-4 sm:px-8 lg:px-16 py-16 bg-muted/20">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <Briefcase className="w-5 h-5 text-primary" />
+            <h2 className="text-xl sm:text-2xl font-bold text-center">Open Vacancies in {country.name}</h2>
+          </div>
+          <p className="text-muted-foreground text-center mb-10 max-w-xl mx-auto">
+            Companies in {country.name} are hiring. Browse opportunities and apply as an individual.
+          </p>
+
+          {jobsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : jobs.length === 0 ? (
+            <div className="text-center py-12">
+              <Briefcase className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">No open vacancies at the moment. Check back later.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {jobs.map((job) => (
+                <div key={job.id} className="bg-card border border-border rounded-xl p-5 hover:shadow-md transition-shadow">
+                  <div className="mb-3">
+                    <p className="font-semibold text-sm">{job.title}</p>
+                    <p className="text-xs text-muted-foreground">{job.company}</p>
+                  </div>
+                  <div className="space-y-1.5 mb-4">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <MapPin className="w-3 h-3" /> {job.location}
+                    </p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" /> {job.type} {job.salary ? `- ${job.salary}` : ''}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => navigate('/register?type=individual')}
+                    className="w-full text-xs bg-primary text-primary-foreground py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    I am Interested
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
