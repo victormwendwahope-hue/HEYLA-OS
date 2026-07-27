@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Lead } from '@/types';
 import { api } from '@/lib/api';
+import { sanitizeError } from '@/lib/secure';
 import { toast } from 'sonner';
 
 interface LeadState {
@@ -26,7 +27,7 @@ export const useLeadStore = create<LeadState>((set) => ({
     try {
       const data = await api.get<Lead[]>('/leads');
       set({ leads: data, loading: false });
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch leads';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -39,7 +40,7 @@ export const useLeadStore = create<LeadState>((set) => ({
       const created = await api.post<Lead>('/leads', lead);
       set((s) => ({ leads: [created, ...s.leads], loading: false }));
       toast.success('Lead created');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to create lead';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -52,7 +53,7 @@ export const useLeadStore = create<LeadState>((set) => ({
       const updated = await api.patch<Lead>(`/leads/${id}`, data);
       set((s) => ({ leads: s.leads.map((l) => (l.id === id ? updated : l)) }));
       toast.success('Lead updated');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to update lead';
       set({ error: msg });
       toast.error(msg);
@@ -65,7 +66,7 @@ export const useLeadStore = create<LeadState>((set) => ({
       await api.delete(`/leads/${id}`);
       set((s) => ({ leads: s.leads.filter((l) => l.id !== id) }));
       toast.success('Lead deleted');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to delete lead';
       set({ error: msg });
       toast.error(msg);

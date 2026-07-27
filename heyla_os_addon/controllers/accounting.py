@@ -53,7 +53,7 @@ class AccountingController(http.Controller):
                 })
             return http.Response(json.dumps(self._invoice_to_json(inv)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/invoices/<int:inv_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_invoice(self, inv_id):

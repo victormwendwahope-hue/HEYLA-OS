@@ -17,14 +17,18 @@ declare global {
   }
 }
 
+let gsiScriptLoaded = false;
+let gsiInitialized = false;
+
 function loadGoogleScript(): Promise<void> {
+  if (gsiScriptLoaded) return Promise.resolve();
   return new Promise((resolve) => {
-    if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) { resolve(); return; }
+    if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) { gsiScriptLoaded = true; resolve(); return; }
     const s = document.createElement('script');
     s.src = 'https://accounts.google.com/gsi/client';
     s.async = true;
     s.defer = true;
-    s.onload = () => resolve();
+    s.onload = () => { gsiScriptLoaded = true; resolve(); };
     document.head.appendChild(s);
   });
 }
@@ -37,6 +41,7 @@ export default function LoginPage() {
   const { login, googleLogin, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
   const googleBtnRef = useRef<HTMLDivElement>(null);
+  const gcb = useRef<((credential: string) => void) | null>(null);
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
@@ -54,23 +59,27 @@ export default function LoginPage() {
     }
   }, [googleLogin, navigate]);
 
+  gcb.current = handleGoogleCredential;
+
   useEffect(() => {
     if (!googleClientId) return;
     loadGoogleScript().then(() => setGoogleLoaded(true));
   }, [googleClientId]);
 
   useEffect(() => {
-    if (!googleLoaded || !googleBtnRef.current || !googleClientId) return;
+    if (!googleLoaded || !googleBtnRef.current || !googleClientId || gsiInitialized) return;
+    gsiInitialized = true;
     googleBtnRef.current.innerHTML = '';
     window.google?.accounts.id.initialize({
       client_id: googleClientId,
-      callback: (res) => handleGoogleCredential(res.credential),
+      callback: (res) => gcb.current?.(res.credential),
       cancel_on_tap_outside: false,
     });
     window.google?.accounts.id.renderButton(googleBtnRef.current, {
-      theme: 'outline', size: 'large', text: 'signin_with', width: '100%',
+      theme: 'outline', size: 'large', text: 'signin_with', width: 400,
     });
-  }, [googleLoaded, googleClientId, handleGoogleCredential]);
+    return () => { window.google?.accounts.id.cancel(); };
+  }, [googleLoaded, googleClientId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,7 +145,7 @@ export default function LoginPage() {
           </div>
 
           {googleClientId ? (
-            <div ref={googleBtnRef} className="flex justify-center [&>div]:w-full [&>div>div]:w-full [&_iframe]:!w-full" />
+            <div ref={googleBtnRef} className="flex justify-center [&>div]:w-[400px] [&>div>div]:w-[400px] [&_iframe]:!w-[400px]" />
           ) : (
             <button
               onClick={() => toast.info('Google sign-in is being configured. Please use email and password.')}

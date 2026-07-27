@@ -51,8 +51,7 @@ class AdminController(http.Controller):
         user = request.env['heyla.user'].sudo().browse(user_id)
         if not user.exists():
             return http.Response(json.dumps({'error': 'Not found'}), content_type='application/json', status=404)
-        import secrets
-        user.sudo().write({'password': secrets.token_hex(32), 'refresh_token': ''})
+        user.sudo().write({'token': False, 'token_expires_at': False, 'refresh_token': False})
         return http.Response(json.dumps({'ok': True}), content_type='application/json', status=200)
 
     @http.route('/api/admin/users/<int:user_id>/reset-password', type='http', auth='none', methods=['POST'], csrf=False)
@@ -67,7 +66,8 @@ class AdminController(http.Controller):
             return http.Response(json.dumps({'error': 'Not found'}), content_type='application/json', status=404)
         data = json.loads(request.httprequest.data)
         from .auth import _hash_password
-        user.sudo().write({'password': _hash_password(data.get('newPassword', '')), 'refresh_token': ''})
+        new_hash = _hash_password(data.get('newPassword', ''))
+        user.sudo().write({'password': new_hash, 'password_hash': new_hash, 'token': False, 'token_expires_at': False, 'refresh_token': False})
         return http.Response(json.dumps({'ok': True}), content_type='application/json', status=200)
 
     @http.route('/api/admin/audit-logs', type='http', auth='none', methods=['GET'], csrf=False)

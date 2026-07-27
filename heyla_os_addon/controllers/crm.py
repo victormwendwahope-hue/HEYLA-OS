@@ -49,7 +49,7 @@ class CRMController(http.Controller):
             lead = request.env['heyla.lead'].sudo().create(vals)
             return http.Response(json.dumps(self._lead_to_json(lead)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/leads/<int:lead_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_lead(self, lead_id):

@@ -48,7 +48,7 @@ class NetworkingController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         p = request.env['heyla.network.post'].sudo().create({
             'author': data.get('author', ''),
             'role': data.get('role', ''),
@@ -89,7 +89,7 @@ class NetworkingController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         j = request.env['heyla.network.job'].sudo().create({
             'title': data.get('title', ''),
             'company': data.get('company', ''),

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api';
+import { sanitizeError } from '@/lib/secure';
 import { toast } from 'sonner';
 
 export interface PerformanceGoal {
@@ -39,7 +40,7 @@ export const usePerformanceStore = create<PerformanceState>((set) => ({
     try {
       const data = await api.get<PerformanceReview[]>('/performance-reviews');
       set({ reviews: data, loading: false });
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch reviews';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -52,7 +53,7 @@ export const usePerformanceStore = create<PerformanceState>((set) => ({
       const created = await api.post<PerformanceReview>('/performance-reviews', r);
       set((s) => ({ reviews: [created, ...s.reviews], loading: false }));
       toast.success('Review created');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to create review';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -65,7 +66,7 @@ export const usePerformanceStore = create<PerformanceState>((set) => ({
       const updated = await api.patch<PerformanceReview>(`/performance-reviews/${id}`, data);
       set((s) => ({ reviews: s.reviews.map((r) => (r.id === id ? updated : r)) }));
       toast.success('Review updated');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to update review';
       set({ error: msg });
       toast.error(msg);
@@ -78,7 +79,7 @@ export const usePerformanceStore = create<PerformanceState>((set) => ({
       await api.delete(`/performance-reviews/${id}`);
       set((s) => ({ reviews: s.reviews.filter((r) => r.id !== id) }));
       toast.success('Review deleted');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to delete review';
       set({ error: msg });
       toast.error(msg);

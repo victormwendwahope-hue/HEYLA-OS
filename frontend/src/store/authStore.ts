@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { User } from '@/types';
 import { api, apiEnabled, setToken, setRefreshToken, getRefreshToken, ApiError } from '@/lib/api';
+import { safeJsonParse, sanitizeError } from '@/lib/secure';
 import { toast } from 'sonner';
 
 interface AuthState {
@@ -21,7 +22,6 @@ interface AuthState {
   googleLogin: (credential: string) => Promise<void>;
   googleRegister: (data: {
     credential: string;
-    password: string;
     facilityName?: string;
     facilityLogo?: string;
   }) => Promise<void>;
@@ -46,6 +46,7 @@ function mapUser(raw: any): User {
     facilityName: raw.facilityName || raw.facility_name || '',
     facilityLogo: raw.facilityLogo || raw.facility_logo || '',
     accountId: raw.accountId || raw.account_id || raw.id || String(raw.id),
+    subscription: raw.subscription ?? raw.subscription ?? undefined,
   };
 }
 
@@ -56,7 +57,7 @@ function persist(user: User, token: string, refresh?: string) {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user: JSON.parse(localStorage.getItem('heyla_user') || 'null'),
+  user: safeJsonParse<User | null>(localStorage.getItem('heyla_user'), null),
   isAuthenticated: !!localStorage.getItem('heyla_token'),
   isLoading: false,
   error: null,
@@ -72,8 +73,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       persist(mapped, token, refreshToken);
       set({ user: mapped, isAuthenticated: true, isLoading: false });
       toast.success(`Welcome back, ${mapped.name}!`);
-    } catch (err) {
-      const msg = err instanceof ApiError ? (err.data as any)?.error || err.message : 'Login failed';
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? sanitizeError((err.data as Record<string, unknown>)?.error, err.message) : 'Login failed';
       set({ error: msg, isLoading: false });
       throw err;
     }
@@ -96,8 +97,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       persist(mapped, token, refreshToken);
       set({ user: mapped, isAuthenticated: true, isLoading: false });
       toast.success('Account created successfully!');
-    } catch (err) {
-      const msg = err instanceof ApiError ? (err.data as any)?.error || err.message : 'Registration failed';
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? sanitizeError((err.data as Record<string, unknown>)?.error, err.message) : 'Registration failed';
       set({ error: msg, isLoading: false });
       throw err;
     }
@@ -147,8 +148,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await api.auth.changePassword(currentPassword, newPassword);
       toast.success('Password changed. Please log in again.');
       get().logout();
-    } catch (err) {
-      const msg = err instanceof ApiError ? (err.data as any)?.error || err.message : 'Failed to change password';
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? sanitizeError((err.data as Record<string, unknown>)?.error, err.message) : 'Failed to change password';
       set({ error: msg });
       toast.error(msg);
     }
@@ -163,14 +164,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       persist(mapped, token, refreshToken);
       set({ user: mapped, isAuthenticated: true, isLoading: false });
       toast.success(`Welcome back, ${mapped.name}!`);
-    } catch (err) {
-      const msg = err instanceof ApiError ? (err.data as any)?.error || err.message : 'Google login failed';
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? sanitizeError((err.data as Record<string, unknown>)?.error, err.message) : 'Google login failed';
       set({ error: msg, isLoading: false });
       throw err;
     }
   },
 
-  googleRegister: async (data) => {
+  googleRegister: async (data: { credential: string; facilityName?: string; facilityLogo?: string }) => {
     set({ isLoading: true, error: null });
     try {
       if (!apiEnabled()) throw new ApiError('API not configured', 0, null);
@@ -179,8 +180,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       persist(mapped, token, refreshToken);
       set({ user: mapped, isAuthenticated: true, isLoading: false });
       toast.success('Account created successfully!');
-    } catch (err) {
-      const msg = err instanceof ApiError ? (err.data as any)?.error || err.message : 'Google registration failed';
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? sanitizeError((err.data as Record<string, unknown>)?.error, err.message) : 'Google registration failed';
       set({ error: msg, isLoading: false });
       throw err;
     }
@@ -196,8 +197,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem('heyla_user', JSON.stringify(updated));
       set({ user: updated });
       toast.success('Profile updated');
-    } catch (err) {
-      const msg = err instanceof ApiError ? (err.data as any)?.error || err.message : 'Failed to update profile';
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? sanitizeError((err.data as Record<string, unknown>)?.error, err.message) : 'Failed to update profile';
       set({ error: msg });
       toast.error(msg);
     }
@@ -213,8 +214,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem('heyla_user', JSON.stringify(updated));
       set({ user: updated });
       toast.success('Facility updated');
-    } catch (err) {
-      const msg = err instanceof ApiError ? (err.data as any)?.error || err.message : 'Failed to update facility';
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? sanitizeError((err.data as Record<string, unknown>)?.error, err.message) : 'Failed to update facility';
       toast.error(msg);
     }
   },

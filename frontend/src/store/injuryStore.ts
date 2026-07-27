@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api';
+import { sanitizeError } from '@/lib/secure';
 import { toast } from 'sonner';
 
 export interface Injury {
@@ -39,7 +40,7 @@ export const useInjuryStore = create<InjuryState>((set) => ({
     try {
       const data = await api.get<Injury[]>('/injuries');
       set({ injuries: data, loading: false });
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch injuries';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -52,7 +53,7 @@ export const useInjuryStore = create<InjuryState>((set) => ({
       const created = await api.post<Injury>('/injuries', i);
       set((s) => ({ injuries: [created, ...s.injuries], loading: false }));
       toast.success('Injury reported');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to report injury';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -65,7 +66,7 @@ export const useInjuryStore = create<InjuryState>((set) => ({
       const updated = await api.patch<Injury>(`/injuries/${id}`, data);
       set((s) => ({ injuries: s.injuries.map((i) => (i.id === id ? updated : i)) }));
       toast.success('Injury updated');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to update injury';
       set({ error: msg });
       toast.error(msg);
@@ -78,7 +79,7 @@ export const useInjuryStore = create<InjuryState>((set) => ({
       await api.delete(`/injuries/${id}`);
       set((s) => ({ injuries: s.injuries.filter((i) => i.id !== id) }));
       toast.success('Injury deleted');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to delete injury';
       set({ error: msg });
       toast.error(msg);

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Employee } from '@/types';
 import { api } from '@/lib/api';
+import { sanitizeError } from '@/lib/secure';
 import { toast } from 'sonner';
 
 interface EmployeeState {
@@ -26,7 +27,7 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
     try {
       const data = await api.get<Employee[]>('/employees');
       set({ employees: data, loading: false });
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch employees';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -39,7 +40,7 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       const created = await api.post<Employee>('/employees', emp);
       set((s) => ({ employees: [created, ...s.employees], loading: false }));
       toast.success('Employee created successfully');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to create employee';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -52,7 +53,7 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       const updated = await api.patch<Employee>(`/employees/${id}`, data);
       set((s) => ({ employees: s.employees.map((e) => (e.id === id ? updated : e)) }));
       toast.success('Employee updated');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to update employee';
       set({ error: msg });
       toast.error(msg);
@@ -65,7 +66,7 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       await api.delete(`/employees/${id}`);
       set((s) => ({ employees: s.employees.filter((e) => e.id !== id) }));
       toast.success('Employee deleted');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to delete employee';
       set({ error: msg });
       toast.error(msg);

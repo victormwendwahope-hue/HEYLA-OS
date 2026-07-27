@@ -3,6 +3,7 @@ import { useNavigate, Link } from '@tanstack/react-router';
 import { useAuthStore } from '@/store/authStore';
 import { Eye, EyeOff, ArrowRight, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { sanitizeUrl } from '@/lib/secure';
 
 declare global {
   interface Window {
@@ -10,56 +11,78 @@ declare global {
       accounts: {
         id: {
           initialize: (config: { client_id: string; callback: (response: { credential: string }) => void; auto_select?: boolean; cancel_on_tap_outside?: boolean }) => void;
-          renderButton: (element: HTMLElement, options: { theme?: string; size?: string; text?: string; width?: string }) => void;
+          renderButton: (element: HTMLElement, options: { theme?: string; size?: string; text?: string; width?: number }) => void;
+          cancel: () => void;
         };
       };
     };
   }
 }
 
+let gsiScriptLoaded = false;
+
 function loadGoogleScript(): Promise<void> {
+  if (gsiScriptLoaded) return Promise.resolve();
   return new Promise((resolve) => {
-    if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) { resolve(); return; }
+    if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) { gsiScriptLoaded = true; resolve(); return; }
     const s = document.createElement('script');
     s.src = 'https://accounts.google.com/gsi/client';
     s.async = true;
     s.defer = true;
-    s.onload = () => resolve();
+    s.onload = () => { gsiScriptLoaded = true; resolve(); };
     document.head.appendChild(s);
   });
+}
+
+function decodeJwt(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    return JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+  } catch { return null; }
 }
 
 export default function RegisterCompanyPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [company, setCompany] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [facilityName, setFacilityName] = useState('');
   const [facilityLogo, setFacilityLogo] = useState<string>('');
-  const [googleCredential, setGoogleCredential] = useState<string | null>(null);
-  const { register, googleRegister, isLoading, error, clearError } = useAuthStore();
+  const [googleStep, setGoogleStep] = useState<'idle' | 'credential'>('idle');
+  const { register, googleLogin, googleRegister, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const gcb = useRef<((credential: string) => void) | null>(null);
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
+  const gsiDone = useRef(false);
   const handleGoogleCredential = useCallback(async (credential: string) => {
-    if (!password) {
-      setGoogleCredential(credential);
-      toast.info('Complete your account setup below');
-      return;
-    }
+    clearError();
     try {
-      clearError();
-      await googleRegister({ credential, password, facilityName: facilityName || company || name, facilityLogo: facilityLogo || undefined });
+      await googleLogin(credential);
       navigate({ to: '/dashboard' });
+      return;
     } catch (err: unknown) {
-      toast.error((err as { message?: string })?.message || 'Google sign-up failed');
+      const e = err as { status?: number };
+      if (e?.status !== 404) {
+        toast.error('Google sign-in failed');
+        return;
+      }
     }
-  }, [googleRegister, password, facilityName, facilityLogo, company, name, navigate, clearError]);
+    const profile = decodeJwt(credential);
+    if (profile) {
+      if (typeof profile.name === 'string') setName(profile.name);
+      if (typeof profile.email === 'string') setEmail(profile.email);
+    }
+    gcb._credential = credential;
+    setGoogleStep('credential');
+  }, [googleLogin, navigate, clearError]);
+
+  gcb.current = handleGoogleCredential;
 
   useEffect(() => {
     if (!googleClientId) return;
@@ -67,17 +90,19 @@ export default function RegisterCompanyPage() {
   }, [googleClientId]);
 
   useEffect(() => {
-    if (!googleLoaded || !googleBtnRef.current || !googleClientId) return;
-    googleBtnRef.current.innerHTML = '';
+    if (!googleLoaded || !googleBtnRef.current || !googleClientId || gsiDone.current || googleStep === 'credential') return;
+    gsiDone.current = true;
+    const ref = googleBtnRef.current;
     window.google?.accounts.id.initialize({
       client_id: googleClientId,
-      callback: (res) => handleGoogleCredential(res.credential),
+      callback: (res) => gcb.current?.(res.credential),
       cancel_on_tap_outside: false,
     });
-    window.google?.accounts.id.renderButton(googleBtnRef.current, {
-      theme: 'outline', size: 'large', text: 'signup_with', width: '100%',
+    window.google?.accounts.id.renderButton(ref, {
+      theme: 'outline', size: 'large', text: 'signup_with', width: 400,
     });
-  }, [googleLoaded, googleClientId, handleGoogleCredential]);
+    return () => { window.google?.accounts.id.cancel(); };
+  }, [googleLoaded, googleClientId, googleStep]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -90,20 +115,26 @@ export default function RegisterCompanyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (googleStep === 'credential') {
+      if (!facilityName) { toast.error('Please enter your facility name'); return; }
+      clearError();
+      const cred = (gcb as any)._credential;
+      if (!cred) { toast.error('Missing Google credential, please try again'); return; }
+      await googleRegister({ credential: cred, facilityName, facilityLogo: facilityLogo || undefined });
+      navigate({ to: '/dashboard' });
+      return;
+    }
+
     if (!name || !email || !password) { toast.error('Please fill in all fields'); return; }
     if (password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     clearError();
-
-    if (googleCredential) {
-      await googleRegister({ credential: googleCredential, password, facilityName: facilityName || company || name, facilityLogo: facilityLogo || undefined });
-    } else {
-      await register({
-        email, password, name, company: company || facilityName || name,
-        accountType: 'company',
-        facilityName: facilityName || company || name,
-        facilityLogo: facilityLogo || undefined,
-      });
-    }
+    await register({
+      email, password, name, company: facilityName || name,
+      accountType: 'company',
+      facilityName: facilityName || name,
+      facilityLogo: facilityLogo || undefined,
+    });
     navigate({ to: '/dashboard' });
   };
 
@@ -132,93 +163,148 @@ export default function RegisterCompanyPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-slate-700 mb-1.5 block">Full Name</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-slate-700 mb-1.5 block">Company Name</label>
-              <input type="text" value={company} onChange={(e) => setCompany(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-slate-700 mb-1.5 block">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-slate-700 mb-1.5 block">Password</label>
-              <div className="relative">
-                <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all pr-10" />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {password && (
-                <div className="mt-2">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= pwStrength ? pwColors[pwStrength] : 'bg-slate-200'}`} />
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1">{pwLabels[pwStrength]}</p>
+            {googleStep === 'credential' ? (
+              <>
+                <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-700 mb-2">
+                  Signed in with Google. Complete your registration below.
                 </div>
-              )}
-            </div>
 
-            <div className="border-t border-slate-200 pt-4 mt-2">
-              <h3 className="text-sm font-semibold text-slate-700 mb-3">Facility Details</h3>
-              <div className="mb-3">
-                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Facility Name</label>
-                <input type="text" value={facilityName} onChange={(e) => setFacilityName(e.target.value)}
-                  placeholder="e.g. Hydan Medical Centre"
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Facility Logo</label>
-                <div className="flex items-center gap-3">
-                  {facilityLogo ? (
-                    <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 shrink-0">
-                      <img src={facilityLogo} alt="Facility logo" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => setFacilityLogo('')}
-                        className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
-                        <X className="w-3 h-3" />
-                      </button>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">Name</label>
+                  <input type="text" value={name} disabled
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-500 cursor-not-allowed" />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">Email</label>
+                  <input type="email" value={email} disabled
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-500 cursor-not-allowed" />
+                </div>
+
+                <div className="border-t border-slate-200 pt-4 mt-2">
+                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Facility Details</h3>
+                  <div className="mb-3">
+                    <label className="text-sm font-medium text-slate-700 mb-1.5 block">Facility Name</label>
+                    <input type="text" value={facilityName} onChange={(e) => setFacilityName(e.target.value)}
+                      placeholder="e.g. Hydan Medical Centre"
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1.5 block">Facility Logo</label>
+                    <div className="flex items-center gap-3">
+                      {facilityLogo ? (
+                        <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                          <img src={sanitizeUrl(facilityLogo)} alt="Facility logo" className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => setFacilityLogo('')}
+                            className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => fileInputRef.current?.click()}
+                          className="w-16 h-16 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors shrink-0">
+                          <Upload className="w-5 h-5" />
+                        </button>
+                      )}
+                      <div className="text-xs text-slate-400">
+                        <p>Upload your facility logo</p>
+                        <p>PNG, JPG or SVG. Max 2MB.</p>
+                      </div>
+                      <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml" onChange={handleLogoUpload} className="hidden" />
                     </div>
-                  ) : (
-                    <button type="button" onClick={() => fileInputRef.current?.click()}
-                      className="w-16 h-16 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors shrink-0">
-                      <Upload className="w-5 h-5" />
-                    </button>
-                  )}
-                  <div className="text-xs text-slate-400">
-                    <p>Upload your facility logo</p>
-                    <p>PNG, JPG or SVG. Max 2MB.</p>
                   </div>
-                  <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml" onChange={handleLogoUpload} className="hidden" />
                 </div>
-              </div>
-            </div>
 
-            <button type="submit" disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
-              {isLoading ? 'Creating account...' : <><span>Create Company Account</span><ArrowRight className="w-4 h-4" /></>}
-            </button>
+                <button type="submit" disabled={isLoading}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                  {isLoading ? 'Creating account...' : <><span>Complete Registration</span><ArrowRight className="w-4 h-4" /></>}
+                </button>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">Full Name</label>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">Email</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">Password</label>
+                  <div className="relative">
+                    <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all pr-10" />
+                    <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {password && (
+                    <div className="mt-2">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= pwStrength ? pwColors[pwStrength] : 'bg-slate-200'}`} />
+                        ))}
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1">{pwLabels[pwStrength]}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-slate-200 pt-4 mt-2">
+                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Facility Details</h3>
+                  <div className="mb-3">
+                    <label className="text-sm font-medium text-slate-700 mb-1.5 block">Facility Name</label>
+                    <input type="text" value={facilityName} onChange={(e) => setFacilityName(e.target.value)}
+                      placeholder="e.g. Hydan Medical Centre"
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1.5 block">Facility Logo</label>
+                    <div className="flex items-center gap-3">
+                      {facilityLogo ? (
+                        <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                          <img src={sanitizeUrl(facilityLogo)} alt="Facility logo" className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => setFacilityLogo('')}
+                            className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => fileInputRef.current?.click()}
+                          className="w-16 h-16 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors shrink-0">
+                          <Upload className="w-5 h-5" />
+                        </button>
+                      )}
+                      <div className="text-xs text-slate-400">
+                        <p>Upload your facility logo</p>
+                        <p>PNG, JPG or SVG. Max 2MB.</p>
+                      </div>
+                      <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml" onChange={handleLogoUpload} className="hidden" />
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" disabled={isLoading}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                  {isLoading ? 'Creating account...' : <><span>Create Company Account</span><ArrowRight className="w-4 h-4" /></>}
+                </button>
+              </>
+            )}
           </form>
 
-          {!googleCredential && (
+          {googleStep !== 'credential' && (
             <>
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
                 <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-slate-400">or sign up with</span></div>
               </div>
               {googleClientId ? (
-                <div ref={googleBtnRef} className="flex justify-center [&>div]:w-full [&>div>div]:w-full [&_iframe]:!w-full" />
+                <div ref={googleBtnRef} className="flex justify-center [&>div]:w-[400px] [&>div>div]:w-[400px] [&_iframe]:!w-[400px]" />
               ) : (
                 <button onClick={() => toast.info('Google sign-up is being configured.')}
                   className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
@@ -234,10 +320,13 @@ export default function RegisterCompanyPage() {
             </>
           )}
 
-          {googleCredential && (
-            <p className="text-center text-xs text-slate-400 mt-3">
-              Signed in with Google. Set your password and details above.
-            </p>
+          {googleStep === 'credential' && (
+            <div className="mt-4 text-center">
+              <button type="button" onClick={() => { setGoogleStep('idle'); setName(''); setEmail(''); setFacilityName(''); setFacilityLogo(''); }}
+                className="text-sm text-slate-500 hover:text-slate-700 underline">
+                Use email & password instead
+              </button>
+            </div>
           )}
         </div>
 

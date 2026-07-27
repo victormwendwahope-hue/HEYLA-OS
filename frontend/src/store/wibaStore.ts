@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api';
+import { sanitizeError } from '@/lib/secure';
 import { toast } from 'sonner';
 
 export interface WIBAClaim {
@@ -37,7 +38,7 @@ export const useWibaStore = create<WibaState>((set) => ({
     try {
       const data = await api.get<WIBAClaim[]>('/wiba-claims');
       set({ claims: data, loading: false });
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch WIBA claims';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -50,7 +51,7 @@ export const useWibaStore = create<WibaState>((set) => ({
       const created = await api.post<WIBAClaim>('/wiba-claims', c);
       set((s) => ({ claims: [created, ...s.claims], loading: false }));
       toast.success('WIBA claim filed');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to file WIBA claim';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -63,7 +64,7 @@ export const useWibaStore = create<WibaState>((set) => ({
       const updated = await api.patch<WIBAClaim>(`/wiba-claims/${id}`, data);
       set((s) => ({ claims: s.claims.map((c) => (c.id === id ? updated : c)) }));
       toast.success('WIBA claim updated');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to update WIBA claim';
       set({ error: msg });
       toast.error(msg);
@@ -76,7 +77,7 @@ export const useWibaStore = create<WibaState>((set) => ({
       await api.delete(`/wiba-claims/${id}`);
       set((s) => ({ claims: s.claims.filter((c) => c.id !== id) }));
       toast.success('WIBA claim removed');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to remove WIBA claim';
       set({ error: msg });
       toast.error(msg);

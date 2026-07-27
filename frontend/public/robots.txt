@@ -1,16 +1,76 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
+# HEYLA OS — Robots.txt
+# All crawlers allowed on public pages
 
 User-agent: *
 Allow: /
+Allow: /login
+Allow: /register
+Allow: /register/individual
+Allow: /register/company
+Allow: /careers
+Allow: /privacy
+Allow: /terms
+Allow: /country/
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+Disallow: /payment
 
+# AI and LLM crawlers — explicitly allowed
+User-agent: GPTBot
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+
+User-agent: CCBot
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+
+User-agent: Bytespider
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+
+# Search engines
+User-agent: Googlebot
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+
+User-agent: Bingbot
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+
+# Sitemaps
 Sitemap: https://heylaos.com/sitemap.xml

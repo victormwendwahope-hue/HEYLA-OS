@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { AttendanceRecord } from '@/types';
 import { api } from '@/lib/api';
+import { sanitizeError } from '@/lib/secure';
 import { toast } from 'sonner';
 
 interface AttendanceState {
@@ -29,7 +30,7 @@ export const useAttendanceStore = create<AttendanceState>((set, get) => ({
     try {
       const data = await api.get<AttendanceRecord[]>('/attendance');
       set({ records: data, loading: false });
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch attendance';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -42,7 +43,7 @@ export const useAttendanceStore = create<AttendanceState>((set, get) => ({
       const created = await api.post<AttendanceRecord>('/attendance', record);
       set((s) => ({ records: [...s.records, created], loading: false }));
       toast.success('Attendance recorded');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to record attendance';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -55,7 +56,7 @@ export const useAttendanceStore = create<AttendanceState>((set, get) => ({
       const updated = await api.patch<AttendanceRecord>(`/attendance/${id}`, data);
       set((s) => ({ records: s.records.map((r) => (r.id === id ? updated : r)) }));
       toast.success('Attendance updated');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to update attendance';
       set({ error: msg });
       toast.error(msg);
@@ -68,7 +69,7 @@ export const useAttendanceStore = create<AttendanceState>((set, get) => ({
       await api.delete(`/attendance/${id}`);
       set((s) => ({ records: s.records.filter((r) => r.id !== id) }));
       toast.success('Attendance record deleted');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to delete attendance record';
       set({ error: msg });
       toast.error(msg);

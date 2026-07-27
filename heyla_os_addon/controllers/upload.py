@@ -5,6 +5,16 @@ import json
 import os
 import uuid
 
+ALLOWED_MIMES = {
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+    'application/pdf',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain', 'text/csv',
+    'application/zip', 'application/gzip',
+}
+MAX_FILE_SIZE = 50 * 1024 * 1024
+
 
 class UploadController(http.Controller):
 
@@ -18,13 +28,18 @@ class UploadController(http.Controller):
             if not file:
                 return http.Response(json.dumps({'error': 'No file provided'}), content_type='application/json', status=400)
 
-            filename = file.filename
+            mimetype = file.content_type or 'application/octet-stream'
+            if mimetype not in ALLOWED_MIMES:
+                return http.Response(json.dumps({'error': 'File type not allowed'}), content_type='application/json', status=400)
+
+            data = file.read()
+            if len(data) > MAX_FILE_SIZE:
+                return http.Response(json.dumps({'error': 'File too large (max 50MB)'}), content_type='application/json', status=400)
+
+            filename = file.filename or 'unnamed'
             ext = os.path.splitext(filename)[1] if '.' in filename else ''
             stored_name = f"{uuid.uuid4().hex}{ext}"
-            mimetype = file.content_type or 'application/octet-stream'
-            data = file.read()
 
-            # Store as attachment
             import base64
             attachment = request.env['ir.attachment'].sudo().create({
                 'name': stored_name,
@@ -43,5 +58,5 @@ class UploadController(http.Controller):
                 }),
                 content_type='application/json', status=201,
             )
-        except Exception as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+        except Exception:
+            return http.Response(json.dumps({'error': 'Upload failed'}), content_type='application/json', status=400)

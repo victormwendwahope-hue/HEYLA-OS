@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api';
+import { sanitizeError } from '@/lib/secure';
 import { toast } from 'sonner';
 
 export type FIDICType = 'Red Book' | 'Yellow Book' | 'Silver Book' | 'Gold Book';

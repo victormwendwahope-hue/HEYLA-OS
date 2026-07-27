@@ -53,7 +53,7 @@ class JobsController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         j = request.env['heyla.job'].sudo().create({
             'title': data.get('title', ''), 'department': data.get('department', ''),
             'location': data.get('location', ''), 'job_type': data.get('type', 'Full-time'),
@@ -76,7 +76,7 @@ class JobsController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         field_map = {'title': 'title', 'department': 'department', 'location': 'location',
                      'type': 'job_type', 'status': 'status', 'salary': 'salary',
                      'description': 'description', 'country': 'country',
@@ -115,7 +115,7 @@ class JobsController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         a = request.env['heyla.job.applicant'].sudo().create({
             'job_id': int(data.get('jobId', 0)) if data.get('jobId') else False,
             'name': data.get('name', ''), 'email': data.get('email', ''),
@@ -136,7 +136,7 @@ class JobsController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         field_map = {'name': 'name', 'email': 'email', 'phone': 'phone',
                      'stage': 'stage', 'resumeUrl': 'resume_url', 'rating': 'rating',
                      'notes': 'notes'}
@@ -161,7 +161,7 @@ class JobsController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         i = request.env['heyla.job.interview'].sudo().create({
             'applicant_id': int(data.get('applicantId', 0)) if data.get('applicantId') else False,
             'applicant_name': data.get('applicantName', ''),
@@ -186,7 +186,7 @@ class JobsController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         field_map = {'applicantName': 'applicant_name', 'jobTitle': 'job_title',
                      'time': 'time', 'type': 'interview_type',
                      'interviewer': 'interviewer', 'status': 'status', 'notes': 'notes'}

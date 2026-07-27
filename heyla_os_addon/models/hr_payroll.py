@@ -81,4 +81,5 @@ class HeylaPayslip(models.Model):
     payment_date = fields.Date(string='Payment Date')
     company_name = fields.Char(string='Company Name', default='HEYLA OS')
     company_kra_pin = fields.Char(string='Company KRA PIN')
+    housing_levy = fields.Float(string='Housing Levy', default=0.0)
     generated_at = fields.Datetime(string='Generated At', default=fields.Datetime.now)

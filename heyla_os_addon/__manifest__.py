@@ -22,6 +22,7 @@ Full-featured business operating system covering:
     'depends': ['base', 'mail', 'web'],
     'data': [
         'security/ir.model.access.csv',
+        'data/sequence_data.xml',
         'data/demo_data.xml',
     ],
     'demo': [],

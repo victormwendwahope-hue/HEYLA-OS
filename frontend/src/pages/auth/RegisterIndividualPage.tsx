@@ -3,6 +3,7 @@ import { useNavigate, Link } from '@tanstack/react-router';
 import { useAuthStore } from '@/store/authStore';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { sanitizeError } from '@/lib/secure';
 
 declare global {
   interface Window {
@@ -47,7 +48,7 @@ export default function RegisterIndividualPage() {
       await googleRegister({ credential, password: '' });
       navigate({ to: '/careers' });
     } catch (err: unknown) {
-      toast.error((err as { message?: string })?.message || 'Google sign-up failed');
+      toast.error(sanitizeError(err, 'Google sign-up failed'));
     }
   }, [googleRegister, navigate, clearError]);
 

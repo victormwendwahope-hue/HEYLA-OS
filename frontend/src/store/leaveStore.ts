@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api';
+import { sanitizeError } from '@/lib/secure';
 import { toast } from 'sonner';
 
 export interface LeaveRequest {
@@ -36,7 +37,7 @@ export const useLeaveStore = create<LeaveState>((set) => ({
     try {
       const data = await api.get<LeaveRequest[]>('/leave');
       set({ leaves: data, loading: false });
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch leaves';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -49,7 +50,7 @@ export const useLeaveStore = create<LeaveState>((set) => ({
       const created = await api.post<LeaveRequest>('/leave', l);
       set((s) => ({ leaves: [created, ...s.leaves], loading: false }));
       toast.success('Leave request submitted');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to submit leave';
       set({ error: msg, loading: false });
       toast.error(msg);
@@ -62,7 +63,7 @@ export const useLeaveStore = create<LeaveState>((set) => ({
       const updated = await api.patch<LeaveRequest>(`/leave/${id}`, data);
       set((s) => ({ leaves: s.leaves.map((l) => (l.id === id ? updated : l)) }));
       toast.success('Leave updated');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to update leave';
       set({ error: msg });
       toast.error(msg);
@@ -75,7 +76,7 @@ export const useLeaveStore = create<LeaveState>((set) => ({
       await api.delete(`/leave/${id}`);
       set((s) => ({ leaves: s.leaves.filter((l) => l.id !== id) }));
       toast.success('Leave deleted');
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to delete leave';
       set({ error: msg });
       toast.error(msg);

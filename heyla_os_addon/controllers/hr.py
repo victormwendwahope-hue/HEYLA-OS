@@ -43,6 +43,13 @@ class HRController(http.Controller):
             'paidLeaveDays': emp.paid_leave_days,
             'unpaidLeaveDays': emp.unpaid_leave_days,
             'sickLeaveDays': emp.sick_leave_days,
+            'classification': emp.classification_id.name if emp.classification_id else '',
+            'taxCategory': emp.tax_category or '',
+            'employmentTerm': emp.employment_term_id.name if emp.employment_term_id else '',
+            'branchLocation': emp.branch_location or '',
+            'supervisor': emp.supervisor_name or '',
+            'supervisorId': str(emp.supervisor_id.id) if emp.supervisor_id else '',
+            'costCenter': emp.cost_center or '',
         }
 
     # ---- Employees ----
@@ -96,7 +103,7 @@ class HRController(http.Controller):
             )
         except (json.JSONDecodeError, Exception) as e:
             return http.Response(
-                json.dumps({'error': str(e)}),
+                json.dumps({'error': 'Request failed'}),
                 content_type='application/json', status=400,
             )
 
@@ -139,7 +146,7 @@ class HRController(http.Controller):
             )
         except (json.JSONDecodeError, Exception) as e:
             return http.Response(
-                json.dumps({'error': str(e)}),
+                json.dumps({'error': 'Request failed'}),
                 content_type='application/json', status=400,
             )
 
@@ -216,7 +223,7 @@ class HRController(http.Controller):
             )
         except (json.JSONDecodeError, Exception) as e:
             return http.Response(
-                json.dumps({'error': str(e)}),
+                json.dumps({'error': 'Request failed'}),
                 content_type='application/json', status=400,
             )
 
@@ -231,7 +238,7 @@ class HRController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         field_map = {
             'basicPay': 'basic_pay', 'housingAllowance': 'housing_allowance',
             'transportAllowance': 'transport_allowance', 'medicalAllowance': 'medical_allowance',
@@ -289,6 +296,7 @@ class HRController(http.Controller):
             'paye': p.paye,
             'nssf': p.nssf,
             'nhif': p.nhif,
+            'housingLevy': p.housing_levy,
             'totalDeductions': p.total_deductions,
             'netPay': p.net_pay,
             'paidLeaveDays': p.paid_leave_days,
@@ -304,6 +312,47 @@ class HRController(http.Controller):
     def generate_payslip(self):
         return _auth_required(lambda: self._generate_payslip())()
 
+    def _calc_paye(self, annual_gross):
+        """Calculate PAYE using KRA bands with personal relief."""
+        bands = [
+            (240000, 0.10),
+            (32333 * 12 - 240000, 0.25),
+            (500000 - 32333 * 12, 0.30),
+            (800000 - 500000, 0.325),
+        ]
+        remaining = annual_gross
+        tax = 0
+        for band_limit, rate in bands:
+            if remaining <= 0:
+                break
+            taxable = min(remaining, band_limit)
+            tax += taxable * rate
+            remaining -= taxable
+        if remaining > 0:
+            tax += remaining * 0.35
+
+        monthly_tax = max(tax / 12 - 2400, 0)
+        return round(monthly_tax, 2)
+
+    def _calc_nssf(self, gross):
+        """NSSF Tier I + Tier II."""
+        tier1 = min(gross, 6000) * 0.06
+        tier2 = max(0, min(gross - 6000, 12000)) * 0.06
+        return round(min(tier1 + tier2, 1080), 2)
+
+    def _calc_nhif(self, gross):
+        """NHIF contribution bands."""
+        bands = [
+            (5999, 150), (11999, 300), (19999, 400), (24999, 500),
+            (29999, 600), (34999, 750), (39999, 850), (44999, 900),
+            (49999, 1000), (59999, 1100), (69999, 1200), (79999, 1300),
+            (89999, 1400), (99999, 1500),
+        ]
+        for limit, amount in bands:
+            if gross <= limit:
+                return amount
+        return 1700
+
     def _generate_payslip(self):
         try:
             data = json.loads(request.httprequest.data)
@@ -314,10 +363,13 @@ class HRController(http.Controller):
 
             emp = record.employee_id
             gross = record.gross_pay
-            paye = gross * 0.3 if gross > 24000 else 0
-            nssf = min(gross * 0.06, 2160)
-            nhif = 1700 if gross >= 100000 else 900 if gross >= 60000 else 500
-            total_ded = paye + nssf + nhif
+            annual_gross = gross * 12
+
+            paye = self._calc_paye(annual_gross)
+            nssf = self._calc_nssf(gross)
+            nhif = self._calc_nhif(gross)
+            housing_levy = round(gross * 0.015, 2)
+            total_ded = paye + nssf + nhif + housing_levy
 
             slip = request.env['heyla.payslip'].sudo().create({
                 'payroll_record_id': record.id,
@@ -339,6 +391,7 @@ class HRController(http.Controller):
                 'paye': paye,
                 'nssf': nssf,
                 'nhif': nhif,
+                'housing_levy': housing_levy,
                 'total_deductions': total_ded,
                 'net_pay': gross - total_ded,
                 'paid_leave_days': emp.paid_leave_days,
@@ -353,7 +406,7 @@ class HRController(http.Controller):
             )
         except (json.JSONDecodeError, Exception) as e:
             return http.Response(
-                json.dumps({'error': str(e)}),
+                json.dumps({'error': 'Request failed'}),
                 content_type='application/json', status=400,
             )
 
@@ -392,7 +445,7 @@ class HRController(http.Controller):
             rec = request.env['heyla.attendance'].sudo().create(vals)
             return http.Response(json.dumps(self._attendance_to_json(rec)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/attendance/<int:att_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_attendance(self, att_id):
@@ -405,7 +458,7 @@ class HRController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         vals = {}
         if 'checkIn' in data:
             vals['check_in'] = data['checkIn']
@@ -482,7 +535,7 @@ class HRController(http.Controller):
                 content_type='application/json', status=201,
             )
         except Exception as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/employee-documents/download/<int:doc_id>', type='http', auth='none', methods=['GET'], csrf=False)
     def download_document(self, doc_id):
@@ -546,7 +599,7 @@ class HRController(http.Controller):
             rec = request.env['heyla.leave'].sudo().create(vals)
             return http.Response(json.dumps(self._leave_to_json(rec)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/leave/<int:leave_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_leave(self, leave_id):
@@ -559,7 +612,7 @@ class HRController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         if 'status' in data:
             rec.sudo().write({'status': data['status']})
         if 'reason' in data:
@@ -606,7 +659,7 @@ class HRController(http.Controller):
             })
             return http.Response(json.dumps(self._wiba_to_json(w)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/wiba-claims/<int:claim_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_wiba_claim(self, claim_id):
@@ -619,7 +672,7 @@ class HRController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         if 'status' in data:
             rec.sudo().write({'status': data['status']})
         return http.Response(json.dumps(self._wiba_to_json(rec)), content_type='application/json', status=200)
@@ -670,7 +723,7 @@ class HRController(http.Controller):
             })
             return http.Response(json.dumps(self._injury_to_json(i)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/injuries/<int:inj_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_injury(self, inj_id):
@@ -683,7 +736,7 @@ class HRController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         if 'status' in data:
             rec.sudo().write({'status': data['status']})
         if 'correctiveAction' in data:
@@ -729,7 +782,7 @@ class HRController(http.Controller):
                 })
             return http.Response(json.dumps(self._review_to_json(review)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/performance-reviews/<int:rev_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_review(self, rev_id):
@@ -742,7 +795,7 @@ class HRController(http.Controller):
         try:
             data = json.loads(request.httprequest.data)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
         if 'rating' in data:
             rec.sudo().write({'rating': data['rating']})
         if 'feedback' in data:
@@ -803,7 +856,7 @@ class HRController(http.Controller):
             })
             return http.Response(json.dumps(self._blacklist_to_json(b)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/blacklist/<int:bl_id>', type='http', auth='none', methods=['DELETE'], csrf=False)
     def delete_blacklist(self, bl_id):

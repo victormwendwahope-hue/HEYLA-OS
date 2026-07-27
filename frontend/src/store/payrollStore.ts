@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { PayrollRecord, Payslip, Employee } from '@/types';
 import { api } from '@/lib/api';
+import { sanitizeError } from '@/lib/secure';
 import { toast } from 'sonner';
 
 interface PayrollState {

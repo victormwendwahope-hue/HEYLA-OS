@@ -75,7 +75,7 @@ class TransportController(http.Controller):
             })
             return http.Response(json.dumps(self._vehicle_to_json(v)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/vehicles/<int:rec_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_vehicle(self, rec_id):
@@ -123,7 +123,7 @@ class TransportController(http.Controller):
             })
             return http.Response(json.dumps(self._driver_to_json(d)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/drivers/<int:rec_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_driver(self, rec_id):
@@ -169,7 +169,7 @@ class TransportController(http.Controller):
             })
             return http.Response(json.dumps(self._shipment_to_json(s)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/shipments/<int:rec_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_shipment(self, rec_id):

@@ -51,7 +51,7 @@ class FuelController(http.Controller):
             })
             return http.Response(json.dumps(self._entry_to_json(e)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
-            return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     @http.route('/api/fuel/<int:rec_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_entry(self, rec_id):

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Loan Number Sequence -->
+        <record id="seq_heyla_loan" model="ir.sequence">
+            <field name="name">HEYLA Loan Number</field>
+            <field name="code">heyla.loan</field>
+            <field name="prefix">LN-</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Expense Claim Number Sequence -->
+        <record id="seq_heyla_expense" model="ir.sequence">
+            <field name="name">HEYLA Expense Number</field>
+            <field name="code">heyla.expense</field>
+            <field name="prefix">EXP-</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

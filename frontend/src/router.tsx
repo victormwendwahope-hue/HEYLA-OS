@@ -5,7 +5,7 @@ import {
   redirect,
   Outlet,
 } from '@tanstack/react-router';
-import { Suspense, lazy } from 'react';
+import { Suspense } from 'react';
 import { CookieConsent } from '@/components/ui/CookieConsent';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
@@ -42,27 +42,14 @@ import GeoLanding from '@/components/landing-pages/GeoLanding';
 import PrivacyPage from '@/pages/legal/PrivacyPage';
 import TermsPage from '@/pages/legal/TermsPage';
 import { AppLayoutWithBot } from '@/components/layout/AppLayout';
-
-const KenyaLanding = lazy(() => import('@/components/landing-pages/ke/KenyaLanding'));
-const NigeriaLanding = lazy(() => import('@/components/landing-pages/ng/NigeriaLanding'));
-const SouthAfricaLanding = lazy(() => import('@/components/landing-pages/za/SouthAfricaLanding'));
-const GhanaLanding = lazy(() => import('@/components/landing-pages/gh/GhanaLanding'));
-const TanzaniaLanding = lazy(() => import('@/components/landing-pages/tz/TanzaniaLanding'));
-const UgandaLanding = lazy(() => import('@/components/landing-pages/ug/UgandaLanding'));
-const RwandaLanding = lazy(() => import('@/components/landing-pages/rw/RwandaLanding'));
-const EthiopiaLanding = lazy(() => import('@/components/landing-pages/et/EthiopiaLanding'));
-const EgyptLanding = lazy(() => import('@/components/landing-pages/eg/EgyptLanding'));
-const USALanding = lazy(() => import('@/components/landing-pages/us/USALanding'));
-const UKLanding = lazy(() => import('@/components/landing-pages/gb/UKLanding'));
-const GermanyLanding = lazy(() => import('@/components/landing-pages/de/GermanyLanding'));
-const FranceLanding = lazy(() => import('@/components/landing-pages/fr/FranceLanding'));
-const IndiaLanding = lazy(() => import('@/components/landing-pages/in/IndiaLanding'));
-const UAELanding = lazy(() => import('@/components/landing-pages/ae/UAELanding'));
-const BrazilLanding = lazy(() => import('@/components/landing-pages/br/BrazilLanding'));
-const ChinaLanding = lazy(() => import('@/components/landing-pages/cn/ChinaLanding'));
-const JapanLanding = lazy(() => import('@/components/landing-pages/jp/JapanLanding'));
-const AustraliaLanding = lazy(() => import('@/components/landing-pages/au/AustraliaLanding'));
-const CanadaLanding = lazy(() => import('@/components/landing-pages/ca/CanadaLanding'));
+import { CountryHomePage } from '@/components/landing-pages/pages/CountryHomePage';
+import { CountryFeaturesPage } from '@/components/landing-pages/pages/CountryFeaturesPage';
+import { CountryPricingPage } from '@/components/landing-pages/pages/CountryPricingPage';
+import { CountryAboutPage } from '@/components/landing-pages/pages/CountryAboutPage';
+import { CountryBlogPage } from '@/components/landing-pages/pages/CountryBlogPage';
+import { CountryBlogArticlePage } from '@/components/landing-pages/pages/CountryBlogArticlePage';
+import { getCountry } from '@/utils/countries';
+import { getCountryData } from '@/utils/countryData';
 
 const CountryFallback = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -73,6 +60,18 @@ const CountryFallback = () => (
 function requireAuth() {
   const token = localStorage.getItem('heyla_token');
   if (!token) throw redirect({ to: '/login' });
+  try {
+    const userStr = localStorage.getItem('heyla_user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      const sub = user?.subscription;
+      if (sub && sub.status === 'expired') {
+        throw redirect({ to: '/payment' });
+      }
+    }
+  } catch {
+    // ignore parse errors
+  }
 }
 
 const rootRoute = createRootRoute({
@@ -96,20 +95,38 @@ const termsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/terms'
 const careersRoute = createRoute({ getParentRoute: () => rootRoute, path: '/careers', component: CareersPage });
 const paymentRoute = createRoute({ getParentRoute: () => rootRoute, path: '/payment', component: PaymentPage });
 
-const countryRoutes = ['ke', 'ng', 'za', 'gh', 'tz', 'ug', 'rw', 'et', 'eg', 'us', 'gb', 'de', 'fr', 'in', 'ae', 'br', 'cn', 'jp', 'au', 'ca'].map((code) => {
-  const components: Record<string, React.ComponentType> = {
-    ke: KenyaLanding, ng: NigeriaLanding, za: SouthAfricaLanding, gh: GhanaLanding,
-    tz: TanzaniaLanding, ug: UgandaLanding, rw: RwandaLanding, et: EthiopiaLanding,
-    eg: EgyptLanding, us: USALanding, gb: UKLanding, de: GermanyLanding,
-    fr: FranceLanding, in: IndiaLanding, ae: UAELanding, br: BrazilLanding,
-    cn: ChinaLanding, jp: JapanLanding, au: AustraliaLanding, ca: CanadaLanding,
-  };
-  return createRoute({
-    getParentRoute: () => rootRoute,
-    path: `/country/${code}`,
-    component: components[code],
-  });
-});
+const COUNTRY_CODES = ['ke', 'ng', 'za', 'gh', 'tz', 'ug', 'rw', 'et', 'eg', 'us', 'gb', 'de', 'fr', 'in', 'ae', 'br', 'cn', 'jp', 'au', 'ca'];
+
+function countryRouteComponent(code: string, section: string) {
+  const country = getCountry(code.toUpperCase())!;
+  switch (section) {
+    case 'home':
+      const data = getCountryData(code);
+      return () => <CountryHomePage country={country} highlights={data.highlights} testimonial={data.testimonial} />;
+    case 'features':
+      return () => <CountryFeaturesPage country={country} industries={getCountryData(code).industries} />;
+    case 'pricing':
+      return () => <CountryPricingPage country={country} />;
+    case 'about':
+      return () => <CountryAboutPage country={country} />;
+    case 'blog':
+      return () => <CountryBlogPage country={country} />;
+    case 'blog-article':
+      return () => <CountryBlogArticlePage country={country} />;
+    default:
+      const defaultData = getCountryData(code);
+      return () => <CountryHomePage country={country} highlights={defaultData.highlights} testimonial={defaultData.testimonial} />;
+  }
+}
+
+const countryRoutes = COUNTRY_CODES.flatMap((code) => [
+  createRoute({ getParentRoute: () => rootRoute, path: `/country/${code}`, component: countryRouteComponent(code, 'home') }),
+  createRoute({ getParentRoute: () => rootRoute, path: `/country/${code}/features`, component: countryRouteComponent(code, 'features') }),
+  createRoute({ getParentRoute: () => rootRoute, path: `/country/${code}/pricing`, component: countryRouteComponent(code, 'pricing') }),
+  createRoute({ getParentRoute: () => rootRoute, path: `/country/${code}/about`, component: countryRouteComponent(code, 'about') }),
+  createRoute({ getParentRoute: () => rootRoute, path: `/country/${code}/blog`, component: countryRouteComponent(code, 'blog') }),
+  createRoute({ getParentRoute: () => rootRoute, path: `/country/${code}/blog/$slug`, component: countryRouteComponent(code, 'blog-article') }),
+]);
 
 const protectedLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,

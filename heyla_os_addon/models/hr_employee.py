@@ -55,6 +55,13 @@ class HeylaEmployee(models.Model):
     unpaid_leave_days = fields.Float(string='Unpaid Leave Days', default=0.0)
     sick_leave_days = fields.Float(string='Sick Leave Days', default=0.0)
     active = fields.Boolean(string='Active', default=True)
+    classification_id = fields.Many2one('heyla.employee.classification', string='Classification')
+    tax_category = fields.Selection(related='classification_id.tax_category', store=True)
+    employment_term_id = fields.Many2one('heyla.employment.term', string='Employment Term')
+    branch_location = fields.Char(string='Branch Location')
+    supervisor_id = fields.Many2one('heyla.employee', string='Supervisor')
+    supervisor_name = fields.Char(related='supervisor_id.name', store=True)
+    cost_center = fields.Char(string='Cost Center')
 
     _sql_constraints = [
         ('email_unique', 'unique(email)', 'Email must be unique!'),

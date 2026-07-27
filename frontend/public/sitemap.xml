@@ -1,29 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- heylaos.com pages -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- ════════════════════════════════════════════
+       GLOBAL PAGES (priority 1.0 – 0.5)
+       ════════════════════════════════════════════ -->
   <url>
     <loc>https://heylaos.com/</loc>
     <lastmod>2026-07-26</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://heylaos.com/login</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://heylaos.com/register</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://heylaos.com/register/individual</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://heylaos.com/register/company</loc>
@@ -50,45 +55,156 @@
     <priority>0.3</priority>
   </url>
 
-  <!-- Country landing pages -->
-  <url><loc>https://heylaos.com/country/ke</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/ng</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/za</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/gh</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/tz</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/ug</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/rw</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/et</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/eg</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/us</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/gb</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/de</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/fr</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/in</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/ae</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/br</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/cn</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/jp</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/au</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://heylaos.com/country/ca</loc><lastmod>2026-07-26</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <!-- ════════════════════════════════════════════
+       COUNTRY PAGES (priority 0.9 – 0.6)
+       Each country has: Home, Features, Pricing, About, Blog
+       ════════════════════════════════════════════ -->
 
-  <!-- Subdomain pages -->
-  <url>
-    <loc>https://hms.heylaos.com/</loc>
-    <lastmod>2026-07-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://hydan.heylaos.com/</loc>
-    <lastmod>2026-07-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://keylist.heylaos.com/</loc>
-    <lastmod>2026-07-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
+  <!-- Kenya (KE) -->
+  <url><loc>https://heylaos.com/country/ke</loc><priority>0.90</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ke/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ke/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ke/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ke/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Nigeria (NG) -->
+  <url><loc>https://heylaos.com/country/ng</loc><priority>0.90</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ng/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ng/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ng/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ng/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- South Africa (ZA) -->
+  <url><loc>https://heylaos.com/country/za</loc><priority>0.85</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/za/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/za/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/za/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/za/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Ghana (GH) -->
+  <url><loc>https://heylaos.com/country/gh</loc><priority>0.80</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/gh/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/gh/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/gh/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/gh/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Tanzania (TZ) -->
+  <url><loc>https://heylaos.com/country/tz</loc><priority>0.80</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/tz/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/tz/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/tz/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/tz/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Uganda (UG) -->
+  <url><loc>https://heylaos.com/country/ug</loc><priority>0.80</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ug/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ug/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ug/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ug/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Rwanda (RW) -->
+  <url><loc>https://heylaos.com/country/rw</loc><priority>0.75</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/rw/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/rw/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/rw/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/rw/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Ethiopia (ET) -->
+  <url><loc>https://heylaos.com/country/et</loc><priority>0.75</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/et/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/et/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/et/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/et/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Egypt (EG) -->
+  <url><loc>https://heylaos.com/country/eg</loc><priority>0.75</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/eg/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/eg/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/eg/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/eg/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- United States (US) -->
+  <url><loc>https://heylaos.com/country/us</loc><priority>0.90</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/us/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/us/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/us/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/us/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- United Kingdom (GB) -->
+  <url><loc>https://heylaos.com/country/gb</loc><priority>0.85</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/gb/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/gb/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/gb/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/gb/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Germany (DE) -->
+  <url><loc>https://heylaos.com/country/de</loc><priority>0.85</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/de/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/de/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/de/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/de/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- France (FR) -->
+  <url><loc>https://heylaos.com/country/fr</loc><priority>0.85</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/fr/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/fr/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/fr/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/fr/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- India (IN) -->
+  <url><loc>https://heylaos.com/country/in</loc><priority>0.85</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/in/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/in/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/in/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/in/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- United Arab Emirates (AE) -->
+  <url><loc>https://heylaos.com/country/ae</loc><priority>0.80</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ae/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ae/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ae/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ae/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Brazil (BR) -->
+  <url><loc>https://heylaos.com/country/br</loc><priority>0.80</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/br/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/br/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/br/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/br/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- China (CN) -->
+  <url><loc>https://heylaos.com/country/cn</loc><priority>0.80</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/cn/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/cn/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/cn/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/cn/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Japan (JP) -->
+  <url><loc>https://heylaos.com/country/jp</loc><priority>0.80</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/jp/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/jp/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/jp/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/jp/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Australia (AU) -->
+  <url><loc>https://heylaos.com/country/au</loc><priority>0.80</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/au/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/au/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/au/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/au/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- Canada (CA) -->
+  <url><loc>https://heylaos.com/country/ca</loc><priority>0.80</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ca/features</loc><priority>0.70</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ca/pricing</loc><priority>0.65</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ca/about</loc><priority>0.60</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://heylaos.com/country/ca/blog</loc><priority>0.65</priority><changefreq>weekly</changefreq><lastmod>2026-07-26</lastmod></url>
+
+  <!-- ════════════════════════════════════════════
+       SUBDOMAIN PAGES
+       ════════════════════════════════════════════ -->
+  <url><loc>https://hms.heylaos.com/</loc><priority>0.5</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://hydan.heylaos.com/</loc><priority>0.5</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+  <url><loc>https://keylist.heylaos.com/</loc><priority>0.5</priority><changefreq>monthly</changefreq><lastmod>2026-07-26</lastmod></url>
+
 </urlset>

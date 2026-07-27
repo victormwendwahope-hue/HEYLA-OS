@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useState, useRef, useEffect } from 'react';
 import { User, Building2, Bell, Shield, Palette, Check, Camera, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { sanitizeUrl } from '@/lib/secure';
 
 export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
@@ -98,7 +99,7 @@ export default function SettingsPage() {
               <div className="flex items-center gap-4 mb-6">
                 <div className="relative w-16 h-16 rounded-2xl overflow-hidden gradient-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
                   {avatarPreview ? (
-                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={sanitizeUrl(avatarPreview)} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     (profile?.name?.charAt(0) || 'U')
                   )}

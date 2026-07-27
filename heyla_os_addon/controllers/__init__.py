@@ -13,3 +13,6 @@ from . import admin
 from . import upload
 from . import health
 from . import public
+from . import organisation
+from . import hr_extended
+from . import subscription

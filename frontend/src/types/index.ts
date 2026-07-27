@@ -146,6 +146,21 @@ export interface EmployeeDocument {
   uploadedAt: string;
 }
 
+export interface SubscriptionInfo {
+  plan: 'starter' | 'growth' | 'professional' | 'enterprise';
+  status: 'trial' | 'active' | 'expired' | 'cancelled';
+  trialStartedAt: string | null;
+  trialEndAt: string | null;
+  trialRemainingDays: number;
+  trialTotalDays: number;
+  subscriptionStartedAt: string | null;
+  subscriptionEndAt: string | null;
+  billingCycle: 'monthly' | 'yearly';
+  maxUsers: number;
+  maxBranches: number;
+  modulesEnabled: string[];
+}
+
 export interface User {
   id: string;
   email: string;
@@ -156,6 +171,7 @@ export interface User {
   facilityName?: string;
   facilityLogo?: string;
   accountId?: string;
+  subscription?: SubscriptionInfo;
 }
 
 export interface AttendanceRecord {
@@ -165,6 +181,19 @@ export interface AttendanceRecord {
   checkIn: string;
   checkOut: string;
   status: 'Present' | 'Absent' | 'Late' | 'Half Day' | 'On Leave';
+}
+
+export interface CareerJob {
+  id: string;
+  source: 'company' | 'network';
+  title: string;
+  company: string;
+  location: string;
+  type: string;
+  salary: string;
+  description: string;
+  skills: string[];
+  postedDate: string;
 }
 
 export interface CountryConfig {

@@ -1,5 +1,6 @@
 // Thin fetch wrapper with refresh-token rotation, 401 auto-retry and 403 toast.
 import { toast } from 'sonner';
+import { isSafeRedirectUrl } from '@/lib/secure';
 
 const runtimeBase =
   (typeof window !== 'undefined' ? (window as any).__VITE_API_URL__ : undefined) as string | undefined;
@@ -85,7 +86,7 @@ function handleUnauthorized() {
   // Soft redirect — avoid hard reload loops on /login.
   if (!location.pathname.startsWith('/login')) {
     toast.error('Session expired — please log in again');
-    location.assign('/login');
+    location.assign(isSafeRedirectUrl('/login') ? '/login' : '/');
   }
 }
 
@@ -125,7 +126,7 @@ if (!res.ok) {
     // Trial-gating: backend responds 403 { redirectToPayment: true, paymentUrl }
     if (res.status === 403 && (data as any)?.redirectToPayment) {
       const paymentUrl = (data as any).paymentUrl || '/payment';
-      location.assign(paymentUrl);
+      location.assign(isSafeRedirectUrl(paymentUrl) ? paymentUrl : '/');
     }
 
     if (res.status === 403) toast.error(typeof msg === 'string' ? msg : 'You don\'t have access to this');
@@ -170,14 +171,32 @@ export const api = {
       request<{ user: any }>('PATCH', '/auth/profile', data),
     googleLogin: (credential: string) =>
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/google/login', { credential }),
-    googleRegister: (data: { credential: string; password: string; facilityName?: string; facilityLogo?: string }) =>
+    googleRegister: (data: { credential: string; facilityName?: string; facilityLogo?: string }) =>
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/google/register', data),
+  },
+
+  subscription: {
+    plans: () => request<{ plans: any[]; optionalModules: any[] }>('GET', '/subscription/plans'),
+    status: () => request<{ subscription: any }>('GET', '/subscription/status'),
+    subscribe: (plan: string, billingCycle: string) =>
+      request<{ ok: true; subscription: any }>('POST', '/subscription/subscribe', { plan, billingCycle }),
+    cancel: () => request<{ ok: true; subscription: any }>('POST', '/subscription/cancel'),
   },
 
   public: {
     jobs: (countryCode?: string) => {
       const params = countryCode ? `?country=${countryCode}` : '';
       return request<{ id: string; title: string; company: string; location: string; type: string; salary: string; description: string; postedDate: string }[]>('GET', `/public/jobs${params}`);
+    },
+    vacancies: (q?: { search?: string; type?: string; country?: string; limit?: number; offset?: number }) => {
+      const params = new URLSearchParams();
+      if (q?.search) params.set('search', q.search);
+      if (q?.type) params.set('type', q.type);
+      if (q?.country) params.set('country', q.country);
+      if (q?.limit) params.set('limit', String(q.limit));
+      if (q?.offset) params.set('offset', String(q.offset));
+      const qs = params.toString();
+      return request<CareerJob[]>('GET', `/public/vacancies${qs ? `?${qs}` : ''}`);
     },
   },
 
