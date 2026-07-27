@@ -9,6 +9,7 @@ class HeylaNetworkPost(models.Model):
     _order = 'id desc'
 
     author = fields.Char(string='Author', required=True)
+    author_id = fields.Many2one('heyla.user', string='Author User')
     role = fields.Char(string='Role')
     avatar = fields.Char(string='Avatar URL')
     content = fields.Text(string='Content', required=True)

@@ -31,6 +31,7 @@ from . import job_applicant
 from . import job_interview
 from . import network_post
 from . import network_job
+from . import network_profile
 from . import org_department
 from . import hr_loan
 from . import hr_expense

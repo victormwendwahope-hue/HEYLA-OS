@@ -1,60 +1,58 @@
 import { PageHeader } from '@/components/shared/CommonUI';
 import { Heart, MessageCircle, Share2, Send, Briefcase, Image, Trash2, MapPin, Clock } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNetworkStore } from '@/store/networkStore';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 
 export default function NetworkingPage() {
   const user = useAuthStore((s) => s.user);
-  const { posts, jobs, addPost, deletePost, toggleLike, addJob } = useNetworkStore();
+  const navigate = useNavigate();
+  const { posts, jobs, fetchPosts, fetchJobs, addPost, deletePost, toggleLike, addComment, addJob } = useNetworkStore();
   const [newPost, setNewPost] = useState('');
   const [tab, setTab] = useState<'feed' | 'jobs'>('feed');
   const [showJobForm, setShowJobForm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoName, setPhotoName] = useState('');
   const [jobForm, setJobForm] = useState({ title: '', company: user?.company || '', location: '', type: 'Full-time' as const, salary: '', skills: '', description: '' });
-  const [postComments, setPostComments] = useState<Record<string, string[]>>({});
   const [commentInput, setCommentInput] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
 
+  useEffect(() => { fetchPosts(); fetchJobs(); }, []);
+
   const handlePost = () => {
     if (!newPost.trim()) return;
-    addPost({
-      id: Date.now().toString(),
-      author: user?.name || 'You',
-      role: user?.role || 'Admin',
-      avatar: (user?.name || 'U').split(' ').map((n) => n[0]).join(''),
-      content: newPost,
-      time: 'Just now',
-      likes: 0,
-      comments: 0,
-      liked: false,
-    });
+    addPost(newPost);
     setNewPost('');
-    toast.success('Post published!');
   };
 
   const handlePostJob = (e: React.FormEvent) => {
     e.preventDefault();
     if (!jobForm.title || !jobForm.description) { toast.error('Fill required fields'); return; }
     addJob({
-      id: Date.now().toString(),
       ...jobForm,
       type: jobForm.type as any,
       posted: 'Just now',
       skills: jobForm.skills.split(',').map((s) => s.trim()).filter(Boolean),
-      applicants: [],
     });
     setShowJobForm(false);
     setJobForm({ title: '', company: user?.company || '', location: '', type: 'Full-time', salary: '', skills: '', description: '' });
-    toast.success('Job posted! It will also appear in Marketplace.');
   };
 
   return (
     <div className="space-y-6 animate-fade-in max-w-3xl mx-auto">
       <PageHeader title="Networking" description="Connect, share updates, and post jobs" />
+
+      {/* Quick Links */}
+      <div className="flex gap-2 flex-wrap">
+        <button onClick={() => navigate({ to: '/networking/profile' })}
+          className="px-3 py-1.5 text-xs border border-border rounded-lg hover:bg-muted transition-colors">My Profile</button>
+        <button onClick={() => navigate({ to: '/networking/network' })}
+          className="px-3 py-1.5 text-xs border border-border rounded-lg hover:bg-muted transition-colors">My Network</button>
+        <button onClick={() => navigate({ to: '/networking/discover' })}
+          className="px-3 py-1.5 text-xs border border-border rounded-lg hover:bg-muted transition-colors">Discover People</button>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-muted rounded-lg p-1">
@@ -102,11 +100,11 @@ export default function NetworkingPage() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-sm">{post.author}</p>
+                      <button onClick={() => post.authorId && navigate({ to: `/networking/profile/${post.authorId}` })} className="font-medium text-sm hover:text-primary transition-colors text-left">{post.author}</button>
                       <p className="text-xs text-muted-foreground">{post.role} · {post.time}</p>
                     </div>
                     {post.author === (user?.name || 'You') && (
-                      <button onClick={() => { deletePost(post.id); toast.success('Post deleted'); }} className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                      <button onClick={() => { deletePost(post.id); }} className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
@@ -120,26 +118,26 @@ export default function NetworkingPage() {
                   <Heart className={`w-4 h-4 ${post.liked ? 'fill-primary' : ''}`} /> {post.likes}
                 </button>
                 <button onClick={() => setCommentInput(commentInput === post.id ? null : post.id)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
-                  <MessageCircle className="w-4 h-4" /> {postComments[post.id]?.length || post.comments}
+                  <MessageCircle className="w-4 h-4" /> {post.commentList?.length || post.comments}
                 </button>
-                <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success('Link copied to clipboard'); }} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success('Link copied'); }} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
                   <Share2 className="w-4 h-4" /> Share
                 </button>
               </div>
               {commentInput === post.id && (
                 <div className="mt-3 pt-3 border-t border-border space-y-2">
-                  {postComments[post.id]?.map((c, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm">
+                  {(post.commentList || []).map((c) => (
+                    <div key={c.id} className="flex items-start gap-2 text-sm">
                       <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold shrink-0">
-                        {user?.name?.charAt(0) || 'U'}
+                        {(c.userName || 'U').charAt(0)}
                       </div>
                       <div>
-                        <p className="text-xs font-medium">{user?.name || 'You'}</p>
-                        <p className="text-xs text-muted-foreground">{c}</p>
+                        <p className="text-xs font-medium">{c.userName}</p>
+                        <p className="text-xs text-muted-foreground">{c.content}</p>
                       </div>
                     </div>
                   ))}
-                  <form onSubmit={(e) => { e.preventDefault(); if (!commentText.trim()) return; setPostComments(p => ({ ...p, [post.id]: [...(p[post.id] || []), commentText] })); setCommentText(''); toast.success('Comment added'); }} className="flex gap-2">
+                  <form onSubmit={(e) => { e.preventDefault(); if (!commentText.trim()) return; addComment(post.id, commentText); setCommentText(''); }} className="flex gap-2">
                     <input value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Write a comment..."
                       className="flex-1 px-3 py-1.5 rounded-lg border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-primary/30" />
                     <button type="submit" disabled={!commentText.trim()} className="gradient-primary text-primary-foreground p-1.5 rounded-lg disabled:opacity-50"><Send className="w-3.5 h-3.5" /></button>

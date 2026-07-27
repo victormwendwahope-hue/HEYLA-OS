@@ -37,6 +37,13 @@ access_heyla_job_interview,heyla.job.interview,model_heyla_job_interview,base.gr
 access_heyla_network_post,heyla.network.post,model_heyla_network_post,base.group_user,1,1,1,1
 access_heyla_network_job,heyla.network.job,model_heyla_network_job,base.group_user,1,1,1,1
 access_heyla_network_applicant,heyla.network.applicant,model_heyla_network_applicant,base.group_user,1,1,1,1
+access_heyla_network_profile,heyla.network.profile,model_heyla_network_profile,base.group_user,1,1,1,1
+access_heyla_network_profile_skill,heyla.network.profile.skill,model_heyla_network_profile_skill,base.group_user,1,1,1,1
+access_heyla_network_profile_experience,heyla.network.profile.experience,model_heyla_network_profile_experience,base.group_user,1,1,1,1
+access_heyla_network_profile_education,heyla.network.profile.education,model_heyla_network_profile_education,base.group_user,1,1,1,1
+access_heyla_network_connection,heyla.network.connection,model_heyla_network_connection,base.group_user,1,1,1,1
+access_heyla_network_like,heyla.network.like,model_heyla_network_like,base.group_user,1,1,1,1
+access_heyla_network_comment,heyla.network.comment,model_heyla_network_comment,base.group_user,1,1,1,1
 access_heyla_department,heyla.department,model_heyla_department,base.group_user,1,1,1,1
 access_heyla_division,heyla.division,model_heyla_division,base.group_user,1,1,1,1
 access_heyla_business_unit,heyla.business.unit,model_heyla_business_unit,base.group_user,1,1,1,1

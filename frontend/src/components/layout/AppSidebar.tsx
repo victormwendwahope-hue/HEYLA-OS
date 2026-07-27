@@ -6,6 +6,7 @@ import {
   ChevronLeft, LogOut, Settings, ChevronDown, FileText, Calendar, Award, ShieldBan, FolderOpen, Receipt,
   Truck, Fuel, Briefcase, Moon, Sun, HeartPulse, Shield, HardHat, ShieldCheck,
   AlertTriangle, ClipboardCheck, Bell, Building2, FileSignature, Scale, Banknote, Gavel, ShieldAlert,
+  User, UserPlus, Search,
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -53,7 +54,12 @@ const mainNav = [
     { title: 'Overview', url: '/transport', icon: Truck },
     { title: 'Fuel Tracking', url: '/fuel', icon: Fuel },
   ] },
-  { title: 'Networking', url: '/networking', icon: Globe },
+  { title: 'Networking', url: '/networking', icon: Globe, items: [
+    { title: 'Feed & Jobs', url: '/networking', icon: Globe },
+    { title: 'My Profile', url: '/networking/profile', icon: User },
+    { title: 'My Network', url: '/networking/network', icon: Users },
+    { title: 'Discover', url: '/networking/discover', icon: Search },
+  ] },
   { title: 'Marketplace', url: '/marketplace', icon: ShoppingBag },
 ];
 

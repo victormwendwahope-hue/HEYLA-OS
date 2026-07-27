@@ -27,6 +27,10 @@ import AccountingPage from '@/pages/accounting/AccountingPage';
 import PayrollPage from '@/pages/accounting/PayrollPage';
 import InventoryPage from '@/pages/inventory/InventoryPage';
 import NetworkingPage from '@/pages/networking/NetworkingPage';
+import NetworkingProfilePage from '@/pages/networking/NetworkingProfilePage';
+import NetworkingNetworkPage from '@/pages/networking/NetworkingNetworkPage';
+import NetworkingDiscoverPage from '@/pages/networking/NetworkingDiscoverPage';
+import NetworkingUserProfilePage from '@/pages/networking/NetworkingUserProfilePage';
 import MarketplacePage from '@/pages/marketplace/MarketplacePage';
 import SettingsPage from '@/pages/settings/SettingsPage';
 import AdminPage from '@/pages/admin/AdminPage';
@@ -156,6 +160,10 @@ const inventoryRoute = createRoute({ getParentRoute: () => protectedLayoutRoute,
 const transportRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport', component: TransportPage });
 const fuelRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/fuel', component: FuelPage });
 const networkingRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking', component: NetworkingPage });
+const networkingProfileRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/profile', component: NetworkingProfilePage });
+const networkingUserProfileRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/profile/$userId', component: NetworkingUserProfilePage });
+const networkingNetworkRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/network', component: NetworkingNetworkPage });
+const networkingDiscoverRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/discover', component: NetworkingDiscoverPage });
 const marketplaceRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/marketplace', component: MarketplacePage });
 const settingsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/settings', component: SettingsPage });
 const adminRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/admin', component: AdminPage });
@@ -167,7 +175,7 @@ const protectedChildren = [
   hrPerformanceRoute, hrWibaRoute, hrInjuriesRoute, hrBlacklistRoute,
   hrDocumentsRoute, hrPayrollRoute, jobsRoute, ehsRoute, engineeringRoute,
   crmRoute, accountingRoute, accountingPayrollRoute, inventoryRoute,
-  transportRoute, fuelRoute, networkingRoute, marketplaceRoute,
+  transportRoute, fuelRoute, networkingRoute, networkingProfileRoute, networkingUserProfileRoute, networkingNetworkRoute, networkingDiscoverRoute, marketplaceRoute,
   settingsRoute, adminRoute,
 ];
 

@@ -1,5 +1,5 @@
 import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
-import { useNetworkStore, Applicant } from '@/store/networkStore';
+import { useNetworkStore, NetworkApplicant } from '@/store/networkStore';
 import { Briefcase, MapPin, Clock, Star, Send, Users, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -23,7 +23,7 @@ export default function MarketplacePage() {
     return m[s] || 'default';
   };
 
-  const handleStatusChange = (jobId: string, applicantId: string, newStatus: Applicant['status']) => {
+  const handleStatusChange = (jobId: string, applicantId: string, newStatus: NetworkApplicant['status']) => {
     updateApplicant(jobId, applicantId, { status: newStatus });
     toast.success(`Applicant moved to ${newStatus}`);
   };
@@ -95,7 +95,7 @@ export default function MarketplacePage() {
                             <StatusBadge status={applicant.status} variant={statusVariant(applicant.status)} />
                             <select
                               value={applicant.status}
-                              onChange={(e) => handleStatusChange(job.id, applicant.id, e.target.value as Applicant['status'])}
+                              onChange={(e) => handleStatusChange(job.id, applicant.id, e.target.value as NetworkApplicant['status'])}
                               className="px-2 py-1 rounded-lg border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
                             >
                               {['Applied', 'Screening', 'Interview', 'Offered', 'Hired', 'Rejected'].map((s) => <option key={s}>{s}</option>)}
