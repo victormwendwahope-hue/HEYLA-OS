@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, Link } from '@tanstack/react-router';
+import { useNavigate, Link, useSearch } from '@tanstack/react-router';
 import { useAuthStore } from '@/store/authStore';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Linkedin } from 'lucide-react';
 import { toast } from 'sonner';
 import { sanitizeError } from '@/lib/secure';
 
@@ -36,7 +36,7 @@ export default function RegisterIndividualPage() {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [googleLoaded, setGoogleLoaded] = useState(false);
-  const { register, googleRegister, isLoading, error, clearError } = useAuthStore();
+  const { register, googleRegister, linkedinRegister, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
@@ -51,6 +51,35 @@ export default function RegisterIndividualPage() {
       toast.error(sanitizeError(err, 'Google sign-up failed'));
     }
   }, [googleRegister, navigate, clearError]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    if (code && state && state === localStorage.getItem('linkedin_oauth_state')) {
+      localStorage.removeItem('linkedin_oauth_state');
+      const LINKEDIN_CLIENT_ID = import.meta.env.VITE_LINKEDIN_CLIENT_ID || '';
+      const LINKEDIN_CLIENT_SECRET = import.meta.env.VITE_LINKEDIN_CLIENT_SECRET || '';
+      if (LINKEDIN_CLIENT_ID && LINKEDIN_CLIENT_SECRET) {
+        const redirectUri = `${window.location.origin}/register/individual`;
+        fetch(`https://www.linkedin.com/oauth/v2/accessToken`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: redirectUri, client_id: LINKEDIN_CLIENT_ID, client_secret: LINKEDIN_CLIENT_SECRET }),
+        }).then(r => r.json()).then(async (tokenData) => {
+          const accessToken = tokenData.access_token;
+          if (!accessToken) { toast.error('LinkedIn auth failed'); return; }
+          try {
+            await linkedinRegister(accessToken);
+            navigate({ to: '/careers' });
+          } catch (err: any) {
+            toast.error(err?.message || 'LinkedIn sign-up failed');
+          }
+        }).catch(() => toast.error('LinkedIn auth failed'));
+        window.history.replaceState({}, '', '/register/individual');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!googleClientId) return;
@@ -162,6 +191,27 @@ export default function RegisterIndividualPage() {
               Sign up with Google
             </button>
           )}
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
+            <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-slate-400">or</span></div>
+          </div>
+
+          <button
+            onClick={() => {
+              const LINKEDIN_CLIENT_ID = import.meta.env.VITE_LINKEDIN_CLIENT_ID || '';
+              if (!LINKEDIN_CLIENT_ID) { toast.error('LinkedIn sign-up not configured'); return; }
+              const redirectUri = `${window.location.origin}/register/individual`;
+              const state = Math.random().toString(36).substring(2);
+              localStorage.setItem('linkedin_oauth_state', state);
+              const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=openid%20profile%20email`;
+              window.location.href = authUrl;
+            }}
+            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <Linkedin className="w-5 h-5 text-[#0A66C2]" />
+            Sign up with LinkedIn
+          </button>
         </div>
 
         <div className="text-center mt-6 space-y-2">

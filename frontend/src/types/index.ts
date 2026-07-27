@@ -172,6 +172,12 @@ export interface User {
   facilityLogo?: string;
   accountId?: string;
   subscription?: SubscriptionInfo;
+  linkedinId?: string;
+  linkedinProfile?: string;
+  talentPool?: boolean;
+  headline?: string;
+  skills?: string;
+  photoUrl?: string;
 }
 
 export interface AttendanceRecord {

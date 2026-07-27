@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+import json
 
 
 class HeylaJob(models.Model):
@@ -29,3 +30,20 @@ class HeylaJob(models.Model):
     applicants = fields.Integer(string='Applicants Count', default=0)
     country = fields.Char(string='Country')
     company_name = fields.Char(string='Company Name')
+
+    banner = fields.Char(string='Banner Image URL')
+    photo = fields.Char(string='Company Photo URL')
+    roles = fields.Text(string='Roles & Responsibilities')
+    benefits = fields.Text(string='Benefits')
+
+    custom_form_fields = fields.Text(string='Custom Form Fields (JSON)', default='[]')
+    linkedin_job_id = fields.Char(string='LinkedIn Job ID')
+
+    interview_instructions = fields.Text(string='Interview Instructions')
+    video_call_link = fields.Char(string='Video Call Link')
+
+    def _get_custom_fields(self):
+        try:
+            return json.loads(self.custom_form_fields or '[]')
+        except (json.JSONDecodeError, TypeError):
+            return []

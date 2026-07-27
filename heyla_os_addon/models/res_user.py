@@ -45,6 +45,13 @@ class HeylaUser(models.Model):
     facility_name = fields.Char(string='Facility Name', tracking=True)
     facility_logo = fields.Char(string='Facility Logo URL')
 
+    linkedin_id = fields.Char(string='LinkedIn ID')
+    linkedin_profile = fields.Char(string='LinkedIn Profile URL')
+    talent_pool = fields.Boolean(string='Talent Pool', default=False)
+    headline = fields.Char(string='Headline')
+    skills = fields.Text(string='Skills')
+    photo_url = fields.Char(string='Photo URL')
+
     plan = fields.Selection([
         ('starter', 'Starter'),
         ('growth', 'Growth'),

@@ -20,6 +20,8 @@ interface AuthState {
     facilityLogo?: string;
   }) => Promise<void>;
   googleLogin: (credential: string) => Promise<void>;
+  linkedinLogin: (accessToken: string) => Promise<void>;
+  linkedinRegister: (accessToken: string) => Promise<void>;
   googleRegister: (data: {
     credential: string;
     facilityName?: string;
@@ -47,6 +49,12 @@ function mapUser(raw: any): User {
     facilityLogo: raw.facilityLogo || raw.facility_logo || '',
     accountId: raw.accountId || raw.account_id || raw.id || String(raw.id),
     subscription: raw.subscription ?? raw.subscription ?? undefined,
+    linkedinId: raw.linkedinId || raw.linkedin_id || '',
+    linkedinProfile: raw.linkedinProfile || raw.linkedin_profile || '',
+    talentPool: raw.talentPool || raw.talent_pool || false,
+    headline: raw.headline || '',
+    skills: raw.skills || '',
+    photoUrl: raw.photoUrl || raw.photo_url || '',
   };
 }
 
@@ -166,6 +174,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       toast.success(`Welcome back, ${mapped.name}!`);
     } catch (err: unknown) {
       const msg = err instanceof ApiError ? sanitizeError((err.data as Record<string, unknown>)?.error, err.message) : 'Google login failed';
+      set({ error: msg, isLoading: false });
+      throw err;
+    }
+  },
+
+  linkedinLogin: async (accessToken) => {
+    set({ isLoading: true, error: null });
+    try {
+      if (!apiEnabled()) throw new ApiError('API not configured', 0, null);
+      const { token, refreshToken, user } = await api.auth.linkedinLogin(accessToken);
+      const mapped = mapUser(user);
+      persist(mapped, token, refreshToken);
+      set({ user: mapped, isAuthenticated: true, isLoading: false });
+      toast.success(`Welcome back, ${mapped.name}!`);
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? sanitizeError((err.data as Record<string, unknown>)?.error, err.message) : 'LinkedIn login failed';
+      set({ error: msg, isLoading: false });
+      throw err;
+    }
+  },
+
+  linkedinRegister: async (accessToken) => {
+    set({ isLoading: true, error: null });
+    try {
+      if (!apiEnabled()) throw new ApiError('API not configured', 0, null);
+      const { token, refreshToken, user } = await api.auth.linkedinRegister(accessToken);
+      const mapped = mapUser(user);
+      persist(mapped, token, refreshToken);
+      set({ user: mapped, isAuthenticated: true, isLoading: false });
+      toast.success('Account created with LinkedIn!');
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? sanitizeError((err.data as Record<string, unknown>)?.error, err.message) : 'LinkedIn registration failed';
       set({ error: msg, isLoading: false });
       throw err;
     }

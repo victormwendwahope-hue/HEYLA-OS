@@ -1,4 +1,4 @@
-from odoo import http
+from odoo import http, fields
 from odoo.http import request
 import json
 from datetime import datetime
@@ -16,25 +16,31 @@ class PublicController(http.Controller):
             jobs = request.env['heyla.job'].sudo().search(domain, order='posted_date desc')
             result = []
             for j in jobs:
-                result.append({
-                    'id': str(j.id),
-                    'title': j.title or '',
-                    'company': j.company_name or '',
-                    'location': j.location or '',
-                    'type': j.job_type or 'Full-time',
-                    'salary': j.salary or '',
-                    'description': j.description or '',
-                    'postedDate': j.posted_date.isoformat() if j.posted_date else '',
-                })
-            return http.Response(
-                json.dumps(result),
-                content_type='application/json', status=200,
-            )
-        except Exception as e:
-            return http.Response(
-                json.dumps({'error': 'Request failed'}),
-                content_type='application/json', status=400,
-            )
+                result.append(self._job_public_json(j))
+            return http.Response(json.dumps(result), content_type='application/json', status=200)
+        except Exception:
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
+
+    def _job_public_json(self, j):
+        return {
+            'id': str(j.id),
+            'title': j.title or '',
+            'company': j.company_name or '',
+            'location': j.location or '',
+            'type': j.job_type or 'Full-time',
+            'salary': j.salary or '',
+            'description': j.description or '',
+            'postedDate': j.posted_date.isoformat() if j.posted_date else '',
+            'requirements': j.requirements.split('\n') if j.requirements else [],
+            'roles': j.roles.split('\n') if j.roles else [],
+            'benefits': j.benefits.split('\n') if j.benefits else [],
+            'banner': j.banner or '',
+            'photo': j.photo or '',
+            'companyName': j.company_name or '',
+            'customFormFields': json.loads(j.custom_form_fields or '[]'),
+            'interviewInstructions': j.interview_instructions or '',
+            'videoCallLink': j.video_call_link or '',
+        }
 
     @http.route('/api/public/vacancies', type='http', auth='none', methods=['GET'], csrf=False)
     def public_vacancies(self):
@@ -46,8 +52,6 @@ class PublicController(http.Controller):
             offset = int(request.params.get('offset', 0))
 
             result = []
-
-            # Fetch from heyla.job (Open positions)
             job_domain = [('status', '=', 'Open')]
             if search:
                 job_domain.append('|')
@@ -62,20 +66,12 @@ class PublicController(http.Controller):
 
             jobs = request.env['heyla.job'].sudo().search(job_domain, order='posted_date desc', limit=limit, offset=offset)
             for j in jobs:
-                result.append({
-                    'id': 'job_' + str(j.id),
-                    'source': 'company',
-                    'title': j.title or '',
-                    'company': j.company_name or '',
-                    'location': j.location or '',
-                    'type': j.job_type or 'Full-time',
-                    'salary': j.salary or '',
-                    'description': j.description or '',
-                    'skills': j.requirements.split('\n') if j.requirements else [],
-                    'postedDate': j.posted_date.isoformat() if j.posted_date else '',
-                })
+                r = self._job_public_json(j)
+                r['id'] = 'job_' + str(j.id)
+                r['source'] = 'company'
+                r['skills'] = j.requirements.split('\n') if j.requirements else []
+                result.append(r)
 
-            # Fetch from heyla.network.job (network posts)
             net_domain = []
             if search:
                 net_domain.append('|')
@@ -99,17 +95,46 @@ class PublicController(http.Controller):
                     'description': j.description or '',
                     'skills': j.skills.split('\n') if j.skills else [],
                     'postedDate': j.posted or '',
+                    'requirements': [],
+                    'roles': [],
+                    'benefits': [],
+                    'banner': '',
+                    'photo': '',
+                    'companyName': j.company or '',
+                    'customFormFields': [],
                 })
 
-            # Sort by newest first
             result.sort(key=lambda x: x.get('postedDate', ''), reverse=True)
+            return http.Response(json.dumps(result), content_type='application/json', status=200)
+        except Exception:
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
-            return http.Response(
-                json.dumps(result),
-                content_type='application/json', status=200,
-            )
-        except Exception as e:
-            return http.Response(
-                json.dumps({'error': 'Request failed'}),
-                content_type='application/json', status=400,
-            )
+    @http.route('/api/public/jobs/<int:job_id>', type='http', auth='none', methods=['GET'], csrf=False)
+    def public_job_detail(self, job_id):
+        try:
+            j = request.env['heyla.job'].sudo().browse(job_id)
+            if not j.exists() or j.status != 'Open':
+                return http.Response(json.dumps({'error': 'Not found'}), content_type='application/json', status=404)
+            return http.Response(json.dumps(self._job_public_json(j)), content_type='application/json', status=200)
+        except Exception:
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
+
+    @http.route('/api/public/linkedin/import', type='http', auth='none', methods=['POST'], csrf=False)
+    def linkedin_job_import(self):
+        try:
+            data = json.loads(request.httprequest.data)
+        except (json.JSONDecodeError, Exception):
+            return http.Response(json.dumps({'error': 'Invalid data'}), content_type='application/json', status=400)
+        vals = {
+            'title': data.get('title', ''),
+            'company_name': data.get('company', data.get('companyName', '')),
+            'location': data.get('location', ''),
+            'job_type': data.get('type', 'Full-time'),
+            'salary': data.get('salary', ''),
+            'description': data.get('description', ''),
+            'linkedin_job_id': data.get('linkedinJobId', ''),
+            'status': 'Open',
+            'posted_date': fields.Date.today(),
+        }
+        j = request.env['heyla.job'].sudo().create(vals)
+        return http.Response(json.dumps({'id': str(j.id), 'title': j.title}), content_type='application/json', status=201)

@@ -44,6 +44,8 @@ def _check_password(password, stored):
 
 TOKEN_EXPIRY_HOURS = 24
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '319632867370-o8hnhe1b0dfl614gn7c2dq3kne4qlqo5.apps.googleusercontent.com')
+LINKEDIN_CLIENT_ID = os.environ.get('LINKEDIN_CLIENT_ID', '')
+LINKEDIN_CLIENT_SECRET = os.environ.get('LINKEDIN_CLIENT_SECRET', '')
 
 
 def _auth_required(f):
@@ -99,6 +101,12 @@ def _user_to_json(user):
         'facility_name': user.facility_name or '',
         'facility_logo': user.facility_logo or '',
         'subscription': user._subscription_info(),
+        'linkedinId': user.linkedin_id or '',
+        'linkedinProfile': user.linkedin_profile or '',
+        'talentPool': user.talent_pool or False,
+        'headline': user.headline or '',
+        'skills': user.skills or '',
+        'photoUrl': user.photo_url or '',
     }
 
 
@@ -240,6 +248,100 @@ class AuthController(http.Controller):
             )
         except (json.JSONDecodeError, Exception):
             return http.Response(json.dumps({'error': 'Google registration failed'}), content_type='application/json', status=400)
+
+    @http.route('/api/auth/linkedin/login', type='http', auth='none', methods=['POST'], csrf=False)
+    def linkedin_login(self):
+        try:
+            data = json.loads(request.httprequest.data)
+            access_token = data.get('accessToken', '')
+            if not access_token:
+                return http.Response(json.dumps({'error': 'Missing access token'}), content_type='application/json', status=400)
+            if not HAS_REQUESTS:
+                return http.Response(json.dumps({'error': 'Requests library not available'}), content_type='application/json', status=500)
+            headers = {'Authorization': f'Bearer {access_token}'}
+            me_resp = http_requests.get('https://api.linkedin.com/v2/userinfo', headers=headers, timeout=10)
+            if me_resp.status_code != 200:
+                return http.Response(json.dumps({'error': 'Failed to fetch LinkedIn profile'}), content_type='application/json', status=401)
+            info = me_resp.json()
+            email = info.get('email', '').strip().lower()
+            if not email:
+                return http.Response(json.dumps({'error': 'No email from LinkedIn'}), content_type='application/json', status=400)
+            user = request.env['heyla.user'].sudo().search([('email', '=', email)], limit=1)
+            if not user:
+                return http.Response(json.dumps({'error': 'No account found with this email'}), content_type='application/json', status=404)
+            raw_token = user._rotate_token()
+            raw_refresh = user._rotate_refresh_token()
+            linkedin_id = info.get('sub', '')
+            name = info.get('name', '')
+            picture = info.get('picture', '')
+            vals = {'last_login': datetime.now(), 'linkedin_id': linkedin_id}
+            if not user.avatar and picture:
+                vals['avatar'] = picture
+            if not user.linkedin_profile:
+                vals['linkedin_profile'] = f'https://www.linkedin.com/in/{linkedin_id}'
+            user.sudo().write(vals)
+            return http.Response(
+                json.dumps({'token': raw_token, 'refreshToken': raw_refresh, 'user': _user_to_json(user)}),
+                content_type='application/json', status=200,
+            )
+        except (json.JSONDecodeError, Exception):
+            return http.Response(json.dumps({'error': 'LinkedIn login failed'}), content_type='application/json', status=400)
+
+    @http.route('/api/auth/linkedin/register', type='http', auth='none', methods=['POST'], csrf=False)
+    def linkedin_register(self):
+        try:
+            data = json.loads(request.httprequest.data)
+            access_token = data.get('accessToken', '')
+            if not access_token:
+                return http.Response(json.dumps({'error': 'Missing access token'}), content_type='application/json', status=400)
+            if not HAS_REQUESTS:
+                return http.Response(json.dumps({'error': 'Requests library not available'}), content_type='application/json', status=500)
+            headers = {'Authorization': f'Bearer {access_token}'}
+            me_resp = http_requests.get('https://api.linkedin.com/v2/userinfo', headers=headers, timeout=10)
+            if me_resp.status_code != 200:
+                return http.Response(json.dumps({'error': 'Failed to fetch LinkedIn profile'}), content_type='application/json', status=401)
+            info = me_resp.json()
+            email = info.get('email', '').strip().lower()
+            if not email:
+                return http.Response(json.dumps({'error': 'No email from LinkedIn'}), content_type='application/json', status=400)
+            existing = request.env['heyla.user'].sudo().search([('email', '=', email)], limit=1)
+            if existing:
+                return http.Response(json.dumps({'error': 'Email already registered'}), content_type='application/json', status=400)
+            linkedin_id = info.get('sub', '')
+            name = info.get('name', email.split('@')[0])
+            picture = info.get('picture', '')
+            user = request.env['heyla.user'].sudo().create({
+                'name': name,
+                'email': email,
+                'password': _hash_password(secrets.token_hex(16)),
+                'avatar': picture,
+                'role': 'individual',
+                'linkedin_id': linkedin_id,
+                'linkedin_profile': f'https://www.linkedin.com/in/{linkedin_id}',
+                'photo_url': picture,
+                'talent_pool': True,
+            })
+            user.password_hash = user.password
+            user._start_trial()
+            raw_token = user._rotate_token()
+            raw_refresh = user._rotate_refresh_token()
+            try:
+                email_resp = http_requests.get('https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', headers=headers, timeout=10)
+                if email_resp.status_code == 200:
+                    email_data = email_resp.json()
+                    elements = email_data.get('elements', [])
+                    if elements:
+                        verified_email = elements[0].get('handle~', {}).get('emailAddress', '')
+                        if verified_email:
+                            user.sudo().write({'email': verified_email.strip().lower()})
+            except Exception:
+                pass
+            return http.Response(
+                json.dumps({'token': raw_token, 'refreshToken': raw_refresh, 'user': _user_to_json(user)}),
+                content_type='application/json', status=200,
+            )
+        except (json.JSONDecodeError, Exception):
+            return http.Response(json.dumps({'error': 'LinkedIn registration failed'}), content_type='application/json', status=400)
 
     @http.route('/api/auth/me', type='http', auth='none', methods=['GET'], csrf=False)
     def me(self):

@@ -173,6 +173,10 @@ export const api = {
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/google/login', { credential }),
     googleRegister: (data: { credential: string; facilityName?: string; facilityLogo?: string }) =>
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/google/register', data),
+    linkedinLogin: (accessToken: string) =>
+      request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/linkedin/login', { accessToken }),
+    linkedinRegister: (accessToken: string) =>
+      request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/linkedin/register', { accessToken }),
   },
 
   subscription: {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from '@tanstack/react-router';
 import { useAuthStore } from '@/store/authStore';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Linkedin } from 'lucide-react';
 import { toast } from 'sonner';
 
 declare global {
@@ -60,6 +60,38 @@ export default function LoginPage() {
   }, [googleLogin, navigate]);
 
   gcb.current = handleGoogleCredential;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    if (code && state && state === localStorage.getItem('linkedin_oauth_state')) {
+      localStorage.removeItem('linkedin_oauth_state');
+      const LINKEDIN_CLIENT_ID = import.meta.env.VITE_LINKEDIN_CLIENT_ID || '';
+      const LINKEDIN_CLIENT_SECRET = import.meta.env.VITE_LINKEDIN_CLIENT_SECRET || '';
+      if (!LINKEDIN_CLIENT_ID || !LINKEDIN_CLIENT_SECRET) { toast.error('LinkedIn not configured'); return; }
+      const redirectUri = `${window.location.origin}/login`;
+      fetch(`https://www.linkedin.com/oauth/v2/accessToken`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: redirectUri, client_id: LINKEDIN_CLIENT_ID, client_secret: LINKEDIN_CLIENT_SECRET }),
+      }).then(r => r.json()).then(async (tokenData) => {
+        const accessToken = tokenData.access_token;
+        if (!accessToken) { toast.error('LinkedIn auth failed'); return; }
+        try {
+          await (useAuthStore.getState() as any).linkedinLogin(accessToken);
+          navigate({ to: '/dashboard' });
+        } catch (err: any) {
+          if (err?.status === 404) {
+            navigate({ to: '/register/individual', search: { linkedin: '1' }, state: { linkedinToken: accessToken } });
+          } else {
+            toast.error(err?.message || 'LinkedIn sign-in failed');
+          }
+        }
+      }).catch(() => toast.error('LinkedIn auth failed'));
+      window.history.replaceState({}, '', '/login');
+    }
+  }, []);
 
   useEffect(() => {
     if (!googleClientId) return;
@@ -160,6 +192,27 @@ export default function LoginPage() {
               Sign in with Google
             </button>
           )}
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
+            <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-slate-400">or</span></div>
+          </div>
+
+          <button
+            onClick={async () => {
+              const LINKEDIN_CLIENT_ID = import.meta.env.VITE_LINKEDIN_CLIENT_ID || '';
+              if (!LINKEDIN_CLIENT_ID) { toast.error('LinkedIn sign-in not configured'); return; }
+              const redirectUri = `${window.location.origin}/login`;
+              const state = Math.random().toString(36).substring(2);
+              localStorage.setItem('linkedin_oauth_state', state);
+              const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=openid%20profile%20email`;
+              window.location.href = authUrl;
+            }}
+            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <Linkedin className="w-5 h-5 text-[#0A66C2]" />
+            Sign in with LinkedIn
+          </button>
 
           <p className="text-center text-sm text-slate-500 mt-6">
             Don't have an account? <Link to="/register" className="text-blue-600 font-medium hover:underline">Sign up</Link>
