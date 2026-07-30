@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate, useLocation } from '@tanstack/react-router'
 
 const PB = '#0A66FF'
 const DN = '#071B4D'
@@ -20,8 +20,8 @@ const MOCK_NETWORK = [
 
 export default function NetworkTapDashboard() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [user, setUser] = useState<any>(null)
-  const [activeNav, setActiveNav] = useState('Home')
   const [showMobileNav, setShowMobileNav] = useState(false)
   const [liked, setLiked] = useState<Set<number>>(new Set())
 
@@ -48,6 +48,9 @@ export default function NetworkTapDashboard() {
     navItems.splice(3, 0, { icon: '📋', label: hasPremium ? 'Candidates' : 'Applicants', path: '/network-tap/jobs' })
   }
 
+  const currentPath = location.pathname
+  const activeLabel = navItems.find(i => currentPath.startsWith(i.path))?.label || 'Home'
+
   const toggleLike = (id: number) => {
     setLiked(prev => {
       const next = new Set(prev)
@@ -59,41 +62,7 @@ export default function NetworkTapDashboard() {
 
   return (
     <div className="min-h-screen" style={{ background: '#F4F8FF', color: '#0F172A' }}>
-      <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
-        <aside className="hidden lg:block w-64 shrink-0">
-          <div className="bg-white rounded-2xl border overflow-hidden sticky top-20 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
-            <div className="h-16" style={{ background: 'linear-gradient(135deg, #071B4D, #0A66FF)' }} />
-            <div className="text-center -mt-10 px-4 pb-4 border-b" style={{ borderColor: '#E2E8F0' }}>
-              {isCompany ? (
-                <div className="w-20 h-20 rounded-xl border-3 border-white mx-auto flex items-center justify-center font-bold text-xl mb-2 shadow-md" style={{ background: 'white', color: DN }}>
-                  <div className="w-16 h-16 rounded-lg flex items-center justify-center text-white text-2xl" style={{ background: PB }}>{initial}</div>
-                </div>
-              ) : (
-                <div className="w-20 h-20 rounded-full border-3 border-white mx-auto flex items-center justify-center font-bold text-xl mb-2 shadow-md" style={{ background: PB, color: 'white' }}>
-                  {initial}
-                </div>
-              )}
-              <Link to={isCompany ? '/network-tap/jobs' : '/network-tap/profile'} className="font-semibold hover:underline" style={{ color: DN }}>{displayName}</Link>
-              <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>{isCompany ? (user?.company || 'Company Account') : 'Student / Job Seeker'}</p>
-              {isCompany && (
-                <div className="mt-2 flex items-center justify-center gap-1.5">
-                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ background: hasPremium ? '#DCFCE7' : '#FEF3C7', color: hasPremium ? '#16A34A' : '#B45309' }}>
-                    {hasPremium ? 'Premium' : 'Free'}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="py-2">
-              {navItems.map((item) => (
-                <button key={item.label} onClick={() => { setActiveNav(item.label); navigate({ to: item.path as any }) }} className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${activeNav === item.label ? 'text-white' : 'hover:bg-gray-50'}`} style={{ background: activeNav === item.label ? PB : 'transparent', color: activeNav === item.label ? 'white' : '#475569' }}>
-                  <span>{item.icon}</span>
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </aside>
-
+      <div className="max-w-7xl mx-auto flex gap-6">
         <main className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -109,11 +78,14 @@ export default function NetworkTapDashboard() {
             <div className="lg:hidden bg-white rounded-2xl border p-3 mb-4 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
               <div className="grid grid-cols-2 gap-1">
                 {navItems.map((item) => (
-                  <button key={item.label} onClick={() => { setActiveNav(item.label); navigate({ to: item.path as any }); setShowMobileNav(false) }} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors`} style={{ background: activeNav === item.label ? PB : 'transparent', color: activeNav === item.label ? 'white' : '#475569' }}>
+                  <button key={item.label} onClick={() => { navigate({ to: item.path as any }); setShowMobileNav(false) }} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors`} style={{ background: activeLabel === item.label ? PB : 'transparent', color: activeLabel === item.label ? 'white' : '#475569' }}>
                     <span>{item.icon}</span>
                     {item.label}
                   </button>
                 ))}
+                <button onClick={() => { navigate({ to: isCompany ? '/dashboard' : '/' }); setShowMobileNav(false) }} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground">
+                  ← {isCompany ? 'Back to Main' : 'Back to Website'}
+                </button>
               </div>
             </div>
           )}
