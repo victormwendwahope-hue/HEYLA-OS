@@ -34,6 +34,16 @@ import NetworkingUserProfilePage from '@/pages/networking/NetworkingUserProfileP
 import MarketplacePage from '@/pages/marketplace/MarketplacePage';
 import SettingsPage from '@/pages/settings/SettingsPage';
 import AdminPage from '@/pages/admin/AdminPage';
+import ManageUsersPage from '@/pages/admin/ManageUsersPage';
+import NetworkTapLanding from '@/pages/network-tap/LandingPage';
+import NetworkTapDashboard from '@/pages/network-tap/DashboardPage';
+import NetworkTapProfile from '@/pages/network-tap/ProfilePage';
+import NetworkTapJobs from '@/pages/network-tap/JobsPage';
+import NetworkTapConnections from '@/pages/network-tap/ConnectionsPage';
+import NetworkTapMessages from '@/pages/network-tap/MessagesPage';
+import NetworkTapNotifications from '@/pages/network-tap/NotificationsPage';
+import CVBuilderPage from '@/pages/network-tap/CVBuilderPage';
+import ProjectsPage from '@/pages/network-tap/ProjectsPage';
 import PaymentPage from '@/pages/payment/PaymentPage';
 import TransportPage from '@/pages/transport/TransportPage';
 import FuelPage from '@/pages/fuel/FuelPage';
@@ -46,6 +56,7 @@ import GeoLanding from '@/components/landing-pages/GeoLanding';
 import PrivacyPage from '@/pages/legal/PrivacyPage';
 import TermsPage from '@/pages/legal/TermsPage';
 import { AppLayoutWithBot } from '@/components/layout/AppLayout';
+import { NtvLayout } from '@/components/layout/NtvLayout';
 import { CountryHomePage } from '@/components/landing-pages/pages/CountryHomePage';
 import { CountryFeaturesPage } from '@/components/landing-pages/pages/CountryFeaturesPage';
 import { CountryPricingPage } from '@/components/landing-pages/pages/CountryPricingPage';
@@ -98,6 +109,7 @@ const privacyRoute = createRoute({ getParentRoute: () => rootRoute, path: '/priv
 const termsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/terms', component: TermsPage });
 const careersRoute = createRoute({ getParentRoute: () => rootRoute, path: '/careers', component: CareersPage });
 const paymentRoute = createRoute({ getParentRoute: () => rootRoute, path: '/payment', component: PaymentPage });
+const networkTapRoute = createRoute({ getParentRoute: () => rootRoute, path: '/network-tap', component: NetworkTapLanding });
 
 const COUNTRY_CODES = ['ke', 'ng', 'za', 'gh', 'tz', 'ug', 'rw', 'et', 'eg', 'us', 'gb', 'de', 'fr', 'in', 'ae', 'br', 'cn', 'jp', 'au', 'ca'];
 
@@ -139,6 +151,13 @@ const protectedLayoutRoute = createRoute({
   component: () => <AppLayoutWithBot />,
 });
 
+const ntvLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'ntv',
+  beforeLoad: () => requireAuth(),
+  component: () => <NtvLayout />,
+});
+
 const dashboardRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/dashboard', component: DashboardPage });
 const hrRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/hr', component: HRPage });
 const hrEmployeeRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/hr/employee/$id', component: EmployeeProfilePage });
@@ -167,6 +186,16 @@ const networkingDiscoverRoute = createRoute({ getParentRoute: () => protectedLay
 const marketplaceRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/marketplace', component: MarketplacePage });
 const settingsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/settings', component: SettingsPage });
 const adminRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/admin', component: AdminPage });
+const manageUsersRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/manage-users', component: ManageUsersPage });
+
+const networkTapDashboardRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/dashboard', component: NetworkTapDashboard });
+const networkTapProfileRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/profile', component: NetworkTapProfile });
+const networkTapJobsRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/jobs', component: NetworkTapJobs });
+const networkTapConnectionsRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/connections', component: NetworkTapConnections });
+const networkTapMessagesRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/messages', component: NetworkTapMessages });
+const networkTapNotificationsRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/notifications', component: NetworkTapNotifications });
+const networkTapCvRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/cv', component: CVBuilderPage });
+const networkTapProjectsRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/projects', component: ProjectsPage });
 
 const notFoundRoute = createRoute({ getParentRoute: () => rootRoute, path: '/$', component: NotFound });
 
@@ -176,7 +205,7 @@ const protectedChildren = [
   hrDocumentsRoute, hrPayrollRoute, jobsRoute, ehsRoute, engineeringRoute,
   crmRoute, accountingRoute, accountingPayrollRoute, inventoryRoute,
   transportRoute, fuelRoute, networkingRoute, networkingProfileRoute, networkingUserProfileRoute, networkingNetworkRoute, networkingDiscoverRoute, marketplaceRoute,
-  settingsRoute, adminRoute,
+  settingsRoute, adminRoute, manageUsersRoute,
 ];
 
 const routeTree = rootRoute.addChildren([
@@ -189,8 +218,14 @@ const routeTree = rootRoute.addChildren([
   termsRoute,
   careersRoute,
   paymentRoute,
+  networkTapRoute,
   ...countryRoutes,
   protectedLayoutRoute.addChildren(protectedChildren),
+  ntvLayoutRoute.addChildren([
+    networkTapDashboardRoute, networkTapProfileRoute, networkTapJobsRoute,
+    networkTapConnectionsRoute, networkTapMessagesRoute, networkTapNotificationsRoute,
+    networkTapCvRoute, networkTapProjectsRoute,
+  ]),
   notFoundRoute,
 ]);
 

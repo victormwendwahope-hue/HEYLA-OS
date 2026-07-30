@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="1">
+    <!-- M-Pesa Gateway Config -->
+    <record id="payment_gateway_mpesa" model="heyla.payment.gateway">
+      <field name="gateway_type">mpesa</field>
+      <field name="active">True</field>
+      <field name="consumer_key">__MPESA_CONSUMER_KEY__</field>
+      <field name="consumer_secret">__MPESA_CONSUMER_SECRET__</field>
+      <field name="passkey">__MPESA_PASSKEY__</field>
+      <field name="shortcode">174379</field>
+      <field name="initiator_name">testapi</field>
+      <field name="security_credential">__MPESA_SECURITY_CREDENTIAL__</field>
+      <field name="callback_base_url">https://heyla-backend.onrender.com</field>
+    </record>
+
+    <!-- Stripe Gateway Config -->
+    <record id="payment_gateway_stripe" model="heyla.payment.gateway">
+      <field name="gateway_type">stripe</field>
+      <field name="active">True</field>
+      <field name="stripe_secret_key">__STRIPE_SECRET_KEY__</field>
+      <field name="stripe_publishable_key">__STRIPE_PUBLISHABLE_KEY__</field>
+      <field name="stripe_webhook_secret">__STRIPE_WEBHOOK_SECRET__</field>
+      <field name="callback_base_url">https://heyla-backend.onrender.com</field>
+    </record>
+
+    <!-- Paystack Gateway Config -->
+    <record id="payment_gateway_paystack" model="heyla.payment.gateway">
+      <field name="gateway_type">paystack</field>
+      <field name="active">True</field>
+      <field name="paystack_secret_key">__PAYSTACK_SECRET_KEY__</field>
+      <field name="paystack_public_key">__PAYSTACK_PUBLIC_KEY__</field>
+      <field name="paystack_webhook_secret">__PAYSTACK_WEBHOOK_SECRET__</field>
+      <field name="callback_base_url">https://heyla-backend.onrender.com</field>
+    </record>
+
+    <!-- Default Settlement Bank Account -->
+    <record id="settlement_bank_main" model="heyla.settlement.bank.account">
+      <field name="account_name">HEYLA Business Account</field>
+      <field name="bank_name">Equity Bank Kenya</field>
+      <field name="account_number">0708066022</field>
+      <field name="branch_code">001</field>
+      <field name="swift_code">EQBLKENA</field>
+      <field name="currency">KES</field>
+      <field name="is_active">True</field>
+      <field name="settlement_percentage">100</field>
+      <field name="auto_settle">True</field>
+      <field name="settlement_frequency">weekly</field>
+    </record>
+  </data>
+</odoo>

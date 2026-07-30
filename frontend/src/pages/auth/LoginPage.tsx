@@ -110,7 +110,7 @@ export default function LoginPage() {
     window.google?.accounts.id.renderButton(googleBtnRef.current, {
       theme: 'outline', size: 'large', text: 'signin_with', width: 400,
     });
-    return () => { window.google?.accounts.id.cancel(); };
+    return () => { window.google?.accounts.id.cancel(); gsiInitialized = false; };
   }, [googleLoaded, googleClientId]);
 
   const handleSubmit = async (e: React.FormEvent) => {

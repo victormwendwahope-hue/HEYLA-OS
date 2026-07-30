@@ -151,7 +151,20 @@ class SubscriptionController(http.Controller):
                 return http.Response(json.dumps({'error': 'Invalid plan'}), content_type='application/json', status=400)
             if billing_cycle not in ('monthly', 'yearly'):
                 return http.Response(json.dumps({'error': 'Invalid billing cycle'}), content_type='application/json', status=400)
-            user._activate_subscription(plan, billing_cycle)
+
+            completed_tx = request.env['heyla.payment.transaction'].sudo().search([
+                ('user_id', '=', user.id),
+                ('plan', '=', plan),
+                ('billing_cycle', '=', billing_cycle),
+                ('status', '=', 'completed'),
+            ], limit=1)
+
+            if not completed_tx:
+                return http.Response(json.dumps({'error': 'Completed payment required before activating subscription'}), content_type='application/json', status=402)
+
+            if user.subscription_status != 'active':
+                user._activate_subscription(plan, billing_cycle)
+
             return http.Response(
                 json.dumps({'ok': True, 'subscription': user._subscription_info()}),
                 content_type='application/json', status=200,

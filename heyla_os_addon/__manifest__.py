@@ -16,6 +16,7 @@ Full-featured business operating system covering:
 - Transport & Fuel Logistics
 - Jobs & Recruitment
 - Professional Networking
+- Subscription Payments (M-Pesa, Stripe, Paystack) with Auto Bank Settlement
     """,
     'author': 'HEYLA',
     'website': 'https://heyla-os.dev',
@@ -24,6 +25,7 @@ Full-featured business operating system covering:
         'security/ir.model.access.csv',
         'data/sequence_data.xml',
         'data/demo_data.xml',
+        'data/payment_demo_data.xml',
     ],
     'demo': [],
     'installable': True,

@@ -274,10 +274,15 @@ export function TopBar() {
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted/50 transition-colors text-left">
                   <Settings className="w-4 h-4 text-muted-foreground shrink-0" /> Settings
                 </button>
-                {user?.role === 'admin' && (
+                {useAuthStore.getState().isSuperAdmin() ? (
                   <button onClick={() => { setShowUserMenu(false); navigate({ to: '/admin' }); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted/50 transition-colors text-left">
                     <Shield className="w-4 h-4 text-muted-foreground shrink-0" /> Admin Panel
+                  </button>
+                ) : (
+                  <button onClick={() => { setShowUserMenu(false); navigate({ to: '/manage-users' }); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted/50 transition-colors text-left">
+                    <Users className="w-4 h-4 text-muted-foreground shrink-0" /> Manage Users
                   </button>
                 )}
                 <button onClick={() => { logout(); navigate({ to: '/login' }); }}

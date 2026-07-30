@@ -61,14 +61,14 @@ export default function AdminPage() {
     setSaving(false);
   };
 
-  if (!user || user.role !== 'admin') {
+  if (!user || !useAuthStore.getState().isSuperAdmin()) {
     return (
       <div className="space-y-6 animate-fade-in">
         <PageHeader title="Admin Panel" description="Administration" />
         <div className="glass rounded-xl p-12 text-center">
           <Shield className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
-          <p className="text-muted-foreground">Only admin users can access this page.</p>
+          <p className="text-muted-foreground">Only super administrators can access this page.</p>
         </div>
       </div>
     );
@@ -113,8 +113,12 @@ export default function AdminPage() {
                       <td className="px-4 py-3 font-medium">{u.name}</td>
                       <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
                       <td className="px-4 py-3 text-center">
-                        <select value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                          className="px-2 py-1 rounded border border-input bg-background text-xs font-medium text-center">
+                        <select value={u.role} onChange={(e) => {
+                          if (e.target.value === 'admin' && u.email !== user?.email) {
+                            if (!confirm(`Grant admin rights to ${u.email}? This gives full system access.`)) return;
+                          }
+                          handleRoleChange(u.id, e.target.value);
+                        }} className="px-2 py-1 rounded border border-input bg-background text-xs font-medium text-center">
                           {['admin', 'manager', 'employee', 'individual'].map((r) => (
                             <option key={r} value={r}>{r}</option>
                           ))}

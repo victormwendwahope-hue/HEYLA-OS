@@ -52,3 +52,6 @@ from . import hr_asset
 from . import hr_exit
 from . import hr_job_requisition
 from . import hr_employee_classification
+from . import payment_gateway
+from . import bank_settlement
+from . import network_tap

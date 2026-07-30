@@ -2,11 +2,11 @@ import { NavLink } from '@/components/NavLink';
 import { useAuthStore } from '@/store/authStore';
 import { useLocation, useNavigate, Link } from '@tanstack/react-router';
 import {
-  LayoutDashboard, Users, TrendingUp, DollarSign, Package, Globe, ShoppingBag,
+  LayoutDashboard, Users, TrendingUp, DollarSign, Package, Globe,
   ChevronLeft, LogOut, Settings, ChevronDown, FileText, Calendar, Award, ShieldBan, FolderOpen, Receipt,
   Truck, Fuel, Briefcase, Moon, Sun, HeartPulse, Shield, HardHat, ShieldCheck,
   AlertTriangle, ClipboardCheck, Bell, Building2, FileSignature, Scale, Banknote, Gavel, ShieldAlert,
-  User, UserPlus, Search,
+  User, UserPlus, MessageCircle,
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -54,13 +54,15 @@ const mainNav = [
     { title: 'Overview', url: '/transport', icon: Truck },
     { title: 'Fuel Tracking', url: '/fuel', icon: Fuel },
   ] },
-  { title: 'Networking', url: '/networking', icon: Globe, items: [
-    { title: 'Feed & Jobs', url: '/networking', icon: Globe },
-    { title: 'My Profile', url: '/networking/profile', icon: User },
-    { title: 'My Network', url: '/networking/network', icon: Users },
-    { title: 'Discover', url: '/networking/discover', icon: Search },
+  { title: 'Networking', url: '/network-tap/dashboard', icon: Globe, items: [
+    { title: 'Home', url: '/network-tap/dashboard', icon: Globe },
+    { title: 'My Network', url: '/network-tap/connections', icon: Users },
+    { title: 'Posts / Reals', url: '/network-tap/dashboard', icon: FileText },
+    { title: 'Jobs', url: '/network-tap/jobs', icon: Briefcase },
+    { title: 'Messaging', url: '/network-tap/messages', icon: MessageCircle },
+    { title: 'Notification', url: '/network-tap/notifications', icon: Bell },
   ] },
-  { title: 'Marketplace', url: '/marketplace', icon: ShoppingBag },
+  { title: 'Manage Users', url: '/manage-users', icon: UserPlus },
 ];
 
 export function AppSidebar() {
@@ -71,10 +73,16 @@ export function AppSidebar() {
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const [dark, setDark] = useState(() => {
+    const stored = localStorage.getItem('heyla-theme');
+    if (stored === 'dark') return true;
+    if (stored === 'light') return false;
+    return document.documentElement.classList.contains('dark');
+  });
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
+    localStorage.setItem('heyla-theme', dark ? 'dark' : 'light');
   }, [dark]);
 
   const isActive = (url: string) => location.pathname === url;

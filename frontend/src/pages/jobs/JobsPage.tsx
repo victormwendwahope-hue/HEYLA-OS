@@ -1,8 +1,9 @@
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
 import { useJobStore } from '@/store/jobStore';
-import { Briefcase, Users, Calendar, FileText, Plus, X, Star, ChevronRight, Clock, Image, Link as LinkIcon, List, Gift, Settings } from 'lucide-react';
-import { useState } from 'react';
+import { Briefcase, Users, Calendar, FileText, Plus, X, Star, ChevronRight, Clock, Image, Link as LinkIcon, List, Gift, Settings, Upload, Loader2, DollarSign } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
 
 type Tab = 'jobs' | 'applicants' | 'interviews' | 'compliance';
 
@@ -21,14 +22,33 @@ export default function JobsPage() {
   const [showJobForm, setShowJobForm] = useState(false);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [editingJob, setEditingJob] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [jForm, setJForm] = useState({
     title: '', department: '', location: '', type: 'Full-time' as any, salary: '', description: '',
     requirements: '', roles: '', benefits: '', banner: '', photo: '',
-    linkedinJobId: '', interviewInstructions: '', videoCallLink: '',
+    netWorth: '', linkedinJobId: '', interviewInstructions: '', videoCallLink: '',
     customFormFields: [] as CustomField[],
   });
   const [newCustomField, setNewCustomField] = useState<CustomField>({ label: '', type: 'text', required: false, options: [] });
   const [newReq, setNewReq] = useState('');
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const bannerRef = useRef<HTMLInputElement>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (file: File, target: 'banner' | 'photo') => {
+    if (!file) return;
+    const setLoading = target === 'banner' ? setUploadingBanner : setUploadingPhoto;
+    setLoading(true);
+    try {
+      const result = await api.upload(file);
+      setJForm({ ...jForm, [target]: result.url });
+      toast.success(`${target === 'banner' ? 'Banner' : 'Photo'} uploaded`);
+    } catch {
+      toast.error('Upload failed');
+    }
+    setLoading(false);
+  };
 
   const openJobs = jobs.filter((j) => j.status === 'Open').length;
   const totalApplicants = applicants.length;
@@ -47,6 +67,7 @@ export default function JobsPage() {
       postedDate: new Date().toISOString().split('T')[0], applicants: 0,
       roles: jForm.roles.split('\n').filter(Boolean),
       benefits: jForm.benefits.split('\n').filter(Boolean),
+      netWorth: jForm.netWorth,
       banner: jForm.banner, photo: jForm.photo,
       linkedinJobId: jForm.linkedinJobId,
       interviewInstructions: jForm.interviewInstructions,
@@ -55,7 +76,7 @@ export default function JobsPage() {
     };
     addJob(payload);
     setShowJobForm(false);
-    setJForm({ title: '', department: '', location: '', type: 'Full-time', salary: '', description: '', requirements: '', roles: '', benefits: '', banner: '', photo: '', linkedinJobId: '', interviewInstructions: '', videoCallLink: '', customFormFields: [] });
+    setJForm({ title: '', department: '', location: '', type: 'Full-time', salary: '', description: '', requirements: '', roles: '', benefits: '', banner: '', photo: '', netWorth: '', linkedinJobId: '', interviewInstructions: '', videoCallLink: '', customFormFields: [] });
     toast.success('Job posted');
   };
 
@@ -117,10 +138,19 @@ export default function JobsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {jobs.map((j) => (
             <div key={j.id} className="glass rounded-xl p-5 hover:shadow-elevated transition-shadow">
-              {(j as any).banner && <img src={(j as any).banner} alt="" className="w-full h-32 object-cover rounded-lg mb-3" />}
+              {(j as any).banner && (
+                <div className="relative group mb-3">
+                  <img src={(j as any).banner} alt="Job banner" className="w-full h-32 object-cover rounded-lg cursor-pointer" onClick={() => setPreviewImage((j as any).banner)} />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-lg transition-colors flex items-center justify-center cursor-pointer" onClick={() => setPreviewImage((j as any).banner)}>
+                    <span className="opacity-0 group-hover:opacity-100 text-white text-xs font-medium bg-black/50 px-3 py-1 rounded-full transition-opacity">View full size</span>
+                  </div>
+                </div>
+              )}
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  {(j as any).photo ? <img src={(j as any).photo} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <Briefcase className="w-10 h-10 text-primary p-2 bg-primary/10 rounded-lg" />}
+                  {(j as any).photo
+                    ? <img src={(j as any).photo} alt="Company logo" className="w-10 h-10 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setPreviewImage((j as any).photo)} />
+                    : <Briefcase className="w-10 h-10 text-primary p-2 bg-primary/10 rounded-lg" />}
                   <div>
                     <h3 className="font-semibold text-lg">{j.title}</h3>
                     <p className="text-sm text-muted-foreground">{j.department} • {j.location}</p>
@@ -278,10 +308,32 @@ export default function JobsPage() {
                   </select></div>
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Salary Range</label>
                   <input value={jForm.salary} onChange={(e) => setJForm({ ...jForm, salary: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="e.g. KSh 80,000 - 120,000" /></div>
-                <div><label className="text-xs font-medium text-muted-foreground mb-1 block"><Image className="w-3 h-3 inline" /> Banner Image URL</label>
-                  <input value={jForm.banner} onChange={(e) => setJForm({ ...jForm, banner: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="https://..." /></div>
-                <div><label className="text-xs font-medium text-muted-foreground mb-1 block"><Image className="w-3 h-3 inline" /> Company Photo URL</label>
-                  <input value={jForm.photo} onChange={(e) => setJForm({ ...jForm, photo: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="https://..." /></div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block"><Image className="w-3 h-3 inline" /> Banner Image</label>
+                  <input ref={bannerRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f, 'banner'); }} />
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => bannerRef.current?.click()} disabled={uploadingBanner}
+                      className="px-3 py-2 rounded-lg border border-input bg-background text-sm hover:bg-muted transition-colors flex items-center gap-2 disabled:opacity-50">
+                      {uploadingBanner ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                      {jForm.banner ? 'Change Banner' : 'Upload Banner'}
+                    </button>
+                    {jForm.banner && <img src={jForm.banner} alt="" className="h-10 w-20 object-cover rounded" />}
+                    {jForm.banner && <button type="button" onClick={() => setJForm({ ...jForm, banner: '' })} className="text-xs text-destructive hover:underline">Remove</button>}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block"><Image className="w-3 h-3 inline" /> Company Photo / Logo</label>
+                  <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f, 'photo'); }} />
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => photoRef.current?.click()} disabled={uploadingPhoto}
+                      className="px-3 py-2 rounded-lg border border-input bg-background text-sm hover:bg-muted transition-colors flex items-center gap-2 disabled:opacity-50">
+                      {uploadingPhoto ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                      {jForm.photo ? 'Change Photo' : 'Upload Photo'}
+                    </button>
+                    {jForm.photo && <img src={jForm.photo} alt="" className="h-10 w-10 object-cover rounded" />}
+                    {jForm.photo && <button type="button" onClick={() => setJForm({ ...jForm, photo: '' })} className="text-xs text-destructive hover:underline">Remove</button>}
+                  </div>
+                </div>
               </div>
 
               <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Description</label>
@@ -290,6 +342,11 @@ export default function JobsPage() {
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Requirements (one per line)</label>
                 <textarea value={jForm.requirements} onChange={(e) => setJForm({ ...jForm, requirements: e.target.value })} rows={3} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm resize-none" placeholder="BSc in Computer Science&#10;3+ years experience&#10;..."/>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block flex items-center gap-1"><DollarSign className="w-3 h-3" /> Minimum Net Worth Required</label>
+                <input value={jForm.netWorth} onChange={(e) => setJForm({ ...jForm, netWorth: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="e.g. KSh 500,000 or Not specified" />
               </div>
 
               <div>
@@ -345,6 +402,17 @@ export default function JobsPage() {
                 <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Post Job</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 backdrop-blur-sm animate-fade-in" onClick={() => setPreviewImage(null)}>
+          <div className="relative max-w-4xl max-h-[90vh] m-4" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setPreviewImage(null)} className="absolute -top-3 -right-3 z-10 p-1.5 rounded-full bg-card border border-border shadow-lg hover:bg-muted transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <img src={previewImage} alt="Preview" className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain bg-white" />
           </div>
         </div>
       )}

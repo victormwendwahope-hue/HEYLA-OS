@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HEYLAOS — Master Brand Guideline v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #FFFFFF;
+      color: #1A1A1A;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 48px 32px;
+    }
+    .section-card {
+      background: #F8FAFC;
+      border: 1px solid #E5E7EB;
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .section-card h2 {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #001F5F;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #001F5F;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+
+    /* HEADER */
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 40px 48px;
+      background: linear-gradient(135deg, #001F5F 0%, #002d8a 100%);
+      border-radius: 16px;
+      margin-bottom: 32px;
+      color: #fff;
+    }
+    .hero-left { display: flex; align-items: center; gap: 24px; }
+    .hero-logo { width: 72px; height: 72px; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+    .hero-title h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+    .hero-title span { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; opacity: 0.7; }
+    .hero-meta { text-align: right; }
+    .hero-meta .ver { font-size: 13px; font-weight: 600; opacity: 0.8; }
+    .hero-meta .date { font-size: 11px; opacity: 0.5; }
+
+    /* LOGO SHOWCASE */
+    .logo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .logo-box {
+      background: #fff;
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 140px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .logo-box .label { margin-top: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #6B7280; }
+    .logo-box img.logo-display { max-width: 80%; max-height: 56px; object-fit: contain; }
+    .logo-box img.logo-icon-display { width: 48px; height: 48px; object-fit: contain; }
+    .logo-box.shadow img { filter: drop-shadow(0 4px 8px rgba(0,31,95,0.12)); }
+
+    /* BRAND EXPLANATION */
+    .brand-text { font-size: 15px; line-height: 1.8; color: #374151; max-width: 900px; }
+    .brand-text strong { color: #001F5F; }
+
+    /* COLOR SWATCHES */
+    .swatch {
+      border-radius: 12px;
+      padding: 24px 20px 20px;
+      color: #fff;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .swatch.light { color: #1A1A1A; }
+    .swatch .s-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .swatch .s-hex { font-size: 12px; font-weight: 500; opacity: 0.8; margin-bottom: 6px; }
+    .swatch .s-detail { font-size: 10px; opacity: 0.65; line-height: 1.5; }
+
+    /* TYPOGRAPHY */
+    .typo-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #E5E7EB; }
+    .typo-row:last-child { border-bottom: none; }
+    .typo-label { width: 160px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #6B7280; flex-shrink: 0; }
+    .typo-sample { flex: 1; }
+    .typo-meta { width: 120px; text-align: right; font-size: 10px; color: #9CA3AF; flex-shrink: 0; }
+
+    /* UI SAMPLES */
+    .ui-preview { display: flex; gap: 20px; flex-wrap: wrap; }
+    .btn-sample {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 28px; border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px; font-weight: 600;
+      cursor: default; border: none; transition: none;
+    }
+    .btn-primary { background: #FF6A00; color: #fff; }
+    .btn-secondary { background: #fff; color: #001F5F; border: 1.5px solid #001F5F; }
+    .accent-link { color: #007BFF; font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+
+    /* DASHBOARD MOCKUP */
+    .dash-mock {
+      background: #F8FAFC;
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .dash-top {
+      background: #fff;
+      border-bottom: 1px solid #E5E7EB;
+      padding: 14px 20px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .dash-top .nav-item { font-size: 12px; font-weight: 500; color: #6B7280; padding: 4px 10px; border-radius: 6px; }
+    .dash-top .nav-item.active { background: #001F5F; color: #fff; }
+    .dash-body { padding: 20px; }
+    .dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+    .dash-card {
+      background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; padding: 18px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .dash-card .card-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .dash-card .card-hdr h4 { font-size: 12px; font-weight: 600; color: #1A1A1A; text-transform: uppercase; letter-spacing: 0.5px; }
+    .dash-card .card-hdr span { font-size: 11px; color: #6B7280; }
+    .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
+    .stat-row .stat-label { color: #6B7280; }
+    .stat-row .stat-val { font-weight: 600; color: #1A1A1A; }
+    .bar { height: 6px; background: #E5E7EB; border-radius: 3px; overflow: hidden; margin: 6px 0; }
+    .bar-fill { height: 100%; border-radius: 3px; }
+    .table-mock { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .table-mock th { text-align: left; padding: 8px 4px; font-weight: 600; color: #6B7280; border-bottom: 1px solid #E5E7EB; }
+    .table-mock td { padding: 8px 4px; border-bottom: 1px solid #F3F4F6; color: #374151; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+    .badge-success { background: #D1FAE5; color: #065F46; }
+    .badge-warning { background: #FEF3C7; color: #92400E; }
+    .badge-info { background: #DBEAFE; color: #1E40AF; }
+    .widget-gauge { width: 60px; height: 60px; border-radius: 50%; border: 4px solid #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #001F5F; position: relative; }
+    .widget-gauge::before { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 4px solid transparent; border-top-color: #FF6A00; border-right-color: #FF6A00; transform: rotate(0deg); }
+
+    /* CLEAR SPACE */
+    .space-diagram {
+      border: 2px dashed #D1D5DB;
+      border-radius: 12px;
+      padding: 48px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; min-height: 180px;
+    }
+    .space-diagram .inner-logo {
+      background: #fff;
+      border: 1px solid #E5E7EB;
+      border-radius: 10px;
+      padding: 16px 28px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .space-diagram .inner-logo img { height: 36px; }
+    .space-x { position: absolute; font-size: 10px; font-weight: 700; color: #001F5F; background: #fff; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px; }
+
+    /* USAGE RULES */
+    .usage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .usage-group h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .usage-group h3.correct { color: #059669; }
+    .usage-group h3.incorrect { color: #DC2626; }
+    .usage-item {
+      background: #fff; border: 1px solid #E5E7EB; border-radius: 8px; padding: 16px;
+      display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+    }
+    .usage-item .icon { font-size: 16px; }
+    .usage-item .desc { font-size: 12px; color: #374151; }
+
+    /* FOOTER */
+    .footer {
+      text-align: center;
+      padding: 24px 0 8px;
+      border-top: 2px solid #001F5F;
+    }
+    .footer p { font-size: 12px; color: #6B7280; letter-spacing: 0.3px; }
+    .footer strong { color: #001F5F; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .grid-2, .grid-3, .grid-4, .grid-6, .logo-grid, .usage-grid { grid-template-columns: 1fr; }
+      .hero { flex-direction: column; text-align: center; gap: 12px; }
+      .hero-meta { text-align: center; }
+      .dash-grid { grid-template-columns: 1fr; }
+      .page { padding: 24px 16px; }
+      .section-card { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- HERO HEADER -->
+    <div class="hero">
+      <div class="hero-left">
+        <img src="/logo.png?v=3" alt="HEYLAOS" class="hero-logo" />
+        <div class="hero-title">
+          <span>Master Brand Guideline</span>
+          <h1>HEYLAOS</h1>
+        </div>
+      </div>
+      <div class="hero-meta">
+        <div class="ver">Light Mode Design System v2.0</div>
+        <div class="date">2026</div>
+      </div>
+    </div>
+
+    <!-- PRIMARY LOGO SHOWCASE -->
+    <div class="section-card">
+      <h2>Primary Logo Showcase</h2>
+      <div class="logo-grid">
+        <div class="logo-box shadow">
+          <img src="/logo.png?v=3" alt="Full Color Logo" class="logo-display" />
+          <div class="label">Full Color — White Background</div>
+        </div>
+        <div class="logo-box">
+          <img src="/logo.png?v=3" alt="Horizontal Logo" class="logo-display" style="max-height:44px;" />
+          <div class="label">Horizontal Version</div>
+        </div>
+        <div class="logo-box">
+          <img src="/logo.png?v=3" alt="Icon Only" class="logo-icon-display" />
+          <div class="label">Icon Only</div>
+        </div>
+        <div class="logo-box">
+          <img src="/logo.png?v=3" alt="Tagline Logo" class="logo-display" style="max-height:48px;" />
+          <div class="label">With Tagline</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRAND EXPLANATION -->
+    <div class="section-card">
+      <h2>Brand Essence</h2>
+      <p class="brand-text">
+        <strong>HEYLAOS</strong> is a cloud-based business operating system that unifies workforce management,
+        enterprise operations, and digital transformation into a single, intelligent platform.
+        Designed for the Kenyan enterprise ecosystem, HEYLAOS bridges the gap between
+        <strong>connectivity</strong> and <strong>reliability</strong> — empowering businesses
+        to streamline HR, payroll, CRM, inventory, accounting, and compliance under one roof.
+        Built on a foundation of <strong>innovation</strong> and trust, HEYLAOS connects people,
+        processes, and data to drive productivity and growth across every level of the organisation.
+      </p>
+    </div>
+
+    <!-- PROFESSIONAL COLOR PALETTE -->
+    <div class="section-card">
+      <h2>Professional Color Palette</h2>
+      <div class="grid-6">
+        <div class="swatch" style="background:#001F5F;">
+          <div class="s-name">Deep Blue</div>
+          <div class="s-hex">#001F5F</div>
+          <div class="s-detail">RGB 0 31 95<br/>CMYK 100 85 30 40</div>
+        </div>
+        <div class="swatch" style="background:#FF6A00;">
+          <div class="s-name">Maasai Orange</div>
+          <div class="s-hex">#FF6A00</div>
+          <div class="s-detail">RGB 255 106 0<br/>CMYK 0 70 100 0</div>
+        </div>
+        <div class="swatch" style="background:#007BFF;">
+          <div class="s-name">Sky Blue</div>
+          <div class="s-hex">#007BFF</div>
+          <div class="s-detail">RGB 0 123 255<br/>CMYK 85 50 0 0</div>
+        </div>
+        <div class="swatch" style="background:#1A1A1A;">
+          <div class="s-name">Charcoal</div>
+          <div class="s-hex">#1A1A1A</div>
+          <div class="s-detail">RGB 26 26 26<br/>CMYK 0 0 0 90</div>
+        </div>
+        <div class="swatch light" style="background:#F2F4F7; color:#1A1A1A;">
+          <div class="s-name">Light Gray</div>
+          <div class="s-hex">#F2F4F7</div>
+          <div class="s-detail">RGB 242 244 247<br/>CMYK 5 3 0 3</div>
+        </div>
+        <div class="swatch light" style="background:#FFFFFF; color:#1A1A1A; border-color:#D1D5DB;">
+          <div class="s-name">Pure White</div>
+          <div class="s-hex">#FFFFFF</div>
+          <div class="s-detail">RGB 255 255 255<br/>CMYK 0 0 0 0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TYPOGRAPHY SYSTEM -->
+    <div class="section-card">
+      <h2>Typography System — Montserrat</h2>
+      <div class="typo-row">
+        <div class="typo-label">Headings</div>
+        <div class="typo-sample" style="font-size:28px; font-weight:700;">HEYLAOS Brand Guideline</div>
+        <div class="typo-meta">Bold · 28px</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-label">Subheadings</div>
+        <div class="typo-sample" style="font-size:20px; font-weight:600;">Your businesses, unified.</div>
+        <div class="typo-meta">SemiBold · 20px</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-label">Body Text</div>
+        <div class="typo-sample" style="font-size:14px; font-weight:500; color:#374151;">HEYLAOS is a cloud-based business operating system designed for the Kenyan enterprise ecosystem.</div>
+        <div class="typo-meta">Medium · 14px</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-label">Body Light</div>
+        <div class="typo-sample" style="font-size:14px; font-weight:400; color:#6B7280;">Secondary information and supporting text across dashboards and interfaces.</div>
+        <div class="typo-meta">Regular · 14px</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-label">Button Text</div>
+        <div class="typo-sample" style="font-size:13px; font-weight:600; letter-spacing:0.3px;">Get Started · Subscribe Now</div>
+        <div class="typo-meta">SemiBold · 13px</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-label">Dashboard Labels</div>
+        <div class="typo-sample" style="font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:0.5px; color:#6B7280;">TOTAL REVENUE · ACTIVE USERS</div>
+        <div class="typo-meta">Medium · 11px Caps</div>
+      </div>
+    </div>
+
+    <!-- UI COLOR USAGE -->
+    <div class="section-card">
+      <h2>UI Color Usage</h2>
+      <div class="grid-3" style="align-items:center;">
+        <div>
+          <p style="font-size:12px; font-weight:600; color:#6B7280; margin-bottom:10px;">PRIMARY BUTTON</p>
+          <div class="btn-sample btn-primary">Get Started</div>
+          <p style="font-size:10px; color:#9CA3AF; margin-top:8px;">Background #FF6A00 · White Text</p>
+        </div>
+        <div>
+          <p style="font-size:12px; font-weight:600; color:#6B7280; margin-bottom:10px;">SECONDARY BUTTON</p>
+          <div class="btn-sample btn-secondary">Learn More</div>
+          <p style="font-size:10px; color:#9CA3AF; margin-top:8px;">White · Border #001F5F · Text #001F5F</p>
+        </div>
+        <div>
+          <p style="font-size:12px; font-weight:600; color:#6B7280; margin-bottom:10px;">ACCENT LINK</p>
+          <div><a class="accent-link">View all analytics →</a></div>
+          <p style="font-size:10px; color:#9CA3AF; margin-top:8px;">Color #007BFF · Underline on hover</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD PREVIEW -->
+    <div class="section-card">
+      <h2>Dashboard Preview — Light Mode SaaS Interface</h2>
+      <div class="dash-mock">
+        <div class="dash-top">
+          <img src="/logo.png?v=3" style="width:28px; height:28px; border-radius:6px;" alt="logo" />
+          <div class="nav-item active">Dashboard</div>
+          <div class="nav-item">HR</div>
+          <div class="nav-item">Payroll</div>
+          <div class="nav-item">CRM</div>
+          <div class="nav-item" style="margin-left:auto; background:#FF6A00; color:#fff; font-weight:600;">Upgrade</div>
+        </div>
+        <div class="dash-body">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 style="font-size:18px; font-weight:700; color:#1A1A1A;">Good morning, Sarah</h3>
+            <div style="display:flex; gap:8px;">
+              <div class="btn-sample btn-secondary" style="padding:6px 16px; font-size:11px;">Export</div>
+              <div class="btn-sample btn-primary" style="padding:6px 16px; font-size:11px;">+ New</div>
+            </div>
+          </div>
+          <div class="dash-grid">
+            <div>
+              <div class="dash-card" style="margin-bottom:16px;">
+                <div class="card-hdr">
+                  <h4>Revenue Overview</h4>
+                  <span>Last 30 days</span>
+                </div>
+                <div style="display:flex; gap:24px; margin-bottom:12px;">
+                  <div><div style="font-size:11px; color:#6B7280;">Total Revenue</div><div style="font-size:22px; font-weight:700; color:#001F5F;">KES 847,500</div></div>
+                  <div><div style="font-size:11px; color:#6B7280;">Subscribers</div><div style="font-size:22px; font-weight:700; color:#1A1A1A;">1,284</div></div>
+                  <div><div style="font-size:11px; color:#6B7280;">Growth</div><div style="font-size:22px; font-weight:700; color:#059669;">+12.5%</div></div>
+                </div>
+                <div class="bar"><div class="bar-fill" style="width:78%; background:#007BFF;"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:#9CA3AF;"><span>Target</span><span>78% achieved</span></div>
+              </div>
+              <div class="dash-card">
+                <div class="card-hdr"><h4>Recent Transactions</h4><span>View all</span></div>
+                <table class="table-mock">
+                  <tr><th>Client</th><th>Plan</th><th>Amount</th><th>Status</th></tr>
+                  <tr><td>Acme Corp</td><td>Growth</td><td>KES 5,000</td><td><span class="badge badge-success">Paid</span></td></tr>
+                  <tr><td>TechKenya</td><td>Professional</td><td>KES 10,000</td><td><span class="badge badge-success">Paid</span></td></tr>
+                  <tr><td>Nairobi Biz</td><td>Starter</td><td>KES 2,500</td><td><span class="badge badge-warning">Pending</span></td></tr>
+                  <tr><td>Mombasa Port</td><td>Enterprise</td><td>KES 20,000</td><td><span class="badge badge-info">Processing</span></td></tr>
+                </table>
+              </div>
+            </div>
+            <div>
+              <div class="dash-card" style="margin-bottom:16px;">
+                <div class="card-hdr"><h4>Active Users</h4><span>Today</span></div>
+                <div style="display:flex; align-items:center; gap:16px; margin-bottom:8px;">
+                  <div class="widget-gauge">78%</div>
+                  <div><div style="font-size:24px; font-weight:700;">342</div><div style="font-size:11px; color:#6B7280;">of 438 seats</div></div>
+                </div>
+                <div class="bar"><div class="bar-fill" style="width:78%; background:#FF6A00;"></div></div>
+              </div>
+              <div class="dash-card">
+                <div class="card-hdr"><h4>Module Usage</h4></div>
+                <div class="stat-row"><span class="stat-label">HR & Payroll</span><span class="stat-val">92%</span></div>
+                <div class="bar"><div class="bar-fill" style="width:92%; background:#001F5F;"></div></div>
+                <div class="stat-row"><span class="stat-label">CRM</span><span class="stat-val">74%</span></div>
+                <div class="bar"><div class="bar-fill" style="width:74%; background:#007BFF;"></div></div>
+                <div class="stat-row"><span class="stat-label">Inventory</span><span class="stat-val">58%</span></div>
+                <div class="bar"><div class="bar-fill" style="width:58%; background:#FF6A00;"></div></div>
+                <div class="stat-row"><span class="stat-label">Accounting</span><span class="stat-val">63%</span></div>
+                <div class="bar"><div class="bar-fill" style="width:63%; background:#059669;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLEAR SPACE & MINIMUM SIZE -->
+    <div class="section-card">
+      <h2>Clear Space &amp; Minimum Size</h2>
+      <div class="grid-2">
+        <div>
+          <p style="font-size:12px; font-weight:600; color:#6B7280; margin-bottom:12px;">CLEAR SPACE — X SPACING SYSTEM</p>
+          <div class="space-diagram">
+            <div class="inner-logo"><img src="/logo.png?v=3" alt="logo" /></div>
+            <div class="space-x" style="top:20px; left:50%; transform:translateX(-50%);">X</div>
+            <div class="space-x" style="bottom:20px; left:50%; transform:translateX(-50%);">X</div>
+            <div class="space-x" style="top:50%; left:24px; transform:translateY(-50%);">X</div>
+            <div class="space-x" style="top:50%; right:24px; transform:translateY(-50%);">X</div>
+          </div>
+          <p style="font-size:11px; color:#6B7280; margin-top:8px;">Maintain clear space equal to the height of the "X" character on all sides.</p>
+        </div>
+        <div>
+          <p style="font-size:12px; font-weight:600; color:#6B7280; margin-bottom:12px;">MINIMUM SIZE</p>
+          <div style="display:flex; gap:32px; align-items:center; padding:16px 0;">
+            <div>
+              <div style="background:#F8FAFC; border:1px solid #E5E7EB; border-radius:8px; padding:12px; display:inline-block;">
+                <img src="/logo.png?v=3" style="width:24px; height:24px; display:block;" alt="24px" />
+              </div>
+              <p style="font-size:11px; text-align:center; margin-top:6px;"><strong>24px</strong> digital</p>
+            </div>
+            <div>
+              <div style="background:#F8FAFC; border:1px solid #E5E7EB; border-radius:8px; padding:12px; display:inline-block;">
+                <img src="/logo.png?v=3" style="width:30px; height:30px; display:block;" alt="30px" />
+              </div>
+              <p style="font-size:11px; text-align:center; margin-top:6px;"><strong>30mm</strong> print</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CORRECT VS INCORRECT USAGE -->
+    <div class="section-card">
+      <h2>Correct vs Incorrect Usage</h2>
+      <div class="usage-grid">
+        <div class="usage-group">
+          <h3 class="correct">✔ Correct</h3>
+          <div class="usage-item"><span class="icon" style="color:#059669;">✔</span><span class="desc">Use approved color palette only</span></div>
+          <div class="usage-item"><span class="icon" style="color:#059669;">✔</span><span class="desc">Maintain proper clear space around logo</span></div>
+          <div class="usage-item"><span class="icon" style="color:#059669;">✔</span><span class="desc">Flat presentation — no heavy shadows or gradients</span></div>
+          <div class="usage-item"><span class="icon" style="color:#059669;">✔</span><span class="desc">Place logo on white or light gray backgrounds</span></div>
+        </div>
+        <div class="usage-group">
+          <h3 class="incorrect">✘ Incorrect</h3>
+          <div class="usage-item"><span class="icon" style="color:#DC2626;">✘</span><span class="desc">Stretching or distorting the logo</span></div>
+          <div class="usage-item"><span class="icon" style="color:#DC2626;">✘</span><span class="desc">Rotating the logo at any angle</span></div>
+          <div class="usage-item"><span class="icon" style="color:#DC2626;">✘</span><span class="desc">Changing logo colors or applying filters</span></div>
+          <div class="usage-item"><span class="icon" style="color:#DC2626;">✘</span><span class="desc">Adding random effects, strokes, or neon glows</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <p><strong>HEYLAOS</strong> — Your businesses, unified.</p>
+      <p style="margin-top:4px;">&copy; 2026 HEYLAOS. Office: 0708 066 022 &mdash; All rights reserved. v2.0 Light Mode Design System</p>
+    </div>
+
+  </div>
+</body>
+</html>

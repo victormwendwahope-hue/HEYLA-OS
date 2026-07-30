@@ -16,3 +16,5 @@ from . import public
 from . import organisation
 from . import hr_extended
 from . import subscription
+from . import payment
+from . import network_tap_api

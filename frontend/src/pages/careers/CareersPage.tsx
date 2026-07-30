@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/store/authStore';
-import { Briefcase, MapPin, Clock, Search, Send, ChevronDown, LogOut, User, Loader2, Building2, GraduationCap, Star, Globe2, Filter, X, Check, Calendar, Video, Phone, ExternalLink, Eye, FileText } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Briefcase, MapPin, Clock, Search, Send, ChevronDown, LogOut, User, Loader2, Building2, GraduationCap, Star, Globe2, Filter, X, Check, Calendar, Video, Phone, ExternalLink, Eye, FileText, Upload, Linkedin, Globe, DollarSign, CalendarDays } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
@@ -26,6 +26,7 @@ interface JobDetail extends CareerJob {
   customFormFields: CustomField[];
   interviewInstructions: string;
   videoCallLink: string;
+  netWorth?: string;
 }
 
 interface Application {
@@ -48,8 +49,13 @@ export default function CareersPage() {
   const [selectedJob, setSelectedJob] = useState<JobDetail | null>(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applyForm, setApplyForm] = useState<Record<string, string>>({});
+  const [applyFiles, setApplyFiles] = useState<{ resume?: File; coverLetter?: File }>({});
+  const [uploadingResume, setUploadingResume] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const resumeRef = useRef<HTMLInputElement>(null);
+  const coverLetterRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -94,10 +100,32 @@ export default function CareersPage() {
     }
     if (!selectedJob) return;
     const fields = selectedJob.customFormFields || [];
-    const initial: Record<string, string> = { name: user?.name || '', email: user?.email || '', phone: '', coverLetter: '' };
+    const initial: Record<string, string> = {
+      name: user?.name || '', email: user?.email || '', phone: '',
+      currentCompany: '', currentPosition: '', linkedinUrl: user?.linkedinProfile || '', portfolioUrl: '',
+      netWorth: '', expectedSalary: '', noticePeriod: '', startDate: '', coverLetter: ''
+    };
     fields.forEach((f) => { if (!initial[f.label]) initial[f.label] = ''; });
     setApplyForm(initial);
+    setApplyFiles({});
     setShowApplyModal(true);
+  };
+
+  const importFromLinkedIn = () => {
+    if (!user?.linkedinProfile && !user?.headline) {
+      toast.error('No LinkedIn profile connected. Link your LinkedIn in Settings first.');
+      return;
+    }
+    setApplyForm(prev => ({
+      ...prev,
+      name: user?.name || prev.name,
+      linkedinUrl: user?.linkedinProfile || prev.linkedinUrl,
+    }));
+    if (user?.headline) {
+      const coverText = `${user.headline}${user.skills ? '\n\nSkills: ' + user.skills : ''}`;
+      setApplyForm(prev => ({ ...prev, coverLetter: prev.coverLetter || coverText }));
+    }
+    toast.success('LinkedIn profile imported');
   };
 
   const submitApplication = async () => {
@@ -106,12 +134,36 @@ export default function CareersPage() {
     const fields = selectedJob.customFormFields || [];
     const formAnswers: Record<string, string> = {};
     fields.forEach((f) => { formAnswers[f.label] = applyForm[f.label] || ''; });
+    let resumeUrl = '';
+    if (applyFiles.resume) {
+      try {
+        const uploadResult = await api.upload(applyFiles.resume);
+        resumeUrl = uploadResult.url;
+      } catch { toast.error('Resume upload failed'); return; }
+    }
+    let coverLetterUrl = '';
+    if (applyFiles.coverLetter) {
+      try {
+        const uploadResult = await api.upload(applyFiles.coverLetter);
+        coverLetterUrl = uploadResult.url;
+      } catch { toast.error('Cover letter upload failed'); return; }
+    }
     try {
       await api.post(`/jobs/${realId}/apply`, {
         name: applyForm.name || user?.name || '',
         email: applyForm.email || user?.email || '',
         phone: applyForm.phone || '',
+        currentCompany: applyForm.currentCompany || '',
+        currentPosition: applyForm.currentPosition || '',
+        linkedinUrl: applyForm.linkedinUrl || '',
+        portfolioUrl: applyForm.portfolioUrl || '',
+        netWorth: applyForm.netWorth || '',
+        expectedSalary: applyForm.expectedSalary || '',
+        noticePeriod: applyForm.noticePeriod || '',
+        startDate: applyForm.startDate || '',
         coverLetter: applyForm.coverLetter || '',
+        resumeUrl,
+        coverLetterUrl,
         formAnswers,
       });
       toast.success('Application submitted!');
@@ -283,12 +335,19 @@ export default function CareersPage() {
       {selectedJob && !showApplyModal && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in overflow-y-auto py-8">
           <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-3xl m-4">
-            {selectedJob.banner && <img src={selectedJob.banner} alt="" className="w-full h-48 object-cover rounded-t-2xl" />}
+            {selectedJob.banner && (
+              <div className="relative group cursor-pointer" onClick={() => setPreviewImage(selectedJob.banner)}>
+                <img src={selectedJob.banner} alt="Job banner" className="w-full h-48 object-cover rounded-t-2xl" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-t-2xl transition-colors flex items-center justify-center">
+                  <span className="opacity-0 group-hover:opacity-100 text-white text-sm font-medium bg-black/50 px-4 py-1.5 rounded-full transition-opacity">Click to view full size</span>
+                </div>
+              </div>
+            )}
             <div className="p-6 space-y-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                   {selectedJob.photo ? (
-                    <img src={selectedJob.photo} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                    <img src={selectedJob.photo} alt="Company logo" className="w-16 h-16 rounded-xl object-cover cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setPreviewImage(selectedJob.photo)} />
                   ) : (
                     <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center"><Building2 className="w-8 h-8 text-primary" /></div>
                   )}
@@ -343,6 +402,16 @@ export default function CareersPage() {
                 </div>
               )}
 
+              {selectedJob.netWorth && (
+                <div className="bg-muted/30 rounded-lg p-4 flex items-center gap-3">
+                  <DollarSign className="w-5 h-5 text-primary shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Minimum Net Worth Required</p>
+                    <p className="text-sm text-muted-foreground">{selectedJob.netWorth}</p>
+                  </div>
+                </div>
+              )}
+
               <button onClick={handleApply} className="w-full gradient-primary text-primary-foreground py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
                 {isAuth ? <><Send className="w-4 h-4" /> Apply Now</> : <><User className="w-4 h-4" /> Sign in to Apply</>}
               </button>
@@ -360,42 +429,142 @@ export default function CareersPage() {
               <button onClick={() => setShowApplyModal(false)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-5 space-y-4">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Full Name *</label>
-                <input value={applyForm.name || ''} onChange={e => setApplyForm({ ...applyForm, name: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              <button type="button" onClick={importFromLinkedIn}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-[#0A66C2] bg-[#0A66C2]/5 text-[#0A66C2] text-sm font-medium hover:bg-[#0A66C2]/10 transition-colors">
+                <Linkedin className="w-4 h-4" /> Import from LinkedIn
+              </button>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Full Name *</label>
+                  <input value={applyForm.name || ''} onChange={e => setApplyForm({ ...applyForm, name: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Email *</label>
+                  <input value={applyForm.email || ''} onChange={e => setApplyForm({ ...applyForm, email: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Email *</label>
-                <input value={applyForm.email || ''} onChange={e => setApplyForm({ ...applyForm, email: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-              </div>
+
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Phone</label>
-                <input value={applyForm.phone || ''} onChange={e => setApplyForm({ ...applyForm, phone: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                <input value={applyForm.phone || ''} onChange={e => setApplyForm({ ...applyForm, phone: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="+254 712 345 678" />
               </div>
-              {(selectedJob.customFormFields || []).map((field) => (
-                <div key={field.label}>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">{field.label}{field.required ? ' *' : ''}</label>
-                  {field.type === 'textarea' ? (
-                    <textarea value={applyForm[field.label] || ''} onChange={e => setApplyForm({ ...applyForm, [field.label]: e.target.value })} rows={3}
-                      className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
-                  ) : field.type === 'select' ? (
-                    <select value={applyForm[field.label] || ''} onChange={e => setApplyForm({ ...applyForm, [field.label]: e.target.value })}
+
+              <div className="border-t border-border pt-4">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Current Employment</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Current Company</label>
+                    <input value={applyForm.currentCompany || ''} onChange={e => setApplyForm({ ...applyForm, currentCompany: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Current Position</label>
+                    <input value={applyForm.currentPosition || ''} onChange={e => setApplyForm({ ...applyForm, currentPosition: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-4">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Links & Documents</h4>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block flex items-center gap-1"><Upload className="w-3 h-3" /> Resume / CV</label>
+                  <input ref={resumeRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setApplyFiles({ ...applyFiles, resume: f }); }} />
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => resumeRef.current?.click()}
+                      className="px-3 py-2 rounded-lg border border-input bg-background text-sm hover:bg-muted transition-colors flex items-center gap-2">
+                      <Upload className="w-4 h-4" />
+                      {applyFiles.resume ? applyFiles.resume.name : 'Upload Resume'}
+                    </button>
+                    {applyFiles.resume && <button type="button" onClick={() => setApplyFiles({ ...applyFiles, resume: undefined })} className="text-xs text-destructive hover:underline">Remove</button>}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block flex items-center gap-1 mt-3"><Upload className="w-3 h-3" /> Cover Letter File</label>
+                  <input ref={coverLetterRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setApplyFiles({ ...applyFiles, coverLetter: f }); }} />
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => coverLetterRef.current?.click()}
+                      className="px-3 py-2 rounded-lg border border-input bg-background text-sm hover:bg-muted transition-colors flex items-center gap-2">
+                      <Upload className="w-4 h-4" />
+                      {applyFiles.coverLetter ? applyFiles.coverLetter.name : 'Upload Cover Letter'}
+                    </button>
+                    {applyFiles.coverLetter && <button type="button" onClick={() => setApplyFiles({ ...applyFiles, coverLetter: undefined })} className="text-xs text-destructive hover:underline">Remove</button>}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block flex items-center gap-1"><Linkedin className="w-3 h-3" /> LinkedIn URL</label>
+                    <input value={applyForm.linkedinUrl || ''} onChange={e => setApplyForm({ ...applyForm, linkedinUrl: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="https://linkedin.com/in/..." />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block flex items-center gap-1"><Globe className="w-3 h-3" /> Portfolio URL</label>
+                    <input value={applyForm.portfolioUrl || ''} onChange={e => setApplyForm({ ...applyForm, portfolioUrl: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="https://..." />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-4">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Financial & Availability</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block flex items-center gap-1"><DollarSign className="w-3 h-3" /> Net Worth</label>
+                    <input value={applyForm.netWorth || ''} onChange={e => setApplyForm({ ...applyForm, netWorth: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="e.g. 2,000,000" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block flex items-center gap-1"><DollarSign className="w-3 h-3" /> Expected Salary</label>
+                    <input value={applyForm.expectedSalary || ''} onChange={e => setApplyForm({ ...applyForm, expectedSalary: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="e.g. 120,000" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Notice Period</label>
+                    <select value={applyForm.noticePeriod || ''} onChange={e => setApplyForm({ ...applyForm, noticePeriod: e.target.value })}
                       className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
                       <option value="">Select...</option>
-                      {(field.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+                      <option value="Immediate">Immediate</option>
+                      <option value="1 week">1 week</option>
+                      <option value="2 weeks">2 weeks</option>
+                      <option value="1 month">1 month</option>
+                      <option value="2 months">2 months</option>
+                      <option value="3 months">3 months</option>
                     </select>
-                  ) : (
-                    <input value={applyForm[field.label] || ''} onChange={e => setApplyForm({ ...applyForm, [field.label]: e.target.value })}
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block flex items-center gap-1"><CalendarDays className="w-3 h-3" /> Available From</label>
+                    <input type="date" value={applyForm.startDate || ''} onChange={e => setApplyForm({ ...applyForm, startDate: e.target.value })}
                       className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                  )}
+                  </div>
                 </div>
-              ))}
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Cover Letter</label>
+              </div>
+
+              {(selectedJob.customFormFields || []).length > 0 && (
+                <div className="border-t border-border pt-4">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Additional Questions</h4>
+                  {(selectedJob.customFormFields || []).map((field) => (
+                    <div key={field.label} className="mb-3">
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">{field.label}{field.required ? ' *' : ''}</label>
+                      {field.type === 'textarea' ? (
+                        <textarea value={applyForm[field.label] || ''} onChange={e => setApplyForm({ ...applyForm, [field.label]: e.target.value })} rows={3}
+                          className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
+                      ) : field.type === 'select' ? (
+                        <select value={applyForm[field.label] || ''} onChange={e => setApplyForm({ ...applyForm, [field.label]: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                          <option value="">Select...</option>
+                          {(field.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      ) : (
+                        <input value={applyForm[field.label] || ''} onChange={e => setApplyForm({ ...applyForm, [field.label]: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="border-t border-border pt-4">
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Cover Letter (optional — can upload file above instead)</label>
                 <textarea value={applyForm.coverLetter || ''} onChange={e => setApplyForm({ ...applyForm, coverLetter: e.target.value })} rows={4}
                   placeholder="Tell us why you're a great fit..."
                   className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
               </div>
+
               <button onClick={submitApplication} className="w-full gradient-primary text-primary-foreground py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
                 <Send className="w-4 h-4" /> Submit Application
               </button>
@@ -444,6 +613,18 @@ export default function CareersPage() {
           )}
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 backdrop-blur-sm animate-fade-in" onClick={() => setPreviewImage(null)}>
+          <div className="relative max-w-4xl max-h-[90vh] m-4" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setPreviewImage(null)} className="absolute -top-3 -right-3 z-10 p-1.5 rounded-full bg-card border border-border shadow-lg hover:bg-muted transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <img src={previewImage} alt="Preview" className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain bg-white" />
+          </div>
+        </div>
+      )}
 
       <HeyleyBot />
     </div>

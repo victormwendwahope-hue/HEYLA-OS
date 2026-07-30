@@ -187,6 +187,21 @@ export const api = {
     cancel: () => request<{ ok: true; subscription: any }>('POST', '/subscription/cancel'),
   },
 
+  payment: {
+    gateways: () => request<{ gateways: any[] }>('GET', '/payment/gateways'),
+    initiateMpesa: (plan: string, billingCycle: string, phone: string) =>
+      request<{ ok: true; reference: string; checkoutRequestId: string; customerMessage: string }>('POST', '/payment/initiate-mpesa', { plan, billingCycle, phone }),
+    mpesaStatus: (checkoutRequestId: string) =>
+      request<{ status: string; receipt?: string; reason?: string }>('POST', '/payment/mpesa-status', { checkoutRequestId }),
+    initiateStripe: (plan: string, billingCycle: string) =>
+      request<{ ok: true; reference: string; clientSecret: string; paymentIntentId: string }>('POST', '/payment/initiate-stripe', { plan, billingCycle }),
+    initiatePaystack: (plan: string, billingCycle: string) =>
+      request<{ ok: true; reference: string; authorizationUrl: string; accessCode: string }>('POST', '/payment/initiate-paystack', { plan, billingCycle }),
+    verify: (reference: string) =>
+      request<{ status: string; reference: string; amount: number; plan: string; billingCycle: string; gatewayType: string; mpesaReceipt?: string; failureReason?: string }>('POST', '/payment/verify', { reference }),
+    history: () => request<{ transactions: any[] }>('GET', '/payment/history'),
+  },
+
   public: {
     jobs: (countryCode?: string) => {
       const params = countryCode ? `?country=${countryCode}` : '';
@@ -204,12 +219,83 @@ export const api = {
     },
   },
 
+  ntv: {
+    profile: {
+      get: () => api.get<any>('/network-tap/profile'),
+      update: (data: any) => api.put<any>('/network-tap/profile', data),
+      search: (q: string) => api.get<any>(`/network-tap/profiles/search?q=${encodeURIComponent(q)}`),
+      public: (userId: string) => api.get<any>(`/network-tap/profiles/${userId}`),
+    },
+    feed: (limit = 10, offset = 0) =>
+      api.get<any>(`/network-tap/feed?limit=${limit}&offset=${offset}`),
+    post: {
+      create: (content: string) => api.post<any>('/network-tap/posts', { content }),
+      like: (postId: string) => api.post<any>(`/network-tap/posts/${postId}/like`),
+      unlike: (postId: string) => api.post<any>(`/network-tap/posts/${postId}/unlike`),
+      comment: (postId: string, content: string) =>
+        api.post<any>(`/network-tap/posts/${postId}/comment`, { content }),
+      save: (postId: string) => api.post<any>(`/network-tap/posts/${postId}/save`),
+      share: (postId: string) => api.post<any>(`/network-tap/posts/${postId}/share`),
+      delete: (postId: string) => api.delete<any>(`/network-tap/posts/${postId}`),
+    },
+    project: {
+      create: (data: any) => api.post<any>('/network-tap/projects', data),
+      update: (id: string, data: any) => api.put<any>(`/network-tap/projects/${id}`, data),
+      delete: (id: string) => api.delete<any>(`/network-tap/projects/${id}`),
+    },
+    company: {
+      list: () => api.get<any[]>('/network-tap/companies'),
+      get: (id: string) => api.get<any>(`/network-tap/companies/${id}`),
+      create: (data: any) => api.post<any>('/network-tap/companies', data),
+    },
+    job: {
+      list: (params?: { type?: string; search?: string }) => {
+        const qs = new URLSearchParams(params as Record<string, string>).toString()
+        return api.get<any[]>(`/network-tap/jobs${qs ? `?${qs}` : ''}`)
+      },
+      get: (id: string) => api.get<any>(`/network-tap/jobs/${id}`),
+      apply: (jobId: string, coverLetter?: string) =>
+        api.post<any>(`/network-tap/jobs/${jobId}/apply`, { coverLetter }),
+      save: (jobId: string) => api.post<any>(`/network-tap/jobs/${jobId}/save`),
+    },
+    connection: {
+      request: (userId: string) => api.post<any>(`/network-tap/connections/request/${userId}`),
+      accept: (connectionId: string) => api.post<any>(`/network-tap/connections/accept/${connectionId}`),
+      remove: (connectionId: string) => api.post<any>(`/network-tap/connections/remove/${connectionId}`),
+      list: () => api.get<any[]>('/network-tap/connections'),
+      pending: () => api.get<any[]>('/network-tap/connections/pending'),
+      suggestions: () => api.get<any[]>('/network-tap/connections/suggestions'),
+    },
+    follow: {
+      toggle: (targetId: string) => api.post<any>(`/network-tap/follow/${targetId}`),
+    },
+    conversation: {
+      list: () => api.get<any[]>('/network-tap/conversations'),
+      get: (id: string) => api.get<any>(`/network-tap/conversations/${id}`),
+      create: (participantId: string) =>
+        api.post<any>('/network-tap/conversations', { participantId }),
+    },
+    message: {
+      send: (conversationId: string, content: string) =>
+        api.post<any>(`/network-tap/messages`, { conversationId, content }),
+      markRead: (conversationId: string) =>
+        api.post<any>(`/network-tap/messages/${conversationId}/read`),
+    },
+    notification: {
+      list: () => api.get<any[]>('/network-tap/notifications'),
+      markRead: (id: string) => api.post<any>(`/network-tap/notifications/${id}/read`),
+      markAllRead: () => api.post<any>('/network-tap/notifications/read-all'),
+    },
+  },
+
   admin: {
     auditLogs: (q?: { limit?: number; offset?: number; q?: string }) => {
       const params = new URLSearchParams(q as Record<string, string>).toString();
       return request<any[]>('GET', `/admin/audit-logs${params ? `?${params}` : ''}`);
     },
     users: () => request<any[]>('GET', '/admin/users'),
+    createUser: (data: { email: string; name: string; password: string; role?: string; facilityName?: string; company?: string }) =>
+      request<{ user: any }>('POST', '/admin/users/create', data),
     setRole: (id: string, role: string) => request<any>('PATCH', `/admin/users/${id}/role`, { role }),
     revokeSessions: (id: string) => request<{ ok: true }>('POST', `/admin/users/${id}/revoke-sessions`),
     resetPassword: (id: string, newPassword: string) =>

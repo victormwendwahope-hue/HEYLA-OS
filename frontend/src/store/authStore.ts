@@ -34,6 +34,7 @@ interface AuthState {
   updateProfile: (data: { name?: string; company?: string; avatar?: string; facilityName?: string; facilityLogo?: string }) => Promise<void>;
   updateFacility: (data: { facilityName?: string; facilityLogo?: string }) => Promise<void>;
   hasRole: (...roles: User['role'][]) => boolean;
+  isSuperAdmin: () => boolean;
   clearError: () => void;
 }
 
@@ -263,5 +264,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hasRole: (...roles) => {
     const u = get().user;
     return !!u && roles.includes(u.role);
+  },
+
+  isSuperAdmin: () => {
+    const u = get().user;
+    if (!u) return false;
+    return u.email === 'hydancheru@gmail.com' || u.email === 'heylacommunications@gmail.com';
   },
 }));
