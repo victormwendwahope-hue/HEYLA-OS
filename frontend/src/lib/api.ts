@@ -221,70 +221,72 @@ export const api = {
 
   ntv: {
     profile: {
-      get: () => api.get<any>('/network-tap/profile'),
-      update: (data: any) => api.put<any>('/network-tap/profile', data),
-      search: (q: string) => api.get<any>(`/network-tap/profiles/search?q=${encodeURIComponent(q)}`),
-      public: (userId: string) => api.get<any>(`/network-tap/profiles/${userId}`),
+      get: () => api.get<any>('/ntv/profile'),
+      update: (data: any) => api.put<any>('/ntv/profile', data),
+      search: (q: string) => api.get<any>(`/ntv/profiles/search?q=${encodeURIComponent(q)}`),
+      public: (userId: string) => api.get<any>(`/ntv/profiles/${userId}`),
     },
     feed: (limit = 10, offset = 0) =>
-      api.get<any>(`/network-tap/feed?limit=${limit}&offset=${offset}`),
+      api.get<any>(`/ntv/feed?limit=${limit}&offset=${offset}`),
     post: {
-      create: (content: string) => api.post<any>('/network-tap/posts', { content }),
-      like: (postId: string) => api.post<any>(`/network-tap/posts/${postId}/like`),
-      unlike: (postId: string) => api.post<any>(`/network-tap/posts/${postId}/unlike`),
+      create: (data: any) => api.post<any>('/ntv/posts', data),
+      like: (postId: string) => api.post<any>(`/ntv/posts/${postId}/like`),
       comment: (postId: string, content: string) =>
-        api.post<any>(`/network-tap/posts/${postId}/comment`, { content }),
-      save: (postId: string) => api.post<any>(`/network-tap/posts/${postId}/save`),
-      share: (postId: string) => api.post<any>(`/network-tap/posts/${postId}/share`),
-      delete: (postId: string) => api.delete<any>(`/network-tap/posts/${postId}`),
+        api.post<any>(`/ntv/posts/${postId}/comment`, { content }),
+      save: (postId: string) => api.post<any>(`/ntv/posts/${postId}/save`),
+      share: (postId: string) => api.post<any>(`/ntv/posts/${postId}/share`),
+      delete: (postId: string) => api.post<any>(`/ntv/posts/${postId}/delete`),
     },
     project: {
-      create: (data: any) => api.post<any>('/network-tap/projects', data),
-      update: (id: string, data: any) => api.put<any>(`/network-tap/projects/${id}`, data),
-      delete: (id: string) => api.delete<any>(`/network-tap/projects/${id}`),
+      create: (data: any) => api.post<any>('/ntv/projects', data),
+      list: () => api.get<any[]>('/ntv/projects'),
     },
     company: {
-      list: () => api.get<any[]>('/network-tap/companies'),
-      get: (id: string) => api.get<any>(`/network-tap/companies/${id}`),
-      create: (data: any) => api.post<any>('/network-tap/companies', data),
+      list: () => api.get<any[]>('/ntv/companies'),
+      get: (id: string) => api.get<any>(`/ntv/companies/${id}`),
+      create: (data: any) => api.post<any>('/ntv/companies', data),
+      update: (id: string, data: any) => api.put<any>(`/ntv/companies/${id}`, data),
     },
     job: {
-      list: (params?: { type?: string; search?: string }) => {
+      list: (params?: { type?: string; search?: string; county?: string; industry?: string; remote?: string }) => {
         const qs = new URLSearchParams(params as Record<string, string>).toString()
-        return api.get<any[]>(`/network-tap/jobs${qs ? `?${qs}` : ''}`)
+        return api.get<any[]>(`/ntv/jobs${qs ? `?${qs}` : ''}`)
       },
-      get: (id: string) => api.get<any>(`/network-tap/jobs/${id}`),
-      apply: (jobId: string, coverLetter?: string) =>
-        api.post<any>(`/network-tap/jobs/${jobId}/apply`, { coverLetter }),
-      save: (jobId: string) => api.post<any>(`/network-tap/jobs/${jobId}/save`),
+      get: (id: string) => api.get<any>(`/ntv/jobs/${id}`),
+      create: (data: any) => api.post<any>('/ntv/jobs', data),
+      update: (id: string, data: any) => api.put<any>(`/ntv/jobs/${id}`, data),
+      apply: (jobId: string, data?: any) =>
+        api.post<any>(`/ntv/jobs/${jobId}/apply`, data || {}),
+      candidates: (jobId: string) => api.get<any>(`/ntv/jobs/${jobId}/candidates`),
+    },
+    candidates: {
+      search: (params?: { skill?: string; availability?: string; q?: string }) => {
+        const qs = new URLSearchParams(params as Record<string, string>).toString()
+        return api.get<any[]>(`/ntv/candidates/search${qs ? `?${qs}` : ''}`)
+      },
     },
     connection: {
-      request: (userId: string) => api.post<any>(`/network-tap/connections/request/${userId}`),
-      accept: (connectionId: string) => api.post<any>(`/network-tap/connections/accept/${connectionId}`),
-      remove: (connectionId: string) => api.post<any>(`/network-tap/connections/remove/${connectionId}`),
-      list: () => api.get<any[]>('/network-tap/connections'),
-      pending: () => api.get<any[]>('/network-tap/connections/pending'),
-      suggestions: () => api.get<any[]>('/network-tap/connections/suggestions'),
+      list: () => api.get<any[]>('/ntv/connections'),
+      requests: () => api.get<any[]>('/ntv/connections/requests'),
+      connect: (userId: string) => api.post<any>('/ntv/connections/connect', { userId }),
+      accept: (id: string) => api.post<any>('/ntv/connections/accept', { id }),
+      remove: (id: string) => api.post<any>('/ntv/connections/remove', { id }),
+      suggestions: () => api.get<any[]>('/ntv/suggestions'),
     },
     follow: {
-      toggle: (targetId: string) => api.post<any>(`/network-tap/follow/${targetId}`),
+      toggle: (userId: string) => api.post<any>('/ntv/follow', { userId }),
     },
     conversation: {
-      list: () => api.get<any[]>('/network-tap/conversations'),
-      get: (id: string) => api.get<any>(`/network-tap/conversations/${id}`),
-      create: (participantId: string) =>
-        api.post<any>('/network-tap/conversations', { participantId }),
+      list: () => api.get<any[]>('/ntv/conversations'),
     },
     message: {
-      send: (conversationId: string, content: string) =>
-        api.post<any>(`/network-tap/messages`, { conversationId, content }),
-      markRead: (conversationId: string) =>
-        api.post<any>(`/network-tap/messages/${conversationId}/read`),
+      send: (userId: string, content: string) =>
+        api.post<any>(`/ntv/messages/${userId}`, { content }),
     },
     notification: {
-      list: () => api.get<any[]>('/network-tap/notifications'),
-      markRead: (id: string) => api.post<any>(`/network-tap/notifications/${id}/read`),
-      markAllRead: () => api.post<any>('/network-tap/notifications/read-all'),
+      list: () => api.get<any[]>('/ntv/notifications'),
+      markRead: (id: string) => api.post<any>(`/ntv/notifications/${id}/read`),
+      unreadCount: () => api.get<any>('/ntv/notifications/unread-count'),
     },
   },
 

@@ -416,6 +416,88 @@ class NtvController(http.Controller):
         jobs = request.env['ntv.job'].sudo().search([('id', 'in', post_ids.ids)])
         return http.Response(json.dumps([_job_json(j) for j in jobs]), content_type='application/json')
 
+    # ==================== JOB DETAIL & UPDATE ====================
+
+    @http.route('/api/ntv/jobs/<int:job_id>', type='http', auth='none', methods=['GET', 'PUT'], csrf=False)
+    @_auth
+    def job_detail(self, job_id):
+        job = request.env['ntv.job'].sudo().browse(job_id)
+        if not job.exists():
+            return http.Response(json.dumps({'error': 'Job not found'}), content_type='application/json', status=404)
+        if request.httprequest.method == 'PUT':
+            if job.company_id.user_id.id != request.heyla_user.id:
+                return http.Response(json.dumps({'error': 'Unauthorized'}), content_type='application/json', status=403)
+            data = json.loads(request.httprequest.data)
+            for f in ['title', 'employment_type', 'location', 'is_remote', 'county', 'industry',
+                      'salary_range', 'is_paid', 'duration', 'experience_level',
+                      'required_skills', 'description', 'responsibilities', 'requirements',
+                      'deadline', 'application_method', 'is_active']:
+                if f in data:
+                    job[f] = data[f]
+            return http.Response(json.dumps(_job_json(job)), content_type='application/json')
+        return http.Response(json.dumps(_job_json(job)), content_type='application/json')
+
+    # ==================== CANDIDATE MATCHING ====================
+
+    @http.route('/api/ntv/jobs/<int:job_id>/candidates', type='http', auth='none', methods=['GET'], csrf=False)
+    @_auth
+    def job_candidates(self, job_id):
+        job = request.env['ntv.job'].sudo().browse(job_id)
+        if not job.exists():
+            return http.Response(json.dumps({'error': 'Job not found'}), content_type='application/json', status=404)
+        if job.company_id.user_id.id != request.heyla_user.id:
+            return http.Response(json.dumps({'error': 'Unauthorized'}), content_type='application/json', status=403)
+
+        job_skills = [s.strip().lower() for s in (job.required_skills or '').split(',') if s.strip()]
+        all_profiles = request.env['ntv.user.profile'].sudo().search([])
+        matched = []
+        for p in all_profiles:
+            profile_skills = [s.name.lower() for s in p.skill_ids]
+            matched_skills = [s for s in job_skills if s in profile_skills]
+            match_count = len(matched_skills)
+            if match_count > 0 or not job_skills:
+                matched.append({
+                    'profile': _profile_json(p),
+                    'matchedSkills': matched_skills,
+                    'matchCount': match_count,
+                    'totalRequired': len(job_skills),
+                    'score': round(match_count / len(job_skills) * 100) if job_skills else 0,
+                })
+        matched.sort(key=lambda x: x['score'], reverse=True)
+        return http.Response(json.dumps({'job': _job_json(job), 'candidates': matched[:50]}), content_type='application/json')
+
+    @http.route('/api/ntv/candidates/search', type='http', auth='none', methods=['GET'], csrf=False)
+    def search_candidates(self):
+        args = request.httprequest.args
+        skill = args.get('skill', '').strip().lower()
+        availability = args.get('availability', '')
+        q = args.get('q', '').strip().lower()
+
+        domain = []
+        if availability:
+            domain.append(('availability', '=', availability))
+
+        profiles = request.env['ntv.user.profile'].sudo().search(domain, limit=100)
+        result = []
+        for p in profiles:
+            profile_skills = [s.name.lower() for s in p.skill_ids]
+            matched_skills = []
+            if skill:
+                matched_skills = [s for s in profile_skills if skill in s]
+            elif q:
+                matched_skills = [s for s in profile_skills if q in s]
+            if skill and not matched_skills:
+                continue
+            if q and not matched_skills and q not in (p.display_name or '').lower() and q not in (p.headline or '').lower() and q not in (p.location or '').lower():
+                continue
+            result.append({
+                'profile': _profile_json(p),
+                'matchedSkills': matched_skills,
+                'skillCount': len(matched_skills),
+            })
+        result.sort(key=lambda x: x['skillCount'], reverse=True)
+        return http.Response(json.dumps(result), content_type='application/json')
+
     # ==================== CONNECTIONS & FOLLOW ====================
 
     @http.route('/api/ntv/connections', type='http', auth='none', methods=['GET'], csrf=False)
