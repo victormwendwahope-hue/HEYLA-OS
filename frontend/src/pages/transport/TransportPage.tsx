@@ -1,7 +1,7 @@
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
 import { useTransportStore } from '@/store/transportStore';
 import { formatCurrency } from '@/utils/countries';
-import { Truck, Users, Package, MapPin, Plus, X, AlertTriangle, Fuel, BarChart3, Trash2, Edit3, Search } from 'lucide-react';
+import { Truck, Users, Package, MapPin, Plus, X, AlertTriangle, Fuel, BarChart3, Trash2, Edit3, Search, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -20,7 +20,7 @@ const shipmentStatusVariant = (s: string) => {
 type Tab = 'overview' | 'fleet' | 'drivers' | 'shipments';
 
 export default function TransportPage() {
-  const { vehicles, drivers, shipments, fetchVehicles, fetchDrivers, fetchShipments, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver, addShipment, updateShipment, removeShipment } = useTransportStore();
+  const { vehicles, drivers, shipments, loading, fetchVehicles, fetchDrivers, fetchShipments, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver, addShipment, updateShipment, removeShipment } = useTransportStore();
   const [tab, setTab] = useState<Tab>('overview');
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [editVehicleId, setEditVehicleId] = useState<string | null>(null);
@@ -50,7 +50,6 @@ export default function TransportPage() {
   const tripData = Object.entries(monthlyData).sort().slice(-6).map(([month, d]) => ({
     month: month.slice(5), delivered: d.delivered, created: d.created,
   }));
-  const totalFuelCost = 0;
   const pieData = [
     { name: 'Active', value: vehicles.filter(v => v.status === 'Active').length },
     { name: 'Maintenance', value: vehicles.filter(v => v.status === 'Maintenance').length },
@@ -105,6 +104,15 @@ export default function TransportPage() {
     { key: 'overview', label: 'Overview' }, { key: 'fleet', label: 'Fleet' },
     { key: 'drivers', label: 'Drivers' }, { key: 'shipments', label: 'Shipments' },
   ];
+
+  if (loading && vehicles.length === 0 && drivers.length === 0 && shipments.length === 0) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="text-center space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+        <p className="text-sm text-muted-foreground">Loading transport data...</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -326,6 +334,12 @@ export default function TransportPage() {
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Mileage (km)</label>
                   <input type="number" value={vForm.mileage || ''} onChange={(e) => setVForm({ ...vForm, mileage: +e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Driver</label>
+                  <input value={vForm.driver} onChange={(e) => setVForm({ ...vForm, driver: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="Driver name" /></div>
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Last Service</label>
+                  <input type="date" value={vForm.lastService} onChange={(e) => setVForm({ ...vForm, lastService: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
+              </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowVehicleForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
                 <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">{editVehicleId ? 'Update' : 'Add Vehicle'}</button>
@@ -386,6 +400,14 @@ export default function TransportPage() {
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Tracking No</label>
                   <input value={sForm.trackingNo} onChange={(e) => setSForm({ ...sForm, trackingNo: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Driver</label>
+                  <input value={sForm.driver} onChange={(e) => setSForm({ ...sForm, driver: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="Driver name" /></div>
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Vehicle</label>
+                  <input value={sForm.vehicle} onChange={(e) => setSForm({ ...sForm, vehicle: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="Vehicle name/plate" /></div>
+              </div>
+              <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Estimated Delivery</label>
+                <input type="date" value={sForm.estimatedDelivery} onChange={(e) => setSForm({ ...sForm, estimatedDelivery: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowShipmentForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
                 <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">{editingShip ? 'Update' : 'Create'}</button>
