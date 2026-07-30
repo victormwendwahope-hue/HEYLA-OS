@@ -6,11 +6,11 @@ import { NtvSidebar } from '@/components/layout/NtvSidebar';
 export function NtvLayout() {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex flex-col w-full">
-        <TopBar />
-        <div className="flex-1 flex">
-          <NtvSidebar />
-          <main className="flex-1 overflow-auto p-4 md:p-6">
+      <div className="min-h-screen flex w-full">
+        <NtvSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <TopBar />
+          <main className="flex-1 p-4 md:p-6 overflow-auto">
             <Outlet />
           </main>
         </div>

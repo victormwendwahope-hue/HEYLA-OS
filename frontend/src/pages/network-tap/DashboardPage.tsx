@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from '@tanstack/react-router'
+import { useAuthStore } from '@/store/authStore'
+import { api } from '@/lib/api'
 
 const PB = '#0A66FF'
 const DN = '#071B4D'
@@ -21,13 +23,15 @@ const MOCK_NETWORK = [
 export default function NetworkTapDashboard() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [user, setUser] = useState<any>(null)
+  const user = useAuthStore((s) => s.user)
   const [showMobileNav, setShowMobileNav] = useState(false)
   const [liked, setLiked] = useState<Set<number>>(new Set())
+  const [projects, setProjects] = useState<any[]>([])
 
   useEffect(() => {
-    const u = localStorage.getItem('heyla_user')
-    if (u) setUser(JSON.parse(u))
+    if (user?.accountType === 'company' || user?.company) {
+      api.ntv.project.list().then(setProjects).catch(() => {})
+    }
   }, [])
 
   const isCompany = user?.accountType === 'company' || user?.company
@@ -61,9 +65,9 @@ export default function NetworkTapDashboard() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#F4F8FF', color: '#0F172A' }}>
-      <div className="max-w-7xl mx-auto flex gap-6">
-        <main className="flex-1 min-w-0">
+    <div style={{ background: '#F4F8FF', color: '#0F172A' }}>
+      <div className="flex gap-6">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold" style={{ color: DN }}>{isCompany ? 'Company Dashboard' : 'Dashboard'}</h1>
@@ -162,40 +166,26 @@ export default function NetworkTapDashboard() {
               </div>
             ))}
           </div>
-        </main>
+        </div>
 
-        <aside className="hidden xl:block w-72 shrink-0">
-          {isCompany ? (
-            <div className="bg-white rounded-2xl border p-4 sticky top-20 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
-              <h3 className="font-semibold text-sm mb-3" style={{ color: DN }}>Recent Applicants</h3>
-              <div className="space-y-3">
-                {[
-                  { name: 'John Mwangi', title: 'Electrical Technician', avatar: 'JM', status: 'Pending' },
-                  { name: 'Grace Wanjiku', title: 'Solar Installer', avatar: 'GW', status: 'Reviewed' },
-                  { name: 'Brian Kiprop', title: 'Welder', avatar: 'BK', status: 'Shortlisted' },
-                  { name: 'Faith Nyambura', title: 'Plumber', avatar: 'FN', status: 'Pending' },
-                ].map((a) => (
-                  <div key={a.name} className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0" style={{ background: PB }}>{a.avatar}</div>
+        <aside className="hidden xl:block w-72 shrink-0 space-y-4">
+          <div className="bg-white rounded-2xl border p-4 sticky top-20 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
+            <h3 className="font-semibold text-sm mb-3" style={{ color: DN }}>{isCompany ? 'Recent Projects' : 'My Network'}</h3>
+            <div className="space-y-3">
+              {isCompany ? (
+                projects.slice(0, 4).length > 0 ? projects.slice(0, 4).map((p, i) => (
+                  <div key={p.id || i} className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center text-base shrink-0" style={{ background: '#EEF2FF' }}>📂</div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-xs" style={{ color: DN }}>{a.name}</p>
-                      <p className="text-[11px]" style={{ color: '#64748B' }}>{a.title}</p>
+                      <p className="font-medium text-xs" style={{ color: DN }}>{p.title}</p>
+                      <p className="text-[11px]" style={{ color: '#64748B' }}>{p.authorName || 'Individual'}</p>
                     </div>
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ background: a.status === 'Shortlisted' ? '#DCFCE7' : a.status === 'Reviewed' ? '#EEF2FF' : '#FEF3C7', color: a.status === 'Shortlisted' ? '#16A34A' : a.status === 'Reviewed' ? PB : '#B45309' }}>
-                      {a.status}
-                    </span>
                   </div>
-                ))}
-              </div>
-              <Link to="/network-tap/jobs" className="block text-center text-xs font-medium mt-3 pt-3 border-t" style={{ color: PB, borderColor: '#E2E8F0' }}>
-                View All Applicants →
-              </Link>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border p-4 sticky top-20 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
-              <h3 className="font-semibold text-sm mb-3" style={{ color: DN }}>My Network</h3>
-              <div className="space-y-3">
-                {MOCK_NETWORK.map((p) => (
+                )) : (
+                  <p className="text-xs" style={{ color: '#94A3B8' }}>No projects posted yet</p>
+                )
+              ) : (
+                MOCK_NETWORK.map((p) => (
                   <div key={p.name} className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0" style={{ background: PB }}>{p.avatar}</div>
                     <div className="flex-1 min-w-0">
@@ -204,15 +194,15 @@ export default function NetworkTapDashboard() {
                     </div>
                     <button className="text-xs font-medium px-2.5 py-1 rounded-lg border" style={{ borderColor: PB, color: PB }}>+</button>
                   </div>
-                ))}
-              </div>
-              <Link to="/network-tap/connections" className="block text-center text-xs font-medium mt-3 pt-3 border-t" style={{ color: PB, borderColor: '#E2E8F0' }}>
-                View All Connections →
-              </Link>
+                ))
+              )}
             </div>
-          )}
+            <Link to={isCompany ? '/network-tap/projects' : '/network-tap/connections'} className="block text-center text-xs font-medium mt-3 pt-3 border-t" style={{ color: PB, borderColor: '#E2E8F0' }}>
+              {isCompany ? 'Browse All Projects →' : 'View All Connections →'}
+            </Link>
+          </div>
 
-          <div className="bg-white rounded-2xl border p-4 mt-4 sticky top-[22rem] shadow-sm" style={{ borderColor: '#E2E8F0' }}>
+          <div className="bg-white rounded-2xl border p-4 sticky top-[22rem] shadow-sm" style={{ borderColor: '#E2E8F0' }}>
             <h3 className="font-semibold text-sm mb-3" style={{ color: DN }}>{isCompany ? 'Company Stats' : 'Quick Stats'}</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between items-center">
@@ -228,12 +218,12 @@ export default function NetworkTapDashboard() {
                 <span className="font-semibold" style={{ color: DN }}>5</span>
               </div>
               <div className="flex justify-between items-center">
-                <span style={{ color: '#64748B' }}>{isCompany ? 'Shortlisted' : 'Connections'}</span>
-                <span className="font-semibold" style={{ color: DN }}>{isCompany ? '8' : '12'}</span>
+                <span style={{ color: '#64748B' }}>{isCompany ? 'Projects Listed' : 'Connections'}</span>
+                <span className="font-semibold" style={{ color: DN }}>{isCompany ? projects.length : '12'}</span>
               </div>
             </div>
-            <Link to={isCompany ? '/network-tap/jobs' : '/network-tap/profile'} className="block text-center text-xs font-medium mt-3 pt-3 border-t" style={{ color: PB, borderColor: '#E2E8F0' }}>
-              {isCompany ? 'Manage Jobs →' : 'View Profile →'}
+            <Link to={isCompany ? '/network-tap/projects' : '/network-tap/profile'} className="block text-center text-xs font-medium mt-3 pt-3 border-t" style={{ color: PB, borderColor: '#E2E8F0' }}>
+              {isCompany ? 'Browse Projects →' : 'View Profile →'}
             </Link>
           </div>
         </aside>
