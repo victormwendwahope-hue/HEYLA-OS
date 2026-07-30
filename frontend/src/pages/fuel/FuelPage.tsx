@@ -1,19 +1,21 @@
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
 import { useFuelStore, FuelEntry } from '@/store/fuelStore';
 import { formatCurrency } from '@/utils/countries';
-import { Fuel, TrendingUp, AlertTriangle, Plus, X, Truck, BarChart3, Gauge, Weight } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
-import { useState } from 'react';
+import { Fuel, TrendingUp, AlertTriangle, Plus, X, Truck, BarChart3, Gauge, Weight, Loader2 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 const COLORS = ['hsl(24, 95%, 53%)', 'hsl(142, 71%, 45%)', 'hsl(210, 90%, 55%)', 'hsl(38, 92%, 50%)', 'hsl(280, 70%, 55%)'];
 
 export default function FuelPage() {
-  const { entries, addEntry, updateEntry, removeEntry } = useFuelStore();
+  const { entries, loading, fetchEntries, addEntry, updateEntry, removeEntry } = useFuelStore();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [tab, setTab] = useState<'overview' | 'by-vehicle' | 'load-analysis' | 'logs'>('overview');
   const [form, setForm] = useState({ vehicleName: '', vehicleModel: '', plate: '', driver: '', liters: 0, costPerLiter: 210, station: '', fuelType: 'Diesel' as 'Diesel' | 'Petrol', loadState: 'Unloaded' as 'Loaded' | 'Unloaded', cargoWeight: 0, tripDistance: 0 });
+
+  useEffect(() => { fetchEntries(); }, []);
 
   const totalCost = entries.reduce((s, e) => s + e.totalCost, 0);
   const totalLiters = entries.reduce((s, e) => s + e.liters, 0);
@@ -62,29 +64,22 @@ export default function FuelPage() {
     { name: 'Petrol', value: entries.filter(e => e.fuelType === 'Petrol').length },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.vehicleName || !form.liters) { toast.error('Vehicle and liters required'); return; }
-    const kmPerLiter = form.tripDistance && form.liters ? form.tripDistance / form.liters : 0;
-    if (editingId) {
-      updateEntry(editingId, {
-        ...form,
-        totalCost: form.liters * form.costPerLiter,
-        kmPerLiter, tripDistance: form.tripDistance,
-      });
-      toast.success('Fuel entry updated');
-    } else {
-      addEntry({
-        id: Date.now().toString(), vehicleId: '', ...form,
-        date: new Date().toISOString().split('T')[0],
-        totalCost: form.liters * form.costPerLiter,
-        mileage: 0, kmPerLiter, tripDistance: form.tripDistance,
-      });
-      toast.success('Fuel entry added');
-    }
-    setShowForm(false);
-    setEditingId(null);
-    setForm({ vehicleName: '', vehicleModel: '', plate: '', driver: '', liters: 0, costPerLiter: 210, station: '', fuelType: 'Diesel', loadState: 'Unloaded', cargoWeight: 0, tripDistance: 0 });
+    try {
+      if (editingId) {
+        await updateEntry(editingId, form);
+      } else {
+        await addEntry({
+          ...form,
+          date: new Date().toISOString().split('T')[0],
+        });
+      }
+      setShowForm(false);
+      setEditingId(null);
+      setForm({ vehicleName: '', vehicleModel: '', plate: '', driver: '', liters: 0, costPerLiter: 210, station: '', fuelType: 'Diesel', loadState: 'Unloaded', cargoWeight: 0, tripDistance: 0 });
+    } catch { }
   };
 
   const tabs = [
@@ -93,6 +88,15 @@ export default function FuelPage() {
     { key: 'load-analysis' as const, label: 'Load Analysis' },
     { key: 'logs' as const, label: 'Fuel Logs' },
   ];
+
+  if (loading && entries.length === 0) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="text-center space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+        <p className="text-sm text-muted-foreground">Loading fuel entries...</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -301,7 +305,7 @@ export default function FuelPage() {
 
           <div className="glass rounded-xl p-5">
             <h3 className="font-semibold mb-2">Efficiency Impact Summary</h3>
-            <p className="text-sm text-muted-foreground mb-4">Loaded vehicles consume <span className="font-semibold text-warning">{avgUnloadedKpl > 0 ? ((1 - avgLoadedKpl / avgUnloadedKpl) * 100).toFixed(0) : 0}% more fuel</span> per kilometer compared to unloaded runs. Optimizing cargo distribution can save up to <span className="font-semibold text-success">{formatCurrency(Math.round(totalCost * 0.12))}/month</span>.</p>
+            {avgUnloadedKpl > 0 && <p className="text-sm text-muted-foreground mb-4">Loaded vehicles consume <span className="font-semibold text-warning">{((1 - avgLoadedKpl / avgUnloadedKpl) * 100).toFixed(0)}% more fuel</span> per kilometer compared to unloaded runs. Optimizing cargo distribution can save up to <span className="font-semibold text-success">{formatCurrency(Math.round(totalCost * 0.12))}/month</span>.</p>}
           </div>
         </div>
       )}

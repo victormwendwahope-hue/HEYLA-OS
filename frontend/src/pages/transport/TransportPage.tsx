@@ -1,20 +1,11 @@
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
 import { useTransportStore } from '@/store/transportStore';
 import { formatCurrency } from '@/utils/countries';
-import { Truck, Users, Package, MapPin, Plus, X, AlertTriangle, Fuel, BarChart3, Trash2 } from 'lucide-react';
+import { Truck, Users, Package, MapPin, Plus, X, AlertTriangle, Fuel, BarChart3, Trash2, Edit3, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
-const tripData = [
-  { month: 'Sep', trips: 42 }, { month: 'Oct', trips: 56 }, { month: 'Nov', trips: 48 },
-  { month: 'Dec', trips: 61 }, { month: 'Jan', trips: 53 }, { month: 'Feb', trips: 67 },
-];
-const costData = [
-  { month: 'Sep', fuel: 120000, maintenance: 45000 }, { month: 'Oct', fuel: 145000, maintenance: 30000 },
-  { month: 'Nov', fuel: 135000, maintenance: 65000 }, { month: 'Dec', fuel: 160000, maintenance: 35000 },
-  { month: 'Jan', fuel: 150000, maintenance: 50000 }, { month: 'Feb', fuel: 170000, maintenance: 40000 },
-];
 const statusColors = ['hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(210, 90%, 55%)'];
 
 const vehicleStatusVariant = (s: string) => {
@@ -29,38 +20,85 @@ const shipmentStatusVariant = (s: string) => {
 type Tab = 'overview' | 'fleet' | 'drivers' | 'shipments';
 
 export default function TransportPage() {
-  const { vehicles, drivers, shipments, addVehicle, addShipment, updateShipment, removeVehicle, removeShipment } = useTransportStore();
+  const { vehicles, drivers, shipments, fetchVehicles, fetchDrivers, fetchShipments, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver, addShipment, updateShipment, removeShipment } = useTransportStore();
   const [tab, setTab] = useState<Tab>('overview');
   const [showVehicleForm, setShowVehicleForm] = useState(false);
+  const [editVehicleId, setEditVehicleId] = useState<string | null>(null);
+  const [showDriverForm, setShowDriverForm] = useState(false);
+  const [editDriverId, setEditDriverId] = useState<string | null>(null);
   const [showShipmentForm, setShowShipmentForm] = useState(false);
-  const [vForm, setVForm] = useState({ name: '', plate: '', type: 'Truck' as const, fuelType: 'Diesel' as const });
-  const [sForm, setSForm] = useState({ origin: '', destination: '', weight: '', driver: '', vehicle: '' });
+  const [editingShip, setEditingShip] = useState<string | null>(null);
+
+  useEffect(() => { fetchVehicles(); fetchDrivers(); fetchShipments(); }, []);
+
+  const [vForm, setVForm] = useState({ name: '', plate: '', type: 'Truck' as string, status: 'Idle' as string, driver: '', mileage: 0, fuelType: 'Diesel' as string, lastService: '' });
+  const [dForm, setDForm] = useState({ name: '', phone: '', license: '', status: 'Available' as string, trips: 0, rating: 0 });
+  const [sForm, setSForm] = useState({ trackingNo: '', origin: '', destination: '', status: 'Pending' as string, driver: '', vehicle: '', weight: '', estimatedDelivery: '' });
 
   const activeVehicles = vehicles.filter((v) => v.status === 'Active').length;
   const activeDrivers = drivers.filter((d) => d.status !== 'Off Duty').length;
   const inTransit = shipments.filter((s) => s.status === 'In Transit').length;
+
+  const monthlyData = shipments.reduce((acc: Record<string, { delivered: number; created: number; cost: number }>, s) => {
+    const month = (s.createdAt || '').slice(0, 7);
+    if (!month) return acc;
+    if (!acc[month]) acc[month] = { delivered: 0, created: 0, cost: 0 };
+    acc[month].created++;
+    if (s.status === 'Delivered') acc[month].delivered++;
+    return acc;
+  }, {});
+  const tripData = Object.entries(monthlyData).sort().slice(-6).map(([month, d]) => ({
+    month: month.slice(5), delivered: d.delivered, created: d.created,
+  }));
+  const totalFuelCost = 0;
   const pieData = [
     { name: 'Active', value: vehicles.filter(v => v.status === 'Active').length },
     { name: 'Maintenance', value: vehicles.filter(v => v.status === 'Maintenance').length },
     { name: 'Idle', value: vehicles.filter(v => v.status === 'Idle').length },
   ];
 
-  const handleAddVehicle = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!vForm.name || !vForm.plate) { toast.error('Name and plate required'); return; }
-    addVehicle({ id: Date.now().toString(), ...vForm, status: 'Idle', driver: '', mileage: 0, lastService: new Date().toISOString().split('T')[0] });
-    setShowVehicleForm(false);
-    setVForm({ name: '', plate: '', type: 'Truck', fuelType: 'Diesel' });
-    toast.success('Vehicle added');
+  const openVehicleForm = (v?: any) => {
+    if (v) { setVForm({ name: v.name, plate: v.plate, type: v.type, status: v.status, driver: v.driver || '', mileage: v.mileage, fuelType: v.fuelType, lastService: v.lastService || '' }); setEditVehicleId(v.id); }
+    else { setVForm({ name: '', plate: '', type: 'Truck', status: 'Idle', driver: '', mileage: 0, fuelType: 'Diesel', lastService: '' }); setEditVehicleId(null); }
+    setShowVehicleForm(true);
+  };
+  const openDriverForm = (d?: any) => {
+    if (d) { setDForm({ name: d.name, phone: d.phone, license: d.license, status: d.status, trips: d.trips, rating: d.rating }); setEditDriverId(d.id); }
+    else { setDForm({ name: '', phone: '', license: '', status: 'Available', trips: 0, rating: 0 }); setEditDriverId(null); }
+    setShowDriverForm(true);
+  };
+  const openShipmentForm = (s?: any) => {
+    if (s) { setSForm({ trackingNo: s.trackingNo, origin: s.origin, destination: s.destination, status: s.status, driver: s.driver || '', vehicle: s.vehicle || '', weight: s.weight || '', estimatedDelivery: s.estimatedDelivery || '' }); setEditingShip(s.id); }
+    else { setSForm({ trackingNo: `SHP-${Date.now().toString().slice(-7)}`, origin: '', destination: '', status: 'Pending', driver: '', vehicle: '', weight: '', estimatedDelivery: '' }); setEditingShip(null); }
+    setShowShipmentForm(true);
   };
 
-  const handleAddShipment = (e: React.FormEvent) => {
+  const handleVehicleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!vForm.name || !vForm.plate) { toast.error('Name and plate required'); return; }
+    try {
+      if (editVehicleId) await updateVehicle(editVehicleId, vForm);
+      else await addVehicle(vForm);
+      setShowVehicleForm(false);
+    } catch { }
+  };
+  const handleDriverSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dForm.name) { toast.error('Driver name required'); return; }
+    try {
+      if (editDriverId) await updateDriver(editDriverId, dForm);
+      else await addDriver(dForm);
+      setShowDriverForm(false);
+    } catch { }
+  };
+  const handleShipmentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sForm.origin || !sForm.destination) { toast.error('Origin and destination required'); return; }
-    addShipment({ id: Date.now().toString(), trackingNo: `SHP-${Date.now().toString().slice(-7)}`, ...sForm, status: 'Pending', estimatedDelivery: '', createdAt: new Date().toISOString().split('T')[0] });
-    setShowShipmentForm(false);
-    setSForm({ origin: '', destination: '', weight: '', driver: '', vehicle: '' });
-    toast.success('Shipment created');
+    try {
+      if (editingShip) await updateShipment(editingShip, sForm);
+      else await addShipment(sForm);
+      setShowShipmentForm(false);
+    } catch { }
   };
 
   const tabs: { key: Tab; label: string }[] = [
@@ -71,12 +109,13 @@ export default function TransportPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Transport & Logistics" description="Fleet management, deliveries, and route tracking">
-        <button onClick={() => setShowShipmentForm(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
-          <Plus className="w-4 h-4" /> New Shipment
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => openShipmentForm()} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <Plus className="w-4 h-4" /> New Shipment
+          </button>
+        </div>
       </PageHeader>
 
-      {/* Tabs */}
       <div className="flex gap-1 bg-muted/50 p-1 rounded-xl w-fit">
         {tabs.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)}
@@ -92,56 +131,59 @@ export default function TransportPage() {
             <StatCard title="Fleet Size" value={String(vehicles.length)} change={`${activeVehicles} active`} changeType="positive" icon={Truck} iconColor="gradient-primary" />
             <StatCard title="Drivers" value={String(drivers.length)} change={`${activeDrivers} on duty`} changeType="positive" icon={Users} />
             <StatCard title="In Transit" value={String(inTransit)} change="shipments moving" changeType="neutral" icon={Package} />
-            <StatCard title="Monthly Cost" value={formatCurrency(210000)} change="+5% from last month" changeType="negative" icon={Fuel} />
+            <StatCard title="Total Shipments" value={String(shipments.length)} change={`${shipments.filter(s => s.status === 'Delivered').length} delivered`} changeType="positive" icon={Fuel} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 glass rounded-xl p-5">
-              <h3 className="font-semibold mb-4 flex items-center gap-2"><BarChart3 className="w-4 h-4 text-primary" /> Monthly Trip Analytics</h3>
-              <ResponsiveContainer width="100%" height={280}>
+              <h3 className="font-semibold mb-4 flex items-center gap-2"><BarChart3 className="w-4 h-4 text-primary" /> Monthly Shipments</h3>
+              {tripData.length > 0 ? <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={tripData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
                   <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
                   <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
-                  <Bar dataKey="trips" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="created" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} name="Created" />
+                  <Bar dataKey="delivered" fill="hsl(142, 71%, 45%)" radius={[6, 6, 0, 0]} name="Delivered" />
                 </BarChart>
-              </ResponsiveContainer>
+              </ResponsiveContainer> : <p className="text-sm text-muted-foreground py-12 text-center">No shipment data yet</p>}
             </div>
             <div className="glass rounded-xl p-5">
               <h3 className="font-semibold mb-4">Fleet Status</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                    {pieData.map((_, i) => <Cell key={i} fill={statusColors[i]} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="mt-3 space-y-2">
-                {pieData.map((p, i) => (
-                  <div key={p.name} className="flex items-center gap-2 text-sm">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: statusColors[i] }} />
-                    <span className="text-muted-foreground">{p.name}</span>
-                    <span className="ml-auto font-medium">{p.value}</span>
-                  </div>
-                ))}
-              </div>
+              {vehicles.length > 0 ? <>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                      {pieData.map((_, i) => <Cell key={i} fill={statusColors[i]} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-3 space-y-2">
+                  {pieData.map((p, i) => (
+                    <div key={p.name} className="flex items-center gap-2 text-sm">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: statusColors[i] }} />
+                      <span className="text-muted-foreground">{p.name}</span>
+                      <span className="ml-auto font-medium">{p.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </> : <p className="text-sm text-muted-foreground py-12 text-center">No vehicles yet</p>}
             </div>
           </div>
 
           <div className="glass rounded-xl p-5">
-            <h3 className="font-semibold mb-4">Fuel & Maintenance Costs (KES)</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={costData}>
+            <h3 className="font-semibold mb-4">Shipments by Month</h3>
+            {tripData.length > 0 ? <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={tripData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
-                <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
-                <Line type="monotone" dataKey="fuel" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="maintenance" stroke="hsl(var(--warning))" strokeWidth={2} dot={false} />
+                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <Line type="monotone" dataKey="created" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} name="Created" />
+                <Line type="monotone" dataKey="delivered" stroke="hsl(142, 71%, 45%)" strokeWidth={2} dot={false} name="Delivered" />
               </LineChart>
-            </ResponsiveContainer>
+            </ResponsiveContainer> : <p className="text-sm text-muted-foreground py-12 text-center">No shipment data yet</p>}
           </div>
         </>
       )}
@@ -150,9 +192,9 @@ export default function TransportPage() {
         <div className="glass rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <h3 className="font-semibold">Vehicles ({vehicles.length})</h3>
-            <button onClick={() => setShowVehicleForm(true)} className="text-sm text-primary font-medium hover:underline flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Add Vehicle</button>
+            <button onClick={() => openVehicleForm()} className="text-sm text-primary font-medium hover:underline flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Add Vehicle</button>
           </div>
-          <div className="overflow-x-auto">
+          {vehicles.length > 0 ? <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-border bg-muted/30">
                 {['Vehicle', 'Plate', 'Type', 'Status', 'Driver', 'Mileage', 'Fuel', ''].map(h => <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>)}
@@ -164,65 +206,74 @@ export default function TransportPage() {
                     <td className="px-4 py-3 font-mono text-xs">{v.plate}</td>
                     <td className="px-4 py-3">{v.type}</td>
                     <td className="px-4 py-3"><StatusBadge status={v.status} variant={vehicleStatusVariant(v.status)} /></td>
-                    <td className="px-4 py-3 text-muted-foreground">{v.driver || '—'}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{v.driver || '\u2014'}</td>
                     <td className="px-4 py-3">{v.mileage.toLocaleString()} km</td>
                     <td className="px-4 py-3 text-muted-foreground">{v.fuelType}</td>
                     <td className="px-4 py-3">
-                      <button onClick={() => { if (confirm('Delete vehicle?')) { removeVehicle(v.id); toast.success('Vehicle deleted'); } }} className="text-destructive hover:underline text-xs font-medium">Delete</button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => openVehicleForm(v)} className="text-xs text-primary hover:underline"><Edit3 className="w-3 h-3 inline" /> Edit</button>
+                        <button onClick={() => { removeVehicle(v.id); }} className="text-xs text-destructive hover:underline"><Trash2 className="w-3 h-3 inline" /> Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </div> : <p className="text-sm text-muted-foreground text-center py-8">No vehicles in fleet. Add your first vehicle.</p>}
         </div>
       )}
 
       {tab === 'drivers' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {drivers.map((d) => (
-            <div key={d.id} className="glass rounded-xl p-5 hover:shadow-elevated transition-shadow">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
-                  {(d.name || 'D').charAt(0)}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Drivers ({drivers.length})</h3>
+            <button onClick={() => openDriverForm()} className="text-sm text-primary font-medium hover:underline flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Add Driver</button>
+          </div>
+          {drivers.length > 0 ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {drivers.map((d) => (
+              <div key={d.id} className="glass rounded-xl p-5 hover:shadow-elevated transition-shadow">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
+                    {(d.name || 'D').charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{d.name}</p>
+                    <p className="text-xs text-muted-foreground">{d.phone}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold">{d.name}</p>
-                  <p className="text-xs text-muted-foreground">{d.phone}</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Status</span><StatusBadge status={d.status} variant={d.status === 'Available' ? 'success' : d.status === 'On Trip' ? 'info' : 'default'} /></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Trips</span><span className="font-medium">{d.trips}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Rating</span><span className="font-medium">{d.rating} / 5</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">License</span><span className="font-mono text-xs truncate max-w-[120px]">{d.license}</span></div>
+                </div>
+                <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+                  <button onClick={() => openDriverForm(d)} className="text-xs text-primary hover:underline"><Edit3 className="w-3 h-3 inline" /> Edit</button>
+                  <button onClick={() => { removeDriver(d.id); }} className="text-xs text-destructive hover:underline"><Trash2 className="w-3 h-3 inline" /> Delete</button>
                 </div>
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Status</span><StatusBadge status={d.status} variant={d.status === 'Available' ? 'success' : d.status === 'On Trip' ? 'info' : 'default'} /></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Trips</span><span className="font-medium">{d.trips}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Rating</span><span className="font-medium">{d.rating} / 5</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">License</span><span className="font-mono text-xs">{d.license}</span></div>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div> : <div className="glass rounded-xl p-8 text-center"><p className="text-sm text-muted-foreground">No drivers yet. Add your first driver.</p></div>}
         </div>
       )}
 
       {tab === 'shipments' && (
         <div className="space-y-4">
-          {/* Timeline shipments */}
-          {shipments.map((s) => (
+          {shipments.length > 0 ? shipments.map((s) => (
             <div key={s.id} className="glass rounded-xl p-5 hover:shadow-elevated transition-shadow">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                 <div>
                   <p className="font-semibold flex items-center gap-2">{s.trackingNo} <StatusBadge status={s.status} variant={shipmentStatusVariant(s.status)} /></p>
-                  <p className="text-sm text-muted-foreground mt-1">{s.weight} • Created {s.createdAt}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{s.weight} {s.createdAt ? `\u2022 Created ${s.createdAt}` : ''}</p>
                 </div>
-                {s.status === 'Pending' && (
-                  <button onClick={() => updateShipment(s.id, { status: 'Picked Up' })} className="text-sm text-primary font-medium hover:underline">Mark Picked Up</button>
-                )}
-                {s.status === 'Picked Up' && (
-                  <button onClick={() => updateShipment(s.id, { status: 'In Transit' })} className="text-sm text-primary font-medium hover:underline">Mark In Transit</button>
-                )}
-                {s.status === 'In Transit' && (
-                  <button onClick={() => { updateShipment(s.id, { status: 'Delivered' }); toast.success('Shipment delivered!'); }} className="text-sm text-success font-medium hover:underline">Mark Delivered</button>
-                )}
+                <div className="flex items-center gap-2">
+                  {s.status === 'Pending' && <button onClick={() => updateShipment(s.id, { status: 'Picked Up' })} className="text-sm text-primary font-medium hover:underline">Mark Picked Up</button>}
+                  {s.status === 'Picked Up' && <button onClick={() => updateShipment(s.id, { status: 'In Transit' })} className="text-sm text-primary font-medium hover:underline">Mark In Transit</button>}
+                  {s.status === 'In Transit' && <button onClick={() => { updateShipment(s.id, { status: 'Delivered' }); toast.success('Shipment delivered!'); }} className="text-sm text-success font-medium hover:underline">Mark Delivered</button>}
+                  <button onClick={() => openShipmentForm(s)} className="text-xs text-primary hover:underline"><Edit3 className="w-3 h-3 inline" /></button>
+                  <button onClick={() => { removeShipment(s.id); }} className="text-xs text-destructive hover:underline"><Trash2 className="w-3 h-3 inline" /></button>
+                </div>
               </div>
-              {/* Route timeline */}
               <div className="flex items-center gap-3 text-sm">
                 <div className="flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-primary" />
@@ -237,67 +288,107 @@ export default function TransportPage() {
                   <span>{s.destination}</span>
                 </div>
               </div>
-              {s.driver && <p className="text-xs text-muted-foreground mt-2">Driver: {s.driver} • Vehicle: {s.vehicle}</p>}
-              <div className="flex justify-end mt-2">
-                <button onClick={() => { if (confirm('Delete shipment?')) { removeShipment(s.id); toast.success('Shipment deleted'); } }} className="text-destructive text-xs font-medium hover:underline flex items-center gap-1"><Trash2 className="w-3 h-3" /> Delete</button>
-              </div>
+              {(s.driver || s.vehicle) && <p className="text-xs text-muted-foreground mt-2">Driver: {s.driver || '\u2014'} \u2022 Vehicle: {s.vehicle || '\u2014'}</p>}
             </div>
-          ))}
+          )) : <div className="glass rounded-xl p-8 text-center"><p className="text-sm text-muted-foreground">No shipments yet. Create your first shipment.</p></div>}
         </div>
       )}
 
-      {/* Add Vehicle Modal */}
       {showVehicleForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
-          <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-md m-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in" onClick={() => setShowVehicleForm(false)}>
+          <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-md m-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-5 border-b border-border">
-              <h2 className="text-lg font-bold">Add Vehicle</h2>
+              <h2 className="text-lg font-bold">{editVehicleId ? 'Edit Vehicle' : 'Add Vehicle'}</h2>
               <button onClick={() => setShowVehicleForm(false)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
             </div>
-            <form onSubmit={handleAddVehicle} className="p-5 space-y-4">
-              <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Vehicle Name*</label>
-                <input value={vForm.name} onChange={(e) => setVForm({ ...vForm, name: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
-              <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Plate Number*</label>
-                <input value={vForm.plate} onChange={(e) => setVForm({ ...vForm, plate: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+            <form onSubmit={handleVehicleSubmit} className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Vehicle Name*</label>
+                  <input value={vForm.name} onChange={(e) => setVForm({ ...vForm, name: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Plate Number*</label>
+                  <input value={vForm.plate} onChange={(e) => setVForm({ ...vForm, plate: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Type</label>
-                  <select value={vForm.type} onChange={(e) => setVForm({ ...vForm, type: e.target.value as any })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
+                  <select value={vForm.type} onChange={(e) => setVForm({ ...vForm, type: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
                     {['Truck', 'Van', 'Motorcycle', 'Car'].map(t => <option key={t}>{t}</option>)}
                   </select></div>
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
+                  <select value={vForm.status} onChange={(e) => setVForm({ ...vForm, status: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
+                    {['Active', 'Maintenance', 'Idle'].map(t => <option key={t}>{t}</option>)}
+                  </select></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Fuel Type</label>
-                  <select value={vForm.fuelType} onChange={(e) => setVForm({ ...vForm, fuelType: e.target.value as any })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
+                  <select value={vForm.fuelType} onChange={(e) => setVForm({ ...vForm, fuelType: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
                     {['Diesel', 'Petrol', 'Electric'].map(t => <option key={t}>{t}</option>)}
                   </select></div>
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Mileage (km)</label>
+                  <input type="number" value={vForm.mileage || ''} onChange={(e) => setVForm({ ...vForm, mileage: +e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowVehicleForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
-                <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Add Vehicle</button>
+                <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">{editVehicleId ? 'Update' : 'Add Vehicle'}</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Add Shipment Modal */}
-      {showShipmentForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in">
-          <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-md m-4">
+      {showDriverForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in" onClick={() => setShowDriverForm(false)}>
+          <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-md m-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-5 border-b border-border">
-              <h2 className="text-lg font-bold">New Shipment</h2>
+              <h2 className="text-lg font-bold">{editDriverId ? 'Edit Driver' : 'Add Driver'}</h2>
+              <button onClick={() => setShowDriverForm(false)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={handleDriverSubmit} className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Driver Name*</label>
+                  <input value={dForm.name} onChange={(e) => setDForm({ ...dForm, name: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Phone</label>
+                  <input value={dForm.phone} onChange={(e) => setDForm({ ...dForm, phone: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">License Number</label>
+                  <input value={dForm.license} onChange={(e) => setDForm({ ...dForm, license: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
+                  <select value={dForm.status} onChange={(e) => setDForm({ ...dForm, status: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
+                    {['Available', 'On Trip', 'Off Duty'].map(t => <option key={t}>{t}</option>)}
+                  </select></div>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowDriverForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
+                <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">{editDriverId ? 'Update' : 'Add Driver'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showShipmentForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm animate-fade-in" onClick={() => setShowShipmentForm(false)}>
+          <div className="bg-card border border-border rounded-2xl shadow-elevated w-full max-w-md m-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <h2 className="text-lg font-bold">{editingShip ? 'Edit Shipment' : 'New Shipment'}</h2>
               <button onClick={() => setShowShipmentForm(false)} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
             </div>
-            <form onSubmit={handleAddShipment} className="p-5 space-y-4">
+            <form onSubmit={handleShipmentSubmit} className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Origin*</label>
-                  <input value={sForm.origin} onChange={(e) => setSForm({ ...sForm, origin: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+                  <input value={sForm.origin} onChange={(e) => setSForm({ ...sForm, origin: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Destination*</label>
-                  <input value={sForm.destination} onChange={(e) => setSForm({ ...sForm, destination: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" /></div>
+                  <input value={sForm.destination} onChange={(e) => setSForm({ ...sForm, destination: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
               </div>
-              <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Weight</label>
-                <input value={sForm.weight} onChange={(e) => setSForm({ ...sForm, weight: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="e.g. 500 kg" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Weight</label>
+                  <input value={sForm.weight} onChange={(e) => setSForm({ ...sForm, weight: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="e.g. 500 kg" /></div>
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Tracking No</label>
+                  <input value={sForm.trackingNo} onChange={(e) => setSForm({ ...sForm, trackingNo: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
+              </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowShipmentForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
-                <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Create</button>
+                <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">{editingShip ? 'Update' : 'Create'}</button>
               </div>
             </form>
           </div>
