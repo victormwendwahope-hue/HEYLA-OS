@@ -3,6 +3,7 @@ import { PageHeader, StatCard } from '@/components/shared/CommonUI';
 import { Disc, RotateCw, Wrench, CircleDollarSign, TrendingDown } from 'lucide-react';
 import { useFleetStore } from '@/modules/transport/store/fleetStore';
 import { Badge, FilterSelect, SearchInput, EmptyRow, SectionCard, BadgeVariant } from '@/modules/transport/components/Common';
+import AddTyreDialog from '@/modules/transport/components/AddTyreDialog';
 import { formatCurrency, formatDate } from '@/modules/transport/utils/format';
 
 const tyreStatusVariant = (s: string): BadgeVariant => s === 'Good' ? 'success' : s === 'Worn' ? 'warning' : s === 'Retread' ? 'info' : s === 'Punctured' ? 'destructive' : 'default';
@@ -14,6 +15,7 @@ export default function TyreManagementPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [addOpen, setAddOpen] = useState(false);
 
   const tyres = useMemo(() => [...store.tyres].sort((a, b) => a.currentTreadMm / a.initialTreadMm - b.currentTreadMm / b.initialTreadMm), [store.tyres]);
 
@@ -40,7 +42,7 @@ export default function TyreManagementPage() {
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Tyre Management" description="Tread wear, lifecycle cost, and rotation tracking per asset">
         <div className="flex gap-2">
-          <button className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Fit Tyre</button>
+          <button onClick={() => setAddOpen(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Fit Tyre</button>
         </div>
       </PageHeader>
 
@@ -134,6 +136,8 @@ export default function TyreManagementPage() {
           </div>
         </SectionCard>
       </div>
+
+      <AddTyreDialog open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }

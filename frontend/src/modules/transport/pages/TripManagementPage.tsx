@@ -3,6 +3,7 @@ import { PageHeader, StatCard } from '@/components/shared/CommonUI';
 import { Route, MapPin, Package, CheckCircle2, Clock, ArrowRight, Loader2 } from 'lucide-react';
 import { useFleetStore } from '@/modules/transport/store/fleetStore';
 import { Badge, FilterSelect, SearchInput, EmptyRow, SectionCard, BadgeVariant } from '@/modules/transport/components/Common';
+import AddTripDialog from '@/modules/transport/components/AddTripDialog';
 import { formatCurrency, formatDate, formatKm } from '@/modules/transport/utils/format';
 
 const tripStatusVariant = (s: string): BadgeVariant => s === 'Completed' ? 'success' : s === 'In Transit' ? 'info' : s === 'Pending' ? 'warning' : 'destructive';
@@ -10,6 +11,7 @@ const tripStatusVariant = (s: string): BadgeVariant => s === 'Completed' ? 'succ
 export default function TripManagementPage() {
   const store = useFleetStore();
   useEffect(() => { store.init(); }, []);
+  const [addOpen, setAddOpen] = useState(false);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -36,7 +38,7 @@ export default function TripManagementPage() {
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Trip Management" description="Track shipments from dispatch to delivery">
         <div className="flex flex-wrap gap-2">
-          <button className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <button onClick={() => setAddOpen(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Route className="w-4 h-4" /> Dispatch Trip
           </button>
         </div>
@@ -93,6 +95,8 @@ export default function TripManagementPage() {
           }) : <EmptyRow colSpan={1} message="No trips match the current filters." />}
         </div>
       </SectionCard>
+
+      <AddTripDialog open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }

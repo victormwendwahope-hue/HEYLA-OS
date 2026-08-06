@@ -3,6 +3,7 @@ import { PageHeader, StatCard } from '@/components/shared/CommonUI';
 import { CalendarClock, CheckCircle2, AlertTriangle, FileText, CalendarDays, Camera } from 'lucide-react';
 import { useFleetStore } from '@/modules/transport/store/fleetStore';
 import { Badge, FilterSelect, EmptyRow, SectionCard, BadgeVariant } from '@/modules/transport/components/Common';
+import AddMaintenanceDialog from '@/modules/transport/components/AddMaintenanceDialog';
 import { formatDate, daysUntil, formatKm } from '@/modules/transport/utils/format';
 import { daysAgo } from '@/modules/transport/utils/health';
 
@@ -14,6 +15,7 @@ export default function PreventiveMaintenancePage() {
 
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [addOpen, setAddOpen] = useState(false);
 
   const schedules = useMemo(() => [...store.maintenance].sort((a, b) => daysUntil(a.nextDueDate) - daysUntil(b.nextDueDate)), [store.maintenance]);
 
@@ -32,7 +34,7 @@ export default function PreventiveMaintenancePage() {
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Preventive Maintenance" description="Scheduled service intervals to prevent costly breakdowns">
         <div className="flex flex-wrap gap-2">
-          <button className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <button onClick={() => setAddOpen(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Camera className="w-4 h-4" /> Log Service
           </button>
         </div>
@@ -125,6 +127,8 @@ export default function PreventiveMaintenancePage() {
           </div>
         </div>
       </div>
+
+      <AddMaintenanceDialog open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }

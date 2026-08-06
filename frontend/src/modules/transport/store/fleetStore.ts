@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { seedFleetData, FleetDatabase } from '@/modules/transport/data/mockData';
 import { buildVehicleHealth, VehicleHealth } from '@/modules/transport/utils/health';
-import { Vehicle, Driver, HeavyEquipment, WorkOrder, Breakdown, MaintenanceSchedule } from '@/modules/transport/types';
+import { Vehicle, Driver, HeavyEquipment, WorkOrder, Breakdown, MaintenanceSchedule, Trip, Tyre, ComplianceAlert } from '@/modules/transport/types';
 
 interface FleetState extends FleetDatabase {
   health: Record<string, VehicleHealth>;
@@ -17,6 +17,9 @@ interface FleetState extends FleetDatabase {
   updateWorkOrder: (w: WorkOrder) => void;
   addBreakdown: (b: Breakdown) => void;
   addMaintenance: (m: MaintenanceSchedule) => void;
+  addTrip: (t: Trip) => void;
+  addTyre: (t: Tyre) => void;
+  acknowledgeAlert: (id: string) => void;
 }
 
 export const useFleetStore = create<FleetState>((set, get) => ({
@@ -81,5 +84,17 @@ export const useFleetStore = create<FleetState>((set, get) => ({
 
   addMaintenance: (m) => {
     set({ maintenance: [m, ...get().maintenance] });
+  },
+
+  addTrip: (t) => {
+    set({ trips: [t, ...get().trips] });
+  },
+
+  addTyre: (t) => {
+    set({ tyres: [t, ...get().tyres] });
+  },
+
+  acknowledgeAlert: (id) => {
+    set({ complianceAlerts: get().complianceAlerts.map((a) => (a.id === id ? { ...a, status: 'Acknowledged' } : a)) });
   },
 }));

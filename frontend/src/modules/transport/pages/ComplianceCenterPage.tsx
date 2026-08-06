@@ -97,8 +97,12 @@ export default function ComplianceCenterPage() {
                   </div>
                   <p className="text-sm text-muted-foreground">{a.message}</p>
                   <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                    <span>Vehicle: {v?.name} ({v?.plate})</span>
-                    <button className="text-primary font-medium hover:underline ml-auto">Acknowledge</button>
+                    <span>Vehicle: {v ? `${v.name} (${v.plate})` : '—'}</span>
+                    {a.status !== 'Resolved' && (
+                      <button onClick={() => store.acknowledgeAlert(a.id)} className="text-primary font-medium hover:underline ml-auto">
+                        {a.status === 'Acknowledged' ? 'Acknowledged' : 'Acknowledge'}
+                      </button>
+                    )}
                   </div>
                 </div>
               );
