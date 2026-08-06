@@ -103,12 +103,49 @@ class NetworkingGrowthController(http.Controller):
             'communityId': str(p.community_id.id),
             'authorId': str(p.author_id.id) if p.author_id else '',
             'authorName': p.author_name or '',
+            'authorAvatar': p.author_avatar or '',
             'content': p.content or '',
             'image': p.image or '',
+            'video': p.video or '',
+            'mediaType': p.media_type or '',
             'linkUrl': p.link_url or '',
             'likes': p.like_count or 0,
             'liked': liked,
             'createdAt': p.created_at.isoformat() if p.created_at else '',
+        }
+
+    def _help_to_json(self, h, user=None):
+        return {
+            'id': str(h.id),
+            'communityId': str(h.community_id.id),
+            'authorId': str(h.author_id.id) if h.author_id else '',
+            'authorName': h.author_name or '',
+            'authorAvatar': h.author_avatar or '',
+            'title': h.title or '',
+            'description': h.description or '',
+            'category': h.category or 'general',
+            'status': h.status or 'open',
+            'image': h.image or '',
+            'video': h.video or '',
+            'mediaType': h.media_type or '',
+            'offerCount': h.offer_count or 0,
+            'createdAt': h.created_at.isoformat() if h.created_at else '',
+            'resolvedAt': h.resolved_at.isoformat() if h.resolved_at else '',
+            'replies': [self._help_reply_to_json(r) for r in h.reply_ids],
+        }
+
+    def _help_reply_to_json(self, r):
+        return {
+            'id': str(r.id),
+            'helpId': str(r.help_id.id),
+            'authorId': str(r.author_id.id) if r.author_id else '',
+            'authorName': r.author_name or '',
+            'authorAvatar': r.author_avatar or '',
+            'content': r.content or '',
+            'image': r.image or '',
+            'video': r.video or '',
+            'mediaType': r.media_type or '',
+            'createdAt': r.created_at.isoformat() if r.created_at else '',
         }
 
     def _event_to_json(self, e, user=None):
@@ -365,10 +402,12 @@ class NetworkingGrowthController(http.Controller):
         if not community.exists():
             return _json_error('Not found', 404)
         posts = request.env['heyla.network.community.post'].sudo().search([('community_id', '=', community.id)], order='id desc', limit=50)
+        helps = request.env['heyla.network.community.help'].sudo().search([('community_id', '=', community.id)], order='id desc', limit=50)
         members = [{'id': str(m.id), 'name': m.name or '', 'avatar': m.avatar or ''} for m in community.member_ids[:24]]
         return http.Response(json.dumps({
             **self._community_to_json(community, user),
             'posts': [self._community_post_to_json(p, user) for p in posts],
+            'help': [self._help_to_json(h, user) for h in helps],
             'members': members,
         }), content_type='application/json', status=200)
 
@@ -423,9 +462,82 @@ class NetworkingGrowthController(http.Controller):
             'author_id': user.id,
             'content': content,
             'image': data.get('image', ''),
+            'video': data.get('video', ''),
+            'media_type': data.get('mediaType', ''),
             'link_url': data.get('linkUrl', ''),
         })
         return http.Response(json.dumps(self._community_post_to_json(post, user)), content_type='application/json', status=201)
+
+    @http.route('/api/network/communities/<int:community_id>/help', type='http', auth='none', methods=['POST'], csrf=False)
+    def create_community_help(self, community_id):
+        return _auth_required(lambda: self._create_community_help(community_id))()
+
+    def _create_community_help(self, community_id):
+        user = _get_user()
+        data = _load_json()
+        if data is None:
+            return _json_error('Invalid data')
+        community = request.env['heyla.network.community'].sudo().browse(community_id)
+        if not community.exists():
+            return _json_error('Not found', 404)
+        if user not in community.member_ids and user.role != 'admin':
+            return _json_error('Join the community to ask for help', 403)
+        title = (data.get('title') or '').strip()
+        if not title:
+            return _json_error('Title required')
+        help_rec = request.env['heyla.network.community.help'].sudo().create({
+            'community_id': community.id,
+            'author_id': user.id,
+            'title': title,
+            'description': data.get('description', ''),
+            'category': data.get('category', 'general'),
+            'image': data.get('image', ''),
+            'video': data.get('video', ''),
+            'media_type': data.get('mediaType', ''),
+            'status': 'open',
+        })
+        return http.Response(json.dumps(self._help_to_json(help_rec, user)), content_type='application/json', status=201)
+
+    @http.route('/api/network/communities/<int:community_id>/help/<int:help_id>/offer', type='http', auth='none', methods=['POST'], csrf=False)
+    def offer_community_help(self, community_id, help_id):
+        return _auth_required(lambda: self._offer_community_help(community_id, help_id))()
+
+    def _offer_community_help(self, community_id, help_id):
+        user = _get_user()
+        data = _load_json() or {}
+        help_rec = request.env['heyla.network.community.help'].sudo().browse(help_id)
+        if not help_rec.exists() or help_rec.community_id.id != community_id:
+            return _json_error('Not found', 404)
+        if help_rec.status == 'resolved':
+            return _json_error('This request has been resolved', 400)
+        content = (data.get('content') or '').strip()
+        if not content:
+            return _json_error('Offer message required')
+        reply = request.env['heyla.network.community.help.reply'].sudo().create({
+            'help_id': help_rec.id,
+            'author_id': user.id,
+            'content': content,
+            'image': data.get('image', ''),
+            'video': data.get('video', ''),
+            'media_type': data.get('mediaType', ''),
+        })
+        return http.Response(json.dumps(self._help_reply_to_json(reply)), content_type='application/json', status=201)
+
+    @http.route('/api/network/communities/<int:community_id>/help/<int:help_id>/resolve', type='http', auth='none', methods=['POST'], csrf=False)
+    def resolve_community_help(self, community_id, help_id):
+        return _auth_required(lambda: self._resolve_community_help(community_id, help_id))()
+
+    def _resolve_community_help(self, community_id, help_id):
+        user = _get_user()
+        help_rec = request.env['heyla.network.community.help'].sudo().browse(help_id)
+        if not help_rec.exists() or help_rec.community_id.id != community_id:
+            return _json_error('Not found', 404)
+        community = help_rec.community_id
+        if help_rec.author_id.id != user.id and community.created_by.id != user.id and user.role != 'admin':
+            return _json_error('Forbidden', 403)
+        if help_rec.status == 'open':
+            help_rec.sudo().write({'status': 'resolved', 'resolved_at': datetime.now()})
+        return http.Response(json.dumps(self._help_to_json(help_rec, user)), content_type='application/json', status=200)
 
     @http.route('/api/network/communities/<int:community_id>/posts/<int:post_id>', type='http', auth='none', methods=['DELETE'], csrf=False)
     def delete_community_post(self, community_id, post_id):

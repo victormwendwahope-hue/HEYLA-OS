@@ -282,19 +282,23 @@ class NtvController(http.Controller):
                 'title': data.get('title', ''),
                 'description': data.get('description'),
                 'thumbnail': data.get('thumbnail'),
+                'video': data.get('video'),
+                'media_type': data.get('mediaType', ''),
                 'technologies': data.get('technologies'),
                 'github_url': data.get('githubUrl'),
                 'live_url': data.get('liveUrl'),
             })
             return http.Response(json.dumps({
                 'id': project.id, 'title': project.title, 'description': project.description,
-                'thumbnail': project.thumbnail, 'technologies': project.technologies,
+                'thumbnail': project.thumbnail, 'video': project.video, 'mediaType': project.media_type,
+                'technologies': project.technologies,
                 'githubUrl': project.github_url, 'liveUrl': project.live_url,
             }), content_type='application/json', status=201)
 
         projects = request.env['ntv.project'].sudo().search([], limit=30)
         return http.Response(json.dumps([{
             'id': p.id, 'title': p.title, 'description': p.description, 'thumbnail': p.thumbnail,
+            'video': p.video, 'mediaType': p.media_type,
             'technologies': p.technologies, 'githubUrl': p.github_url, 'liveUrl': p.live_url,
             'authorName': p.author_name, 'likes': p.likes_count, 'comments': p.comments_count,
         } for p in projects]), content_type='application/json')

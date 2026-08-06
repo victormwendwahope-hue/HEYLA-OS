@@ -135,8 +135,14 @@ class NetworkCommunityPost(models.Model):
     community_id = fields.Many2one('heyla.network.community', string='Community', required=True, ondelete='cascade')
     author_id = fields.Many2one('heyla.user', string='Author', required=True)
     author_name = fields.Char(string='Author Name', related='author_id.name', store=True)
+    author_avatar = fields.Char(string='Author Avatar', related='author_id.avatar', store=True)
     content = fields.Text(string='Content', required=True)
     image = fields.Char(string='Image URL')
+    video = fields.Char(string='Video URL')
+    media_type = fields.Selection([
+        ('image', 'Image'),
+        ('video', 'Video'),
+    ], string='Media Type')
     link_url = fields.Char(string='Link URL')
     created_at = fields.Datetime(string='Created At', default=fields.Datetime.now)
     like_count = fields.Integer(string='Likes', compute='_compute_likes', store=True)
@@ -146,6 +152,68 @@ class NetworkCommunityPost(models.Model):
     def _compute_likes(self):
         for rec in self:
             rec.like_count = len(rec.like_ids)
+
+
+class NetworkCommunityHelp(models.Model):
+    _name = 'heyla.network.community.help'
+    _description = 'HEYLA Community Help Request'
+    _order = 'id desc'
+    _rec_name = 'title'
+
+    community_id = fields.Many2one('heyla.network.community', string='Community', required=True, ondelete='cascade')
+    author_id = fields.Many2one('heyla.user', string='Author', required=True)
+    author_name = fields.Char(string='Author Name', related='author_id.name', store=True)
+    author_avatar = fields.Char(string='Author Avatar', related='author_id.avatar', store=True)
+    title = fields.Char(string='Title', required=True)
+    description = fields.Text(string='Description')
+    category = fields.Selection([
+        ('tools', 'Tools & Equipment'),
+        ('safety', 'Safety & PPE'),
+        ('training', 'Training & Skills'),
+        ('jobs', 'Job & Opportunities'),
+        ('materials', 'Materials & Supplies'),
+        ('advice', 'Advice & Guidance'),
+        ('general', 'General'),
+    ], string='Category', default='general')
+    status = fields.Selection([
+        ('open', 'Open'),
+        ('resolved', 'Resolved'),
+    ], string='Status', default='open')
+    image = fields.Char(string='Image URL')
+    video = fields.Char(string='Video URL')
+    media_type = fields.Selection([
+        ('image', 'Image'),
+        ('video', 'Video'),
+    ], string='Media Type')
+    offer_count = fields.Integer(string='Offers', compute='_compute_offers', store=True)
+    reply_ids = fields.One2many('heyla.network.community.help.reply', 'help_id', string='Replies')
+    created_at = fields.Datetime(string='Created At', default=fields.Datetime.now)
+    resolved_at = fields.Datetime(string='Resolved At')
+
+    @api.depends('reply_ids')
+    def _compute_offers(self):
+        for rec in self:
+            rec.offer_count = len(rec.reply_ids)
+
+
+class NetworkCommunityHelpReply(models.Model):
+    _name = 'heyla.network.community.help.reply'
+    _description = 'HEYLA Community Help Offer'
+    _order = 'id asc'
+    _rec_name = 'content'
+
+    help_id = fields.Many2one('heyla.network.community.help', string='Help Request', required=True, ondelete='cascade')
+    author_id = fields.Many2one('heyla.user', string='Author', required=True)
+    author_name = fields.Char(string='Author Name', related='author_id.name', store=True)
+    author_avatar = fields.Char(string='Author Avatar', related='author_id.avatar', store=True)
+    content = fields.Text(string='Content', required=True)
+    image = fields.Char(string='Image URL')
+    video = fields.Char(string='Video URL')
+    media_type = fields.Selection([
+        ('image', 'Image'),
+        ('video', 'Video'),
+    ], string='Media Type')
+    created_at = fields.Datetime(string='Created At', default=fields.Datetime.now)
 
 
 class NetworkCommunityPostLike(models.Model):

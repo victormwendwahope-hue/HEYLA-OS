@@ -338,6 +338,9 @@ export const api = {
       post: (id: string, data: any) => api.post<any>(`/network/communities/${id}/posts`, data),
       deletePost: (id: string, postId: string) => api.delete<any>(`/network/communities/${id}/posts/${postId}`),
       likePost: (id: string, postId: string) => api.post<any>(`/network/communities/${id}/posts/${postId}/like`),
+      helpCreate: (id: string, data: any) => api.post<any>(`/network/communities/${id}/help`, data),
+      helpOffer: (id: string, helpId: string, data: any) => api.post<any>(`/network/communities/${id}/help/${helpId}/offer`, data),
+      helpResolve: (id: string, helpId: string) => api.post<any>(`/network/communities/${id}/help/${helpId}/resolve`),
     },
     events: {
       list: () => api.get<any>('/network/events'),

@@ -354,6 +354,11 @@ class NtvProject(models.Model):
     title = fields.Char(string='Project Title', required=True)
     description = fields.Text(string='Description')
     thumbnail = fields.Char(string='Thumbnail URL')
+    video = fields.Char(string='Video URL')
+    media_type = fields.Selection([
+        ('image', 'Image'),
+        ('video', 'Video'),
+    ], string='Media Type')
     technologies = fields.Text(string='Technologies Used')
     github_url = fields.Char(string='GitHub URL')
     live_url = fields.Char(string='Live Demo URL')

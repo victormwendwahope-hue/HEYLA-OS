@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
+import { Play } from 'lucide-react'
+import { MediaUploader } from './MediaUploader'
 
 const PB = '#0A66FF'
 const DN = '#071B4D'
 
 interface Project {
   id: number; title: string; description: string; thumbnail: string
+  video: string; mediaType: string
   technologies: string; githubUrl: string; liveUrl: string
   authorName: string; likes: number; comments: number
 }
@@ -23,6 +26,7 @@ export default function ProjectsPage() {
   const [showUpload, setShowUpload] = useState(false)
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({ title: '', description: '', technologies: '', githubUrl: '', liveUrl: '' })
+  const [media, setMedia] = useState<any>(null)
 
   useEffect(() => { fetchProjects() }, [])
 
@@ -37,10 +41,14 @@ export default function ProjectsPage() {
     e.preventDefault()
     if (!form.title) { toast.error('Title is required'); return }
     try {
-      await api.ntv.project.create(form)
+      await api.ntv.project.create({
+        ...form,
+        ...(media ? { thumbnail: media.mediaType === 'image' ? media.url : '', video: media.mediaType === 'video' ? media.url : '', mediaType: media.mediaType } : {}),
+      })
       toast.success('Project added!')
       setShowUpload(false)
       setForm({ title: '', description: '', technologies: '', githubUrl: '', liveUrl: '' })
+      setMedia(null)
       fetchProjects()
     } catch { toast.error('Failed to add project') }
   }
@@ -95,6 +103,10 @@ export default function ProjectsPage() {
                 <input value={form.liveUrl} onChange={(e) => setForm({ ...form, liveUrl: e.target.value })}
                   placeholder="https://..." className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: '#E2E8F0' }} />
               </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium mb-1" style={{ color: '#64748B' }}>Photo or Video (up to 1080p / 5 min)</label>
+                <MediaUploader value={media} onChange={setMedia} label="Add project photo / video" />
+              </div>
               <div className="sm:col-span-2 flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setShowUpload(false)} className="px-4 py-2 rounded-xl text-sm font-medium border" style={{ borderColor: '#E2E8F0' }}>Cancel</button>
                 <button type="submit" className="px-5 py-2 rounded-xl text-sm font-medium text-white" style={{ background: PB }}>Save Project</button>
@@ -131,11 +143,16 @@ export default function ProjectsPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((project) => (
               <div key={project.id} className="bg-white rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: '#E2E8F0' }}>
-                <div className="h-40 flex items-center justify-center text-5xl" style={{ background: '#F8FAFC' }}>
-                  {project.thumbnail ? (
+                <div className="h-40 flex items-center justify-center text-5xl relative" style={{ background: '#F8FAFC' }}>
+                  {project.mediaType === 'video' || project.video ? (
+                    <video src={project.video} className="w-full h-full object-cover" preload="metadata" />
+                  ) : project.thumbnail ? (
                     <img src={project.thumbnail} alt={project.title} className="w-full h-full object-cover" />
                   ) : (
                     <span>📂</span>
+                  )}
+                  {project.mediaType === 'video' && (
+                    <span className="absolute bottom-2 left-2 flex items-center gap-1 text-[10px] text-white bg-black/60 rounded-full px-2 py-0.5"><Play className="w-3 h-3" /> Video</span>
                   )}
                 </div>
                 <div className="p-4">

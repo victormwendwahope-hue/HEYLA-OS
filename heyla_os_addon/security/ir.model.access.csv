@@ -53,6 +53,8 @@ access_heyla_network_machine,heyla.network.machine,model_heyla_network_machine,b
 access_heyla_network_community,heyla.network.community,model_heyla_network_community,base.group_user,1,1,1,1
 access_heyla_network_community_post,heyla.network.community.post,model_heyla_network_community_post,base.group_user,1,1,1,1
 access_heyla_network_community_post_like,heyla.network.community.post.like,model_heyla_network_community_post_like,base.group_user,1,1,1,1
+access_heyla_network_community_help,heyla.network.community.help,model_heyla_network_community_help,base.group_user,1,1,1,1
+access_heyla_network_community_help_reply,heyla.network.community.help.reply,model_heyla_network_community_help_reply,base.group_user,1,1,1,1
 access_heyla_network_event,heyla.network.event,model_heyla_network_event,base.group_user,1,1,1,1
 access_heyla_network_event_attendee,heyla.network.event.attendee,model_heyla_network_event_attendee,base.group_user,1,1,1,1
 access_heyla_network_mentorship,heyla.network.mentorship,model_heyla_network_mentorship,base.group_user,1,1,1,1
