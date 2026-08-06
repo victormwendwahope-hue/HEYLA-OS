@@ -58,8 +58,8 @@ export function daysAgo(dateStr: string): number {
 }
 
 export interface FleetHealthContext {
-  fuels: FuelTransaction[];
-  maint: MaintenanceSchedule[];
+  fuelTransactions: FuelTransaction[];
+  maintenance: MaintenanceSchedule[];
   workOrders: WorkOrder[];
   tyres: Tyre[];
   breakdowns: Breakdown[];
@@ -71,13 +71,13 @@ export function buildVehicleHealth(
   vehicle: Vehicle,
   ctx: FleetHealthContext,
 ): VehicleHealth {
-  const vehicleFuels = ctx.fuels.filter((f) => f.vehicleId === vehicle.id);
+  const vehicleFuels = ctx.fuelTransactions.filter((f) => f.vehicleId === vehicle.id);
   const kplValues = vehicleFuels.filter((f) => f.kmPerLiter > 0).map((f) => f.kmPerLiter);
   const avgKpl = kplValues.length ? kplValues.reduce((a, b) => a + b, 0) / kplValues.length : null;
   const fuelEff = fuelEfficiencyScore(avgKpl, vehicle.type);
 
   // Maintenance compliance: share of maintenance items that are not overdue.
-  const maintItems = ctx.maint.filter((m) => m.vehicleId === vehicle.id);
+  const maintItems = ctx.maintenance.filter((m) => m.vehicleId === vehicle.id);
   const overdueCount = maintItems.filter((m) => m.status === 'Overdue' || m.status === 'Due Soon').length;
   const maintenanceScore = maintItems.length ? clamp(100 - (overdueCount / maintItems.length) * 100) : 70;
 
@@ -106,7 +106,7 @@ export function buildVehicleHealth(
   const score = computeHealthScore({ fuelEfficiency: fuelEff, maintenanceScore, breakdownScore, tyreScore, driverScore });
 
   const lastServiceDays = daysAgo(vehicle.lastService);
-  const upcomingMaintenance = ctx.maint.filter(
+  const upcomingMaintenance = ctx.maintenance.filter(
     (m) => m.vehicleId === vehicle.id && m.status === 'Due Soon',
   ).length;
   const openWorkOrders = ctx.workOrders.filter(
