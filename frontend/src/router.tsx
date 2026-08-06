@@ -44,6 +44,14 @@ import NetworkTapMessages from '@/pages/network-tap/MessagesPage';
 import NetworkTapNotifications from '@/pages/network-tap/NotificationsPage';
 import CVBuilderPage from '@/pages/network-tap/CVBuilderPage';
 import ProjectsPage from '@/pages/network-tap/ProjectsPage';
+import PassportPage from '@/pages/network-tap/PassportPage';
+import VerificationsPage from '@/pages/network-tap/VerificationsPage';
+import WorklogPage from '@/pages/network-tap/WorklogPage';
+import ReferencesPage from '@/pages/network-tap/ReferencesPage';
+import CommunitiesPage from '@/pages/network-tap/CommunitiesPage';
+import EventsPage from '@/pages/network-tap/EventsPage';
+import MentorshipPage from '@/pages/network-tap/MentorshipPage';
+import AiHubPage from '@/pages/network-tap/AiHubPage';
 import PaymentPage from '@/pages/payment/PaymentPage';
 import TransportPage from '@/pages/transport/TransportPage';
 import FuelPage from '@/pages/fuel/FuelPage';
@@ -206,6 +214,14 @@ const networkTapMessagesRoute = createRoute({ getParentRoute: () => ntvLayoutRou
 const networkTapNotificationsRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/notifications', component: NetworkTapNotifications });
 const networkTapCvRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/cv', component: CVBuilderPage });
 const networkTapProjectsRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/projects', component: ProjectsPage });
+const networkTapPassportRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/passport', component: PassportPage });
+const networkTapVerificationsRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/verifications', component: VerificationsPage });
+const networkTapWorklogRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/worklog', component: WorklogPage });
+const networkTapReferencesRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/references', component: ReferencesPage });
+const networkTapCommunitiesRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/communities', component: CommunitiesPage });
+const networkTapEventsRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/events', component: EventsPage });
+const networkTapMentorshipRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/mentorship', component: MentorshipPage });
+const networkTapAiRoute = createRoute({ getParentRoute: () => ntvLayoutRoute, path: '/network-tap/ai', component: AiHubPage });
 
 const notFoundRoute = createRoute({ getParentRoute: () => rootRoute, path: '/$', component: NotFound });
 
@@ -235,6 +251,9 @@ const routeTree = rootRoute.addChildren([
     networkTapDashboardRoute, networkTapProfileRoute, networkTapJobsRoute,
     networkTapConnectionsRoute, networkTapMessagesRoute, networkTapNotificationsRoute,
     networkTapCvRoute, networkTapProjectsRoute,
+    networkTapPassportRoute, networkTapVerificationsRoute, networkTapWorklogRoute,
+    networkTapReferencesRoute, networkTapCommunitiesRoute, networkTapEventsRoute,
+    networkTapMentorshipRoute, networkTapAiRoute,
   ]),
   notFoundRoute,
 ]);

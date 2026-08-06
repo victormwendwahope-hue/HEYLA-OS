@@ -290,6 +290,74 @@ export const api = {
     },
   },
 
+  network: {
+    verifications: {
+      list: () => api.get<any>('/network/verifications'),
+      user: (userId: string) => api.get<any>(`/network/verifications/${userId}`),
+      create: (data: any) => api.post<any>('/network/verifications', data),
+      update: (id: string, data: any) => api.patch<any>(`/network/verifications/${id}`, data),
+      remove: (id: string) => api.delete<any>(`/network/verifications/${id}`),
+    },
+    references: {
+      list: () => api.get<any>('/network/references'),
+      request: (data: any) => api.post<any>('/network/references/request', data),
+      submit: (id: string, data: any) => api.post<any>(`/network/references/${id}/submit`, data),
+      verify: (id: string) => api.post<any>(`/network/references/${id}/verify`),
+    },
+    worklog: {
+      list: () => api.get<any>('/network/worklog'),
+      create: (data: any) => api.post<any>('/network/worklog', data),
+      remove: (id: string) => api.delete<any>(`/network/worklog/${id}`),
+    },
+    reputation: {
+      mine: () => api.get<any>('/network/reputation'),
+      user: (userId: string) => api.get<any>(`/network/reputation/${userId}`),
+    },
+    passport: {
+      get: () => api.get<any>('/network/passport'),
+      update: (data: any) => api.post<any>('/network/passport', data),
+    },
+    projects: {
+      list: () => api.get<any[]>('/network/projects'),
+      user: (userId: string) => api.get<any[]>(`/network/projects/${userId}`),
+      create: (data: any) => api.post<any>('/network/projects', data),
+      remove: (id: string) => api.delete<any>(`/network/projects/${id}`),
+    },
+    machines: {
+      list: () => api.get<any[]>('/network/machines'),
+      create: (data: any) => api.post<any>('/network/machines', data),
+      remove: (id: string) => api.delete<any>(`/network/machines/${id}`),
+    },
+    endorse: (skillId: string) => api.post<any>(`/network/skills/${skillId}/endorse`),
+    communities: {
+      list: () => api.get<any>('/network/communities'),
+      get: (id: string) => api.get<any>(`/network/communities/${id}`),
+      create: (data: any) => api.post<any>('/network/communities', data),
+      join: (id: string) => api.post<any>(`/network/communities/${id}/join`),
+      leave: (id: string) => api.post<any>(`/network/communities/${id}/leave`),
+      post: (id: string, data: any) => api.post<any>(`/network/communities/${id}/posts`, data),
+      deletePost: (id: string, postId: string) => api.delete<any>(`/network/communities/${id}/posts/${postId}`),
+      likePost: (id: string, postId: string) => api.post<any>(`/network/communities/${id}/posts/${postId}/like`),
+    },
+    events: {
+      list: () => api.get<any>('/network/events'),
+      create: (data: any) => api.post<any>('/network/events', data),
+      register: (id: string) => api.post<any>(`/network/events/${id}/register`),
+      checkin: (id: string) => api.post<any>(`/network/events/${id}/checkin`),
+    },
+    mentorship: {
+      list: () => api.get<any>('/network/mentorship'),
+      mentors: () => api.get<any[]>('/network/mentors'),
+      request: (data: any) => api.post<any>('/network/mentorship/request', data),
+      respond: (id: string, accept: boolean) => api.post<any>(`/network/mentorship/${id}/respond`, { accept }),
+      progress: (id: string, data: any) => api.post<any>(`/network/mentorship/${id}/progress`, data),
+    },
+    matchedJobs: () => api.get<any>('/network/jobs/matched'),
+    careerCoach: () => api.get<any>('/network/career-coach'),
+    resume: (format: string) => api.post<any>('/network/resume/generate', { format }),
+    recruiterSearch: (query: string) => api.post<any>('/network/recruiter/search', { query }),
+  },
+
   admin: {
     auditLogs: (q?: { limit?: number; offset?: number; q?: string }) => {
       const params = new URLSearchParams(q as Record<string, string>).toString();
