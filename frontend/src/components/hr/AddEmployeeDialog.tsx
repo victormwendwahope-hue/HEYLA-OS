@@ -41,7 +41,6 @@ type Step = 'form' | 'documents';
 
 export default function AddEmployeeDialog({ open, onClose }: Props) {
   const addEmployee = useEmployeeStore((s) => s.addEmployee);
-  const employees = useEmployeeStore((s) => s.employees);
   const [step, setStep] = useState<Step>('form');
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -62,14 +61,6 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
   const gross = (Number(form.baseSalary) || 0) + (Number(form.housingAllowance) || 0) + (Number(form.transportAllowance) || 0) + (Number(form.medicalAllowance) || 0) + (Number(form.otherAllowances) || 0);
 
   const update = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
-
-  const generatePayrollNumber = () => {
-    const max = employees.reduce((m, e) => {
-      const num = parseInt((e.payrollNumber || '').replace('PAY-', ''), 10);
-      return isNaN(num) ? m : Math.max(m, num);
-    }, 0);
-    return `PAY-${String(max + 1).padStart(3, '0')}`;
-  };
 
   const reset = () => {
     setForm({
@@ -95,7 +86,7 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.firstName || !form.lastName || !form.email) {
       toast.error('Please fill required fields');
@@ -105,7 +96,7 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
     const emp = {
       ...form,
       id: Date.now().toString(),
-      payrollNumber: generatePayrollNumber(),
+      payrollNumber: '',
       avatar: avatarData || undefined,
       baseSalary: Number(form.baseSalary) || 0,
       hourlyRate: Number(form.hourlyRate) || 0,
@@ -116,9 +107,10 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
       status: 'Active' as const,
       startDate: new Date().toISOString().split('T')[0],
     };
-    addEmployee(emp);
-    setCreatedId(emp.id);
-    toast.success(`${form.firstName} ${form.lastName} added!`);
+    const created = await addEmployee(emp);
+    if (!created) return;
+    setCreatedId(created.id);
+    toast.success(`${form.firstName} ${form.lastName} added — ${created.payrollNumber}`);
     setStep('documents');
   };
 
@@ -132,17 +124,20 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
     setUploading(true);
     try {
       const token = getToken();
-      const formData = new FormData();
-      files.forEach((f) => formData.append('files', f));
-      const res = await fetch(`${apiBaseUrl()}/employee-documents/upload-multiple/${createdId}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      if (!res.ok) throw new Error('Upload failed');
-      const docs = await res.json();
-      setUploadedCount(docs.length);
-      toast.success(`${docs.length} document(s) uploaded`);
+      let uploaded = 0;
+      for (const f of files) {
+        const formData = new FormData();
+        formData.append('file', f);
+        formData.append('category', 'Other');
+        const res = await fetch(`${apiBaseUrl()}/employee-documents/upload-multiple/${createdId}`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+        if (res.ok) uploaded += 1;
+      }
+      setUploadedCount(uploaded);
+      toast.success(`${uploaded} of ${files.length} document(s) uploaded`);
       reset();
       onClose();
     } catch {

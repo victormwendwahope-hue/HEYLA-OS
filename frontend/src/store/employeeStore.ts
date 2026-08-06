@@ -9,7 +9,7 @@ interface EmployeeState {
   loading: boolean;
   error: string | null;
   fetchEmployees: () => Promise<void>;
-  addEmployee: (emp: Omit<Employee, 'id' | 'payrollNumber'>) => Promise<void>;
+  addEmployee: (emp: Omit<Employee, 'id' | 'payrollNumber'>) => Promise<Employee | null>;
   updateEmployee: (id: string, data: Partial<Employee>) => Promise<void>;
   removeEmployee: (id: string) => Promise<void>;
   clearError: () => void;
@@ -40,10 +40,12 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       const created = await api.post<Employee>('/employees', emp);
       set((s) => ({ employees: [created, ...s.employees], loading: false }));
       toast.success('Employee created successfully');
+      return created;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to create employee';
       set({ error: msg, loading: false });
       toast.error(msg);
+      return null;
     }
   },
 

@@ -84,7 +84,7 @@ export default function TripManagementPage() {
                   <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-destructive" /><span>{t.destination}</span></div>
                 </div>
                 <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Vehicle: {v?.name || '—'} ({v?.plate})</span>
+                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Vehicle: {v ? `${v.name} (${v.plate})` : '—'}</span>
                   <span className="flex items-center gap-1">Driver: {d?.name || '—'}</span>
                   <span className="ml-auto font-medium text-foreground">Revenue: {formatCurrency(t.revenue)}</span>
                 </div>

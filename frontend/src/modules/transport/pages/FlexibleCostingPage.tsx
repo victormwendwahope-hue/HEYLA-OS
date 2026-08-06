@@ -138,7 +138,7 @@ export default function FlexibleCostingPage() {
               </div>
             </div>
             <div className="rounded-xl p-3 text-xs border border-border space-y-1.5">
-              <div className="flex justify-between"><span className="text-muted-foreground">Cost per km</span><span className="font-semibold">{formatCurrency(totalCost / distance)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Cost per km</span><span className="font-semibold">{formatCurrency(distance > 0 ? totalCost / distance : 0)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Revenue per km</span><span className="font-semibold">{formatCurrency(ratePerKm)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Fleet actual cost/km</span><span className="font-semibold">{formatCurrency(fleetCostPerKm)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Load factor</span><span className="font-semibold">{loadT} t</span></div>

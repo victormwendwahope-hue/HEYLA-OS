@@ -82,7 +82,7 @@ export default function WorkshopPage() {
                         className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer">
                         <td className="px-3 py-3 font-mono text-xs">{w.reference}</td>
                         <td className="px-3 py-3 font-medium">{w.title}</td>
-                        <td className="px-3 py-3 text-muted-foreground">{v?.name} <span className="font-mono text-xs">({v?.plate})</span></td>
+                        <td className="px-3 py-3 text-muted-foreground">{v ? `${v.name} (${v.plate})` : '—'}</td>
                         <td className="px-3 py-3"><Badge text={w.priority} variant={statusVariantMap.priority[w.priority]} /></td>
                         <td className="px-3 py-3"><Badge text={w.status} variant={statusVariantMap.workOrder[w.status]} /></td>
                         <td className="px-3 py-3 font-medium">{formatCurrency(w.totalCost)}</td>

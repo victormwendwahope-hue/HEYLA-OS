@@ -80,7 +80,7 @@ export default function BreakdownPage() {
                     <p className="text-sm text-muted-foreground mb-2">{b.description}</p>
                     <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-primary" /> {b.location}</span>
-                      <span>Vehicle: {v?.name} ({v?.plate})</span>
+                      <span>Vehicle: {v ? `${v.name} (${v.plate})` : '—'}</span>
                       <span>Driver: {d?.name || '—'}</span>
                       <span>Downtime: {b.downtimeHours} h</span>
                       <span className="ml-auto font-medium text-foreground">Repair: {b.cost ? formatCurrency(b.cost) : '—'}</span>

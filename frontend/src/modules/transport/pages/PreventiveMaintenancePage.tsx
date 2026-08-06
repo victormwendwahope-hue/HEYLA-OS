@@ -111,9 +111,6 @@ export default function PreventiveMaintenancePage() {
         <div className="glass rounded-xl p-5">
           <h3 className="font-semibold mb-3 flex items-center gap-2">Vehicles Needing Service</h3>
           <div className="space-y-2">
-            {store.maintenance.filter((m) => m.status !== 'Up to Date')
-              .reduce((acc: Record<string, number>, m) => { acc[m.vehicleId] = (acc[m.vehicleId] || 0) + 1; return acc; }, {})
-              && null}
             {Object.entries(store.maintenance.filter((m) => m.status !== 'Up to Date')
               .reduce((acc: Record<string, number>, m) => { acc[m.vehicleId] = (acc[m.vehicleId] || 0) + 1; return acc; }, {}))
               .sort((a, b) => b[1] - a[1]).slice(0, 6).map(([vid, count]) => {

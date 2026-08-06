@@ -101,7 +101,7 @@ export default function AddDriverDialog({ open, onClose }: Props) {
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">JPG/PNG — used as the driver&apos;s avatar</p>
                 <input type="file" accept="image/*" capture="user"
-                  onChange={(e) => onDropPhoto(e.target.files?.[0])}
+                  onChange={(e) => onPickPhoto(e.target.files?.[0])}
                   className="hidden" />
               </label>
             </div>
