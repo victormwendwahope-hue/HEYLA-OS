@@ -24,6 +24,7 @@ interface AuthState {
   linkedinRegister: (accessToken: string) => Promise<void>;
   googleRegister: (data: {
     credential: string;
+    accountType?: 'company' | 'individual';
     facilityName?: string;
     facilityLogo?: string;
   }) => Promise<void>;
@@ -212,7 +213,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  googleRegister: async (data: { credential: string; facilityName?: string; facilityLogo?: string }) => {
+  googleRegister: async (data: { credential: string; accountType?: 'company' | 'individual'; facilityName?: string; facilityLogo?: string }) => {
     set({ isLoading: true, error: null });
     try {
       if (!apiEnabled()) throw new ApiError('API not configured', 0, null);

@@ -1,6 +1,6 @@
 from odoo import http
 from odoo.http import request
-from .auth import _auth_required
+from .auth import _auth_required, _admin_required
 import json
 
 
@@ -96,7 +96,7 @@ class JobsController(http.Controller):
 
     @http.route('/api/jobs/<int:job_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_job(self, job_id):
-        return _auth_required(lambda: self._update_job(job_id))()
+        return _admin_required(lambda: self._update_job(job_id))()
 
     def _update_job(self, job_id):
         rec = request.env['heyla.job'].sudo().browse(job_id)
@@ -128,7 +128,7 @@ class JobsController(http.Controller):
 
     @http.route('/api/jobs/<int:job_id>', type='http', auth='none', methods=['DELETE'], csrf=False)
     def delete_job(self, job_id):
-        return _auth_required(lambda: self._delete_job(job_id))()
+        return _admin_required(lambda: self._delete_job(job_id))()
 
     def _delete_job(self, job_id):
         rec = request.env['heyla.job'].sudo().browse(job_id)
@@ -187,14 +187,14 @@ class JobsController(http.Controller):
     # ---- Applicants (internal management) ----
     @http.route('/api/applicants', type='http', auth='none', methods=['GET'], csrf=False)
     def get_applicants(self):
-        return _auth_required(lambda: http.Response(
+        return _admin_required(lambda: http.Response(
             json.dumps([self._applicant_to_json(a) for a in request.env['heyla.job.applicant'].sudo().search([])]),
             content_type='application/json', status=200,
         ))()
 
     @http.route('/api/applicants/<int:app_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_applicant(self, app_id):
-        return _auth_required(lambda: self._update_applicant(app_id))()
+        return _admin_required(lambda: self._update_applicant(app_id))()
 
     def _update_applicant(self, app_id):
         rec = request.env['heyla.job.applicant'].sudo().browse(app_id)

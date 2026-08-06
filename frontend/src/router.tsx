@@ -72,20 +72,30 @@ const CountryFallback = () => (
   </div>
 );
 
+function readStoredUser(): { role?: string; subscription?: { status?: string } } | null {
+  try {
+    const userStr = localStorage.getItem('heyla_user');
+    return userStr ? JSON.parse(userStr) : null;
+  } catch {
+    return null;
+  }
+}
+
 function requireAuth() {
   const token = localStorage.getItem('heyla_token');
   if (!token) throw redirect({ to: '/login' });
-  try {
-    const userStr = localStorage.getItem('heyla_user');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      const sub = user?.subscription;
-      if (sub && sub.status === 'expired') {
-        throw redirect({ to: '/payment' });
-      }
-    }
-  } catch {
-    // ignore parse errors
+  const user = readStoredUser();
+  const sub = user?.subscription;
+  if (sub && sub.status === 'expired') {
+    throw redirect({ to: '/payment' });
+  }
+}
+
+function requireCompany() {
+  requireAuth();
+  // Individual accounts only have access to the networking platform
+  if (readStoredUser()?.role === 'individual') {
+    throw redirect({ to: '/network-tap/dashboard' });
   }
 }
 
@@ -147,7 +157,7 @@ const countryRoutes = COUNTRY_CODES.flatMap((code) => [
 const protectedLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'protected',
-  beforeLoad: () => requireAuth(),
+  beforeLoad: () => requireCompany(),
   component: () => <AppLayoutWithBot />,
 });
 

@@ -4,6 +4,8 @@ import json
 import hashlib
 import secrets
 import os
+import time
+from collections import defaultdict
 from datetime import datetime
 
 try:
@@ -61,8 +63,6 @@ def _auth_required(f):
         token_hash = _hash_token(token)
         user = request.env['heyla.user'].sudo().search([('token', '=', token_hash)], limit=1)
         if not user:
-            user = request.env['heyla.user'].sudo().search([('password', '=', token)], limit=1)
-        if not user:
             return http.Response(
                 json.dumps({'error': 'Invalid or expired token'}),
                 content_type='application/json', status=401,
@@ -87,6 +87,48 @@ def _auth_required(f):
         request.heyla_user = user
         return f(*args, **kwargs)
     return wrapper
+
+
+def _admin_required(f):
+    def wrapper(*args, **kwargs):
+        gate = _auth_required(lambda: None)
+        resp = gate()
+        if resp is not None:
+            return resp
+        if request.heyla_user.role != 'admin':
+            return http.Response(
+                json.dumps({'error': 'Admin access required'}),
+                content_type='application/json', status=403,
+            )
+        return f(*args, **kwargs)
+    return wrapper
+
+
+_LOGIN_WINDOW_SECONDS = 15 * 60
+_LOGIN_MAX_FAILURES = 5
+_login_attempts = defaultdict(lambda: {'fails': 0, 'reset': 0})
+
+
+def _login_throttled(key):
+    now = time.time()
+    rec = _login_attempts[key]
+    if now >= rec['reset']:
+        rec['fails'] = 0
+        rec['reset'] = now + _LOGIN_WINDOW_SECONDS
+    return rec['fails'] >= _LOGIN_MAX_FAILURES
+
+
+def _login_failure(key):
+    now = time.time()
+    rec = _login_attempts[key]
+    if now >= rec['reset']:
+        rec['fails'] = 0
+        rec['reset'] = now + _LOGIN_WINDOW_SECONDS
+    rec['fails'] += 1
+
+
+def _login_success(key):
+    _login_attempts.pop(key, None)
 
 
 def _user_to_json(user):
@@ -140,14 +182,21 @@ class AuthController(http.Controller):
             password = data.get('password', '')
             if not email or not password:
                 return http.Response(json.dumps({'error': 'Invalid credentials'}), content_type='application/json', status=401)
+            client_ip = request.httprequest.remote_addr or 'unknown'
+            throttle_key = f'{email}|{client_ip}'
+            if _login_throttled(throttle_key):
+                return http.Response(json.dumps({'error': 'Too many attempts, try again later'}), content_type='application/json', status=429)
             user = request.env['heyla.user'].sudo().search([('email', '=', email)], limit=1)
             if not user:
+                _login_failure(throttle_key)
                 return http.Response(json.dumps({'error': 'Invalid credentials'}), content_type='application/json', status=401)
             password_hash = user.password_hash or user.password
             if not _check_password(password, password_hash):
                 old_hash = hashlib.sha256(password.encode()).hexdigest()
                 if user.password != old_hash:
+                    _login_failure(throttle_key)
                     return http.Response(json.dumps({'error': 'Invalid credentials'}), content_type='application/json', status=401)
+            _login_success(throttle_key)
             if not user.password_hash:
                 user.password_hash = user.password
             raw_token = user._rotate_token()
@@ -175,7 +224,7 @@ class AuthController(http.Controller):
                 'email': email,
                 'password': _hash_password(data.get('password', '')),
                 'company': data.get('company', ''),
-                'role': 'admin' if data.get('accountType') == 'individual' else 'employee',
+                'role': 'individual' if data.get('accountType') == 'individual' else 'employee',
                 'facility_name': data.get('facilityName', ''),
                 'facility_logo': data.get('facilityLogo', ''),
             })
@@ -234,7 +283,7 @@ class AuthController(http.Controller):
                 'password': _hash_password(secrets.token_hex(16)),
                 'avatar': info.get('picture', ''),
                 'company': data.get('facilityName', ''),
-                'role': 'admin',
+                'role': 'individual' if data.get('accountType') == 'individual' else 'admin',
                 'facility_name': data.get('facilityName', ''),
                 'facility_logo': data.get('facilityLogo', ''),
             })
@@ -361,8 +410,6 @@ class AuthController(http.Controller):
             rt_hash = _hash_token(rt)
             user = request.env['heyla.user'].sudo().search([('refresh_token', '=', rt_hash)], limit=1)
             if not user:
-                user = request.env['heyla.user'].sudo().search([('refresh_token', '=', rt)], limit=1)
-            if not user:
                 return http.Response(json.dumps({'error': 'Invalid refresh token'}), content_type='application/json', status=401)
             raw_token = user._rotate_token()
             raw_refresh = user._rotate_refresh_token()
@@ -382,8 +429,6 @@ class AuthController(http.Controller):
             if token:
                 token_hash = _hash_token(token)
                 user = request.env['heyla.user'].sudo().search([('token', '=', token_hash)], limit=1)
-                if not user:
-                    user = request.env['heyla.user'].sudo().search([('password', '=', token)], limit=1)
                 if user:
                     user.token = False
                     user.token_expires_at = False
@@ -401,8 +446,6 @@ class AuthController(http.Controller):
             if token:
                 token_hash = _hash_token(token)
                 user = request.env['heyla.user'].sudo().search([('token', '=', token_hash)], limit=1)
-                if not user:
-                    user = request.env['heyla.user'].sudo().search([('password', '=', token)], limit=1)
                 if user:
                     user.token = False
                     user.token_expires_at = False
@@ -421,8 +464,6 @@ class AuthController(http.Controller):
                 return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
             token_hash = _hash_token(token)
             user = request.env['heyla.user'].sudo().search([('token', '=', token_hash)], limit=1)
-            if not user:
-                user = request.env['heyla.user'].sudo().search([('password', '=', token)], limit=1)
             if not user:
                 return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
             data = json.loads(request.httprequest.data)
@@ -454,8 +495,6 @@ class AuthController(http.Controller):
                 return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
             token_hash = _hash_token(token)
             user = request.env['heyla.user'].sudo().search([('token', '=', token_hash)], limit=1)
-            if not user:
-                user = request.env['heyla.user'].sudo().search([('password', '=', token)], limit=1)
             if not user:
                 return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
             data = json.loads(request.httprequest.data)

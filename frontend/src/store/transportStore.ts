@@ -9,6 +9,7 @@ export interface Vehicle {
   status: 'Active' | 'Maintenance' | 'Idle';
   driver: string; mileage: number;
   fuelType: 'Diesel' | 'Petrol' | 'Electric';
+  tankCapacity: number;
   lastService: string;
 }
 

@@ -48,7 +48,8 @@ export default function LoginPage() {
   const handleGoogleCredential = useCallback(async (credential: string) => {
     try {
       await googleLogin(credential);
-      navigate({ to: '/dashboard' });
+      const role = useAuthStore.getState().user?.role;
+      navigate({ to: role === 'individual' ? '/network-tap/dashboard' : '/dashboard' });
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string };
       if (e?.status === 404 || e?.message?.toLowerCase().includes('not found')) {
@@ -80,7 +81,8 @@ export default function LoginPage() {
         if (!accessToken) { toast.error('LinkedIn auth failed'); return; }
         try {
           await (useAuthStore.getState() as any).linkedinLogin(accessToken);
-          navigate({ to: '/dashboard' });
+          const role = useAuthStore.getState().user?.role;
+          navigate({ to: role === 'individual' ? '/network-tap/dashboard' : '/dashboard' });
         } catch (err: any) {
           if (err?.status === 404) {
             navigate({ to: '/register/individual', search: { linkedin: '1' }, state: { linkedinToken: accessToken } });
@@ -118,7 +120,8 @@ export default function LoginPage() {
     if (!email || !password) { toast.error('Please fill in all fields'); return; }
     clearError();
     await login(email, password);
-    navigate('/dashboard');
+    const role = useAuthStore.getState().user?.role;
+    navigate(role === 'individual' ? '/network-tap/dashboard' : '/dashboard');
   };
 
   return (

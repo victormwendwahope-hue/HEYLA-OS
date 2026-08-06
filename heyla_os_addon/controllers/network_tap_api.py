@@ -2,24 +2,7 @@ from odoo import http
 from odoo.http import request
 import json
 from datetime import datetime
-
-
-def _auth(f):
-    def wrapper(*args, **kwargs):
-        auth = request.httprequest.headers.get('Authorization', '')
-        token = auth.replace('Bearer ', '') if auth.startswith('Bearer ') else ''
-        if not token:
-            return http.Response(json.dumps({'error': 'Auth required'}), content_type='application/json', status=401)
-        from odoo.addons.heyla_os_addon.models.res_user import _hash_token
-        h = _hash_token(token)
-        u = request.env['heyla.user'].sudo().search([('token', '=', h)], limit=1)
-        if not u:
-            u = request.env['heyla.user'].sudo().search([('password', '=', token)], limit=1)
-        if not u:
-            return http.Response(json.dumps({'error': 'Invalid token'}), content_type='application/json', status=401)
-        request.heyla_user = u
-        return f(*args, **kwargs)
-    return wrapper
+from .auth import _auth_required as _auth, _admin_required as _admin
 
 
 def _get_or_create_profile(user):

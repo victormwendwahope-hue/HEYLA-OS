@@ -171,7 +171,7 @@ export const api = {
       request<{ user: any }>('PATCH', '/auth/profile', data),
     googleLogin: (credential: string) =>
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/google/login', { credential }),
-    googleRegister: (data: { credential: string; facilityName?: string; facilityLogo?: string }) =>
+    googleRegister: (data: { credential: string; accountType?: 'company' | 'individual'; facilityName?: string; facilityLogo?: string }) =>
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/google/register', data),
     linkedinLogin: (accessToken: string) =>
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/linkedin/login', { accessToken }),

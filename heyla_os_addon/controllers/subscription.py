@@ -2,6 +2,7 @@ from odoo import http
 from odoo.http import request
 import json
 from datetime import datetime
+from .auth import _auth_required, _admin_required
 
 
 PLANS = [
@@ -97,28 +98,6 @@ OPTIONAL_MODULES = [
 ]
 
 
-def _auth_required(f):
-    def wrapper(*args, **kwargs):
-        auth_header = request.httprequest.headers.get('Authorization', '')
-        token = auth_header.replace('Bearer ', '') if auth_header.startswith('Bearer ') else ''
-        if not token:
-            return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
-        from odoo.addons.heyla_os_addon.models.res_user import _hash_token
-        token_hash = _hash_token(token)
-        user = request.env['heyla.user'].sudo().search([('token', '=', token_hash)], limit=1)
-        if not user:
-            user = request.env['heyla.user'].sudo().search([('password', '=', token)], limit=1)
-        if not user:
-            return http.Response(json.dumps({'error': 'Invalid or expired token'}), content_type='application/json', status=401)
-        if user.token_expires_at and datetime.now() > user.token_expires_at:
-            user.token = False
-            user.token_expires_at = False
-            return http.Response(json.dumps({'error': 'Token expired'}), content_type='application/json', status=401)
-        request.heyla_user = user
-        return f(*args, **kwargs)
-    return wrapper
-
-
 class SubscriptionController(http.Controller):
 
     @http.route('/api/subscription/plans', type='http', auth='none', methods=['GET'], csrf=False)
@@ -133,17 +112,10 @@ class SubscriptionController(http.Controller):
         ))()
 
     @http.route('/api/subscription/subscribe', type='http', auth='none', methods=['POST'], csrf=False)
+    @_auth_required
     def subscribe(self):
         try:
-            from odoo.addons.heyla_os_addon.models.res_user import _hash_token
-            auth_header = request.httprequest.headers.get('Authorization', '')
-            token = auth_header.replace('Bearer ', '') if auth_header.startswith('Bearer ') else ''
-            if not token:
-                return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
-            token_hash = _hash_token(token)
-            user = request.env['heyla.user'].sudo().search([('token', '=', token_hash)], limit=1)
-            if not user:
-                return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
+            user = request.heyla_user
             data = json.loads(request.httprequest.data)
             plan = data.get('plan', 'starter')
             billing_cycle = data.get('billingCycle', 'monthly')
@@ -173,17 +145,10 @@ class SubscriptionController(http.Controller):
             return http.Response(json.dumps({'error': 'Subscription failed'}), content_type='application/json', status=400)
 
     @http.route('/api/subscription/cancel', type='http', auth='none', methods=['POST'], csrf=False)
+    @_auth_required
     def cancel(self):
         try:
-            from odoo.addons.heyla_os_addon.models.res_user import _hash_token
-            auth_header = request.httprequest.headers.get('Authorization', '')
-            token = auth_header.replace('Bearer ', '') if auth_header.startswith('Bearer ') else ''
-            if not token:
-                return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
-            token_hash = _hash_token(token)
-            user = request.env['heyla.user'].sudo().search([('token', '=', token_hash)], limit=1)
-            if not user:
-                return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
+            user = request.heyla_user
             user.subscription_status = 'cancelled'
             return http.Response(json.dumps({'ok': True, 'subscription': user._subscription_info()}), content_type='application/json', status=200)
         except Exception:

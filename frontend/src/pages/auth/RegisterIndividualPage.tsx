@@ -45,8 +45,8 @@ export default function RegisterIndividualPage() {
   const handleGoogleCredential = useCallback(async (credential: string) => {
     try {
       clearError();
-      await googleRegister({ credential, password: '' });
-      navigate({ to: '/careers' });
+      await googleRegister({ credential, accountType: 'individual', password: '' });
+      navigate({ to: '/network-tap/dashboard' });
     } catch (err: unknown) {
       toast.error(sanitizeError(err, 'Google sign-up failed'));
     }
@@ -71,7 +71,7 @@ export default function RegisterIndividualPage() {
           if (!accessToken) { toast.error('LinkedIn auth failed'); return; }
           try {
             await linkedinRegister(accessToken);
-            navigate({ to: '/careers' });
+            navigate({ to: '/network-tap/dashboard' });
           } catch (err: any) {
             toast.error(err?.message || 'LinkedIn sign-up failed');
           }
@@ -105,7 +105,7 @@ export default function RegisterIndividualPage() {
     if (password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     clearError();
     await register({ email, password, name, accountType: 'individual' });
-    navigate({ to: '/careers' });
+    navigate({ to: '/network-tap/dashboard' });
   };
 
   const pwStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : /[A-Z]/.test(password) && /\d/.test(password) ? 4 : 3;

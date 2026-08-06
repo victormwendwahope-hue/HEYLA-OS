@@ -1,9 +1,11 @@
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
 import { useTransportStore } from '@/store/transportStore';
+import { useFuelStore } from '@/store/fuelStore';
 import { formatCurrency } from '@/utils/countries';
-import { Truck, Users, Package, MapPin, Plus, X, AlertTriangle, Fuel, BarChart3, Trash2, Edit3, Search, Loader2 } from 'lucide-react';
+import { Truck, Users, Package, MapPin, Plus, X, AlertTriangle, Fuel, BarChart3, Trash2, Edit3, Search, Loader2, ExternalLink } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
 const statusColors = ['hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(210, 90%, 55%)'];
@@ -21,6 +23,8 @@ type Tab = 'overview' | 'fleet' | 'drivers' | 'shipments';
 
 export default function TransportPage() {
   const { vehicles, drivers, shipments, loading, fetchVehicles, fetchDrivers, fetchShipments, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver, addShipment, updateShipment, removeShipment } = useTransportStore();
+  const { analytics, fetchAnalytics } = useFuelStore();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('overview');
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [editVehicleId, setEditVehicleId] = useState<string | null>(null);
@@ -28,10 +32,12 @@ export default function TransportPage() {
   const [editDriverId, setEditDriverId] = useState<string | null>(null);
   const [showShipmentForm, setShowShipmentForm] = useState(false);
   const [editingShip, setEditingShip] = useState<string | null>(null);
+  const [shipSearch, setShipSearch] = useState('');
+  const [shipStatus, setShipStatus] = useState('');
 
-  useEffect(() => { fetchVehicles(); fetchDrivers(); fetchShipments(); }, []);
+  useEffect(() => { fetchVehicles(); fetchDrivers(); fetchShipments(); fetchAnalytics(); }, []);
 
-  const [vForm, setVForm] = useState({ name: '', plate: '', type: 'Truck' as string, status: 'Idle' as string, driver: '', mileage: 0, fuelType: 'Diesel' as string, lastService: '' });
+  const [vForm, setVForm] = useState({ name: '', plate: '', type: 'Truck' as string, status: 'Idle' as string, driver: '', mileage: 0, fuelType: 'Diesel' as string, tankCapacity: 0, lastService: '' });
   const [dForm, setDForm] = useState({ name: '', phone: '', license: '', status: 'Available' as string, trips: 0, rating: 0 });
   const [sForm, setSForm] = useState({ trackingNo: '', origin: '', destination: '', status: 'Pending' as string, driver: '', vehicle: '', weight: '', estimatedDelivery: '' });
 
@@ -56,9 +62,21 @@ export default function TransportPage() {
     { name: 'Idle', value: vehicles.filter(v => v.status === 'Idle').length },
   ];
 
+  const filteredShipments = useMemo(() => {
+    return shipments.filter(s => {
+      if (shipStatus && s.status !== shipStatus) return false;
+      if (!shipSearch) return true;
+      const q = shipSearch.toLowerCase();
+      return [s.trackingNo, s.origin, s.destination, s.driver, s.vehicle].join(' ').toLowerCase().includes(q);
+    }).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  }, [shipments, shipSearch, shipStatus]);
+
+  const fuelSpend = analytics?.summary?.totalCost || 0;
+  const fuelAnomalies = analytics?.summary?.anomalyCount || 0;
+
   const openVehicleForm = (v?: any) => {
-    if (v) { setVForm({ name: v.name, plate: v.plate, type: v.type, status: v.status, driver: v.driver || '', mileage: v.mileage, fuelType: v.fuelType, lastService: v.lastService || '' }); setEditVehicleId(v.id); }
-    else { setVForm({ name: '', plate: '', type: 'Truck', status: 'Idle', driver: '', mileage: 0, fuelType: 'Diesel', lastService: '' }); setEditVehicleId(null); }
+    if (v) { setVForm({ name: v.name, plate: v.plate, type: v.type, status: v.status, driver: v.driver || '', mileage: v.mileage, fuelType: v.fuelType, tankCapacity: v.tankCapacity || 0, lastService: v.lastService || '' }); setEditVehicleId(v.id); }
+    else { setVForm({ name: '', plate: '', type: 'Truck', status: 'Idle', driver: '', mileage: 0, fuelType: 'Diesel', tankCapacity: 0, lastService: '' }); setEditVehicleId(null); }
     setShowVehicleForm(true);
   };
   const openDriverForm = (d?: any) => {
@@ -80,8 +98,7 @@ export default function TransportPage() {
       else await addVehicle(vForm);
       setShowVehicleForm(false);
     } catch { }
-  };
-  const handleDriverSubmit = async (e: React.FormEvent) => {
+  };  const handleDriverSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!dForm.name) { toast.error('Driver name required'); return; }
     try {
@@ -139,8 +156,17 @@ export default function TransportPage() {
             <StatCard title="Fleet Size" value={String(vehicles.length)} change={`${activeVehicles} active`} changeType="positive" icon={Truck} iconColor="gradient-primary" />
             <StatCard title="Drivers" value={String(drivers.length)} change={`${activeDrivers} on duty`} changeType="positive" icon={Users} />
             <StatCard title="In Transit" value={String(inTransit)} change="shipments moving" changeType="neutral" icon={Package} />
-            <StatCard title="Total Shipments" value={String(shipments.length)} change={`${shipments.filter(s => s.status === 'Delivered').length} delivered`} changeType="positive" icon={Fuel} />
+            <StatCard title="Fuel Spend" value={fuelSpend ? formatCurrency(fuelSpend) : '—'} change={fuelAnomalies ? `${fuelAnomalies} anomalies flagged` : 'No anomalies'} changeType={fuelAnomalies ? 'negative' : 'positive'} icon={Fuel} />
           </div>
+          {fuelAnomalies > 0 && (
+            <div className="glass rounded-xl p-4 border-l-4 border-warning flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-warning">{fuelAnomalies} fuel anomalies</span> detected across the fleet (over-capacity fills, odometer gaps, variance).{' '}
+                <button onClick={() => navigate({ to: '/fuel' })} className="text-primary font-medium hover:underline inline-flex items-center gap-1">Review in Fuel Tracking <ExternalLink className="w-3 h-3" /></button>
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 glass rounded-xl p-5">
@@ -205,7 +231,7 @@ export default function TransportPage() {
           {vehicles.length > 0 ? <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-border bg-muted/30">
-                {['Vehicle', 'Plate', 'Type', 'Status', 'Driver', 'Mileage', 'Fuel', ''].map(h => <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>)}
+                {['Vehicle', 'Plate', 'Type', 'Status', 'Driver', 'Mileage', 'Tank (L)', 'Fuel', ''].map(h => <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>)}
               </tr></thead>
               <tbody>
                 {vehicles.map((v) => (
@@ -216,9 +242,11 @@ export default function TransportPage() {
                     <td className="px-4 py-3"><StatusBadge status={v.status} variant={vehicleStatusVariant(v.status)} /></td>
                     <td className="px-4 py-3 text-muted-foreground">{v.driver || '\u2014'}</td>
                     <td className="px-4 py-3">{v.mileage.toLocaleString()} km</td>
+                    <td className="px-4 py-3">{v.tankCapacity ? `${v.tankCapacity} L` : '\u2014'}</td>
                     <td className="px-4 py-3 text-muted-foreground">{v.fuelType}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
+                        <button onClick={() => navigate({ to: '/fuel' })} className="text-xs text-primary hover:underline flex items-center gap-1"><Fuel className="w-3 h-3" /> Fuel</button>
                         <button onClick={() => openVehicleForm(v)} className="text-xs text-primary hover:underline"><Edit3 className="w-3 h-3 inline" /> Edit</button>
                         <button onClick={() => { removeVehicle(v.id); }} className="text-xs text-destructive hover:underline"><Trash2 className="w-3 h-3 inline" /> Delete</button>
                       </div>
@@ -267,7 +295,19 @@ export default function TransportPage() {
 
       {tab === 'shipments' && (
         <div className="space-y-4">
-          {shipments.length > 0 ? shipments.map((s) => (
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input value={shipSearch} onChange={e => setShipSearch(e.target.value)} placeholder="Search tracking no, route..."
+                className="pl-9 pr-3 py-2 rounded-lg border border-input bg-background text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            </div>
+            <select value={shipStatus} onChange={e => setShipStatus(e.target.value)} className="px-3 py-2 rounded-lg border border-input bg-background text-sm">
+              <option value="">All statuses</option>
+              {['Pending', 'Picked Up', 'In Transit', 'Delivered', 'Cancelled'].map(s => <option key={s}>{s}</option>)}
+            </select>
+            <span className="text-xs text-muted-foreground">{filteredShipments.length} of {shipments.length} shipments</span>
+          </div>
+          {filteredShipments.length > 0 ? filteredShipments.map((s) => (
             <div key={s.id} className="glass rounded-xl p-5 hover:shadow-elevated transition-shadow">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                 <div>
@@ -298,7 +338,7 @@ export default function TransportPage() {
               </div>
               {(s.driver || s.vehicle) && <p className="text-xs text-muted-foreground mt-2">Driver: {s.driver || '\u2014'} \u2022 Vehicle: {s.vehicle || '\u2014'}</p>}
             </div>
-          )) : <div className="glass rounded-xl p-8 text-center"><p className="text-sm text-muted-foreground">No shipments yet. Create your first shipment.</p></div>}
+          )) : <div className="glass rounded-xl p-8 text-center"><p className="text-sm text-muted-foreground">{shipments.length ? 'No shipments match the current filters.' : 'No shipments yet. Create your first shipment.'}</p></div>}
         </div>
       )}
 
@@ -331,15 +371,17 @@ export default function TransportPage() {
                   <select value={vForm.fuelType} onChange={(e) => setVForm({ ...vForm, fuelType: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
                     {['Diesel', 'Petrol', 'Electric'].map(t => <option key={t}>{t}</option>)}
                   </select></div>
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Driver</label>
+                  <input value={vForm.driver} onChange={(e) => setVForm({ ...vForm, driver: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="Driver name" /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Tank Capacity (L)</label>
+                  <input type="number" value={vForm.tankCapacity || ''} onChange={(e) => setVForm({ ...vForm, tankCapacity: +e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="e.g. 300" /></div>
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Mileage (km)</label>
                   <input type="number" value={vForm.mileage || ''} onChange={(e) => setVForm({ ...vForm, mileage: +e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Driver</label>
-                  <input value={vForm.driver} onChange={(e) => setVForm({ ...vForm, driver: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="Driver name" /></div>
-                <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Last Service</label>
-                  <input type="date" value={vForm.lastService} onChange={(e) => setVForm({ ...vForm, lastService: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
-              </div>
+              <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Last Service</label>
+                <input type="date" value={vForm.lastService} onChange={(e) => setVForm({ ...vForm, lastService: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowVehicleForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted transition-colors">Cancel</button>
                 <button type="submit" className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">{editVehicleId ? 'Update' : 'Add Vehicle'}</button>
@@ -402,9 +444,15 @@ export default function TransportPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Driver</label>
-                  <input value={sForm.driver} onChange={(e) => setSForm({ ...sForm, driver: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="Driver name" /></div>
+                  <select value={sForm.driver} onChange={(e) => setSForm({ ...sForm, driver: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
+                    <option value="">Select driver</option>
+                    {drivers.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                  </select></div>
                 <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Vehicle</label>
-                  <input value={sForm.vehicle} onChange={(e) => setSForm({ ...sForm, vehicle: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" placeholder="Vehicle name/plate" /></div>
+                  <select value={sForm.vehicle} onChange={(e) => setSForm({ ...sForm, vehicle: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
+                    <option value="">Select vehicle</option>
+                    {vehicles.map(v => <option key={v.id} value={`${v.name} (${v.plate})`}>{v.name} ({v.plate})</option>)}
+                  </select></div>
               </div>
               <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Estimated Delivery</label>
                 <input type="date" value={sForm.estimatedDelivery} onChange={(e) => setSForm({ ...sForm, estimatedDelivery: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm" /></div>

@@ -1,5 +1,6 @@
 from odoo import http
 from odoo.http import request
+from .auth import _auth_required, _admin_required
 import json
 import base64
 import hashlib
@@ -15,28 +16,6 @@ PLANS_PRICES = {
     'professional': {'monthly': 10000, 'yearly': 96000},
     'enterprise': {'monthly': 20000, 'yearly': None},
 }
-
-
-def _auth_required(f):
-    def wrapper(*args, **kwargs):
-        auth_header = request.httprequest.headers.get('Authorization', '')
-        token = auth_header.replace('Bearer ', '') if auth_header.startswith('Bearer ') else ''
-        if not token:
-            return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
-        from odoo.addons.heyla_os_addon.models.res_user import _hash_token
-        token_hash = _hash_token(token)
-        user = request.env['heyla.user'].sudo().search([('token', '=', token_hash)], limit=1)
-        if not user:
-            user = request.env['heyla.user'].sudo().search([('password', '=', token)], limit=1)
-        if not user:
-            return http.Response(json.dumps({'error': 'Invalid or expired token'}), content_type='application/json', status=401)
-        if user.token_expires_at and datetime.now() > user.token_expires_at:
-            user.token = False
-            user.token_expires_at = False
-            return http.Response(json.dumps({'error': 'Token expired'}), content_type='application/json', status=401)
-        request.heyla_user = user
-        return f(*args, **kwargs)
-    return wrapper
 
 
 class PaymentController(http.Controller):
@@ -155,14 +134,10 @@ class PaymentController(http.Controller):
         return http.Response(json.dumps({'gateways': result}), content_type='application/json', status=200)
 
     @http.route('/api/payment/initiate-mpesa', type='http', auth='none', methods=['POST'], csrf=False)
+    @_auth_required
     def initiate_mpesa(self):
         try:
-            auth_header = request.httprequest.headers.get('Authorization', '')
-            token = auth_header.replace('Bearer ', '') if auth_header.startswith('Bearer ') else ''
-            user = self._resolve_user(token)
-            if not user:
-                return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
-
+            user = request.heyla_user
             data = json.loads(request.httprequest.data)
             plan = data.get('plan')
             billing_cycle = data.get('billingCycle', 'monthly')
@@ -210,8 +185,10 @@ class PaymentController(http.Controller):
             return http.Response(json.dumps({'error': str(e)}), content_type='application/json', status=400)
 
     @http.route('/api/payment/mpesa-status', type='http', auth='none', methods=['POST'], csrf=False)
+    @_auth_required
     def mpesa_status(self):
         try:
+            user = request.heyla_user
             data = json.loads(request.httprequest.data)
             checkout_request_id = data.get('checkoutRequestId')
             if not checkout_request_id:
@@ -221,16 +198,19 @@ class PaymentController(http.Controller):
             if not gateway:
                 return http.Response(json.dumps({'error': 'M-Pesa gateway not configured'}), content_type='application/json', status=503)
 
-            resp = self._mpesa_query(checkout_request_id, gateway)
-            result_code = resp.get('ResultCode')
-            result_desc = resp.get('ResultDesc', '')
-
             tx = request.env['heyla.payment.transaction'].sudo().search([
                 ('gateway_transaction_id', '=', checkout_request_id),
             ], limit=1)
 
+            if tx and tx.user_id.id != user.id:
+                return http.Response(json.dumps({'error': 'Not your transaction'}), content_type='application/json', status=403)
+
+            resp = self._mpesa_query(checkout_request_id, gateway)
+            result_code = resp.get('ResultCode')
+            result_desc = resp.get('ResultDesc', '')
+
             if result_code == '0':
-                if tx:
+                if tx and tx.status == 'processing':
                     tx.status = 'completed'
                     tx.gateway_response = json.dumps(resp)
                     tx.mpesa_receipt = resp.get('MpesaReceiptNumber', '')
@@ -263,17 +243,43 @@ class PaymentController(http.Controller):
             ], limit=1)
 
             mpesa_receipt = ''
+            total_amount = 0.0
             for item in metadata:
                 if item.get('Name') == 'MpesaReceiptNumber':
                     mpesa_receipt = item.get('Value', '')
-                    break
+                elif item.get('Name') == 'Amount':
+                    try:
+                        total_amount = float(item.get('Value', 0) or 0)
+                    except (TypeError, ValueError):
+                        total_amount = 0.0
 
-            if result_code == 0 and tx:
-                tx.status = 'completed'
-                tx.mpesa_receipt = mpesa_receipt
-                tx.gateway_response = json.dumps(data)
-                self._activate_subscription_after_payment(tx.user_id, tx.plan, tx.billing_cycle)
-                self._create_settlement(tx)
+            if not tx or tx.status != 'processing':
+                return http.Response(json.dumps({'ResultCode': 0, 'ResultDesc': 'Success'}), content_type='application/json', status=200)
+
+            if result_code == 0:
+                if total_amount and abs(total_amount - (tx.amount or 0)) > 1:
+                    tx.status = 'failed'
+                    tx.failure_reason = f'Amount mismatch: callback {total_amount} vs expected {tx.amount}'
+                    tx.gateway_response = json.dumps(data)
+                else:
+                    # The callback payload itself is not trusted (anyone can POST to this URL).
+                    # Confirm with Safaricom server-side before activating, so a spoofed
+                    # callback can never grant a free subscription. On transient query
+                    # failure the tx stays 'processing' and the authenticated status poll
+                    # (which also queries Safaricom) completes the activation.
+                    try:
+                        gateway = tx.gateway_id
+                        confirm = self._mpesa_query(checkout_request_id, gateway)
+                        if confirm.get('ResultCode') == '0' and tx.status == 'processing':
+                            tx.status = 'completed'
+                            tx.mpesa_receipt = mpesa_receipt or confirm.get('MpesaReceiptNumber', '')
+                            tx.gateway_response = json.dumps(data)
+                            self._activate_subscription_after_payment(tx.user_id, tx.plan, tx.billing_cycle)
+                            self._create_settlement(tx)
+                        else:
+                            tx.gateway_response = json.dumps({'callback': data, 'confirm': confirm})
+                    except Exception as exc:
+                        tx.gateway_response = json.dumps({'callback': data, 'confirmError': str(exc)})
             elif tx:
                 tx.status = 'failed'
                 tx.failure_reason = result_desc
@@ -284,14 +290,10 @@ class PaymentController(http.Controller):
             return http.Response(json.dumps({'ResultCode': 0, 'ResultDesc': 'Success'}), content_type='application/json', status=200)
 
     @http.route('/api/payment/initiate-stripe', type='http', auth='none', methods=['POST'], csrf=False)
+    @_auth_required
     def initiate_stripe(self):
         try:
-            auth_header = request.httprequest.headers.get('Authorization', '')
-            token = auth_header.replace('Bearer ', '') if auth_header.startswith('Bearer ') else ''
-            user = self._resolve_user(token)
-            if not user:
-                return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
-
+            user = request.heyla_user
             data = json.loads(request.httprequest.data)
             plan = data.get('plan')
             billing_cycle = data.get('billingCycle', 'monthly')
@@ -354,14 +356,15 @@ class PaymentController(http.Controller):
             if not gateway:
                 return http.Response(json.dumps({'error': 'Stripe not configured'}), content_type='application/json', status=503)
 
-            if gateway.stripe_webhook_secret:
-                try:
-                    from stripe import Webhook
-                    event = Webhook.construct_event(payload, sig_header, gateway.stripe_webhook_secret)
-                except Exception:
-                    return http.Response(json.dumps({'error': 'Invalid signature'}), content_type='application/json', status=400)
-            else:
-                event = json.loads(payload)
+            # Webhook signature is mandatory: never process an unsigned event.
+            if not gateway.stripe_webhook_secret:
+                return http.Response(json.dumps({'error': 'Stripe webhook secret not configured'}), content_type='application/json', status=400)
+
+            from stripe import Webhook
+            try:
+                event = Webhook.construct_event(payload, sig_header, gateway.stripe_webhook_secret)
+            except Exception:
+                return http.Response(json.dumps({'error': 'Invalid signature'}), content_type='application/json', status=400)
 
             if event.get('type') == 'payment_intent.succeeded':
                 intent = event['data']['object']
@@ -370,10 +373,17 @@ class PaymentController(http.Controller):
                     ('reference', '=', ref),
                 ], limit=1)
                 if tx and tx.status == 'processing':
-                    tx.status = 'completed'
-                    tx.gateway_response = json.dumps(event)
-                    self._activate_subscription_after_payment(tx.user_id, tx.plan, tx.billing_cycle)
-                    self._create_settlement(tx)
+                    amount_ok = intent.get('amount', 0) == int((tx.amount or 0) * 100)
+                    currency_ok = (intent.get('currency') or '').lower() == 'kes'
+                    if not (amount_ok and currency_ok):
+                        tx.status = 'failed'
+                        tx.failure_reason = f'Webhook mismatch: amount {intent.get("amount")} {intent.get("currency")} vs {int(tx.amount * 100)} kes'
+                        tx.gateway_response = json.dumps(event)
+                    else:
+                        tx.status = 'completed'
+                        tx.gateway_response = json.dumps(event)
+                        self._activate_subscription_after_payment(tx.user_id, tx.plan, tx.billing_cycle)
+                        self._create_settlement(tx)
 
             elif event.get('type') == 'payment_intent.payment_failed':
                 intent = event['data']['object']
@@ -391,14 +401,10 @@ class PaymentController(http.Controller):
             return http.Response(json.dumps({'received': True}), content_type='application/json', status=200)
 
     @http.route('/api/payment/initiate-paystack', type='http', auth='none', methods=['POST'], csrf=False)
+    @_auth_required
     def initiate_paystack(self):
         try:
-            auth_header = request.httprequest.headers.get('Authorization', '')
-            token = auth_header.replace('Bearer ', '') if auth_header.startswith('Bearer ') else ''
-            user = self._resolve_user(token)
-            if not user:
-                return http.Response(json.dumps({'error': 'Authentication required'}), content_type='application/json', status=401)
-
+            user = request.heyla_user
             data = json.loads(request.httprequest.data)
             plan = data.get('plan')
             billing_cycle = data.get('billingCycle', 'monthly')
@@ -468,14 +474,17 @@ class PaymentController(http.Controller):
             if not gateway:
                 return http.Response(json.dumps({'error': 'Paystack not configured'}), content_type='application/json', status=503)
 
-            if gateway.paystack_webhook_secret:
-                expected_sig = hmac.new(
-                    gateway.paystack_webhook_secret.encode(),
-                    payload,
-                    hashlib.sha512,
-                ).hexdigest()
-                if sig != expected_sig:
-                    return http.Response(json.dumps({'error': 'Invalid signature'}), content_type='application/json', status=400)
+            # Webhook signature is mandatory: never process an unsigned event.
+            if not gateway.paystack_webhook_secret:
+                return http.Response(json.dumps({'error': 'Paystack webhook secret not configured'}), content_type='application/json', status=400)
+
+            expected_sig = hmac.new(
+                gateway.paystack_webhook_secret.encode(),
+                payload,
+                hashlib.sha512,
+            ).hexdigest()
+            if sig != expected_sig:
+                return http.Response(json.dumps({'error': 'Invalid signature'}), content_type='application/json', status=400)
 
             event = json.loads(payload)
             if event.get('event') == 'charge.success':
@@ -485,19 +494,28 @@ class PaymentController(http.Controller):
                     ('reference', '=', ref),
                 ], limit=1)
                 if tx and tx.status == 'processing':
-                    tx.status = 'completed'
-                    tx.gateway_transaction_id = data.get('id', ref)
-                    tx.gateway_response = json.dumps(event)
-                    self._activate_subscription_after_payment(tx.user_id, tx.plan, tx.billing_cycle)
-                    self._create_settlement(tx)
+                    amount_ok = int(data.get('amount', 0)) == int((tx.amount or 0) * 100)
+                    currency_ok = (data.get('currency') or '').lower() == 'kes'
+                    if not (amount_ok and currency_ok):
+                        tx.status = 'failed'
+                        tx.failure_reason = f'Webhook mismatch: amount {data.get("amount")} {data.get("currency")} vs {int(tx.amount * 100)} kes'
+                        tx.gateway_response = json.dumps(event)
+                    else:
+                        tx.status = 'completed'
+                        tx.gateway_transaction_id = data.get('id', ref)
+                        tx.gateway_response = json.dumps(event)
+                        self._activate_subscription_after_payment(tx.user_id, tx.plan, tx.billing_cycle)
+                        self._create_settlement(tx)
 
             return http.Response(json.dumps({'received': True}), content_type='application/json', status=200)
         except Exception:
             return http.Response(json.dumps({'received': True}), content_type='application/json', status=200)
 
     @http.route('/api/payment/verify', type='http', auth='none', methods=['POST'], csrf=False)
+    @_auth_required
     def verify_payment(self):
         try:
+            user = request.heyla_user
             data = json.loads(request.httprequest.data)
             reference = data.get('reference')
             if not reference:
@@ -508,6 +526,8 @@ class PaymentController(http.Controller):
             ], limit=1)
             if not tx:
                 return http.Response(json.dumps({'error': 'Transaction not found'}), content_type='application/json', status=404)
+            if tx.user_id.id != user.id:
+                return http.Response(json.dumps({'error': 'Not your transaction'}), content_type='application/json', status=403)
 
             return http.Response(json.dumps({
                 'status': tx.status,
@@ -545,6 +565,7 @@ class PaymentController(http.Controller):
         return http.Response(json.dumps({'transactions': result}), content_type='application/json', status=200)
 
     @http.route('/api/settlement/accounts', type='http', auth='none', methods=['GET'], csrf=False)
+    @_admin_required
     def get_settlement_accounts(self):
         accounts = request.env['heyla.settlement.bank.account'].sudo().search([('is_active', '=', True)])
         result = []
@@ -564,6 +585,7 @@ class PaymentController(http.Controller):
         return http.Response(json.dumps({'accounts': result}), content_type='application/json', status=200)
 
     @http.route('/api/settlement/transfers', type='http', auth='none', methods=['GET'], csrf=False)
+    @_admin_required
     def get_settlement_transfers(self):
         transfers = request.env['heyla.settlement.transfer'].sudo().search([], order='create_date desc', limit=100)
         result = []
@@ -582,6 +604,7 @@ class PaymentController(http.Controller):
         return http.Response(json.dumps({'transfers': result}), content_type='application/json', status=200)
 
     @http.route('/api/payment/admin/trigger-settlement', type='http', auth='none', methods=['POST'], csrf=False)
+    @_admin_required
     def trigger_settlement(self):
         try:
             pending = request.env['heyla.settlement.transfer'].sudo().search([
@@ -632,17 +655,3 @@ class PaymentController(http.Controller):
         result = resp.json()
         if resp.status_code != 200 or result.get('ResponseCode') != '0':
             raise Exception(result.get('ResponseDescription', 'B2C transfer failed'))
-
-    def _resolve_user(self, token):
-        if not token:
-            return None
-        from odoo.addons.heyla_os_addon.models.res_user import _hash_token
-        token_hash = _hash_token(token)
-        user = request.env['heyla.user'].sudo().search([('token', '=', token_hash)], limit=1)
-        if not user:
-            user = request.env['heyla.user'].sudo().search([('password', '=', token)], limit=1)
-        if not user:
-            return None
-        if user.token_expires_at and datetime.now() > user.token_expires_at:
-            return None
-        return user

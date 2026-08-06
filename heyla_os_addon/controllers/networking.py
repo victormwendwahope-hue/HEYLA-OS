@@ -1,6 +1,6 @@
 from odoo import http
 from odoo.http import request
-from .auth import _auth_required
+from .auth import _auth_required, _admin_required
 import json
 from datetime import datetime
 
@@ -102,9 +102,14 @@ class NetworkingController(http.Controller):
         return _auth_required(lambda: self._delete_post(post_id))()
 
     def _delete_post(self, post_id):
+        user = _get_user()
+        if not user:
+            return http.Response(json.dumps({'error': 'Unauthorized'}), content_type='application/json', status=401)
         rec = request.env['heyla.network.post'].sudo().browse(post_id)
         if not rec.exists():
             return http.Response(json.dumps({'error': 'Not found'}), content_type='application/json', status=404)
+        if rec.author_id.id != user.id and user.role != 'admin':
+            return http.Response(json.dumps({'error': 'Forbidden'}), content_type='application/json', status=403)
         rec.sudo().unlink()
         return http.Response(json.dumps({'ok': True}), content_type='application/json', status=200)
 
@@ -186,7 +191,7 @@ class NetworkingController(http.Controller):
 
     @http.route('/api/network-jobs/<int:job_id>', type='http', auth='none', methods=['DELETE'], csrf=False)
     def delete_job(self, job_id):
-        return _auth_required(lambda: self._delete_job(job_id))()
+        return _admin_required(lambda: self._delete_job(job_id))()
 
     def _delete_job(self, job_id):
         rec = request.env['heyla.network.job'].sudo().browse(job_id)
@@ -399,7 +404,7 @@ class NetworkingController(http.Controller):
     # ---- Applicants ----
     @http.route('/api/network-jobs/<int:job_id>/applicants/<int:applicant_id>', type='http', auth='none', methods=['PATCH'], csrf=False)
     def update_applicant(self, job_id, applicant_id):
-        return _auth_required(lambda: self._update_applicant(job_id, applicant_id))()
+        return _admin_required(lambda: self._update_applicant(job_id, applicant_id))()
 
     def _update_applicant(self, job_id, applicant_id):
         try:
@@ -413,7 +418,40 @@ class NetworkingController(http.Controller):
             rec.sudo().write({'status': data['status']})
         if 'notes' in data:
             rec.sudo().write({'notes': data['notes']})
+        if rec.status == 'Hired':
+            self._auto_worklog_from_hire(rec)
         return http.Response(json.dumps(self._applicant_to_json(rec)), content_type='application/json', status=200)
+
+    def _auto_worklog_from_hire(self, applicant):
+        """Digital work logbook: every completed hire automatically creates a
+        worklog entry on the applicant's profile."""
+        user = applicant.user_id
+        if not user:
+            user = request.env['heyla.user'].sudo().search([('email', '=', applicant.email)], limit=1)
+        if not user:
+            return
+        profile = request.env['heyla.network.profile'].sudo().search([('user_id', '=', user.id)], limit=1)
+        if not profile:
+            profile = request.env['heyla.network.profile'].sudo().create({'user_id': user.id})
+        from datetime import date as _date
+        existing = request.env['heyla.network.worklog'].sudo().search_count([
+            ('profile_id', '=', profile.id),
+            ('employer', '=', applicant.job_id.company or ''),
+            ('role', '=', applicant.job_id.title or ''),
+            ('start_date', '=', _date.today()),
+        ])
+        if existing:
+            return
+        request.env['heyla.network.worklog'].sudo().create({
+            'profile_id': profile.id,
+            'employer': applicant.job_id.company or '',
+            'project_name': applicant.job_id.title or '',
+            'location': applicant.job_id.location or '',
+            'role': applicant.job_id.title or '',
+            'start_date': _date.today(),
+            'output': 'Hired via HEYLA Connect job marketplace',
+        })
+        profile.sudo().recompute_reputation()
 
     @http.route('/api/network-jobs/<int:job_id>/applicants', type='http', auth='none', methods=['POST'], csrf=False)
     def apply_job(self, job_id):
@@ -428,6 +466,9 @@ class NetworkingController(http.Controller):
         job = request.env['heyla.network.job'].sudo().browse(job_id)
         if not job.exists():
             return http.Response(json.dumps({'error': 'Job not found'}), content_type='application/json', status=404)
+        profile = False
+        if user:
+            profile = request.env['heyla.network.profile'].sudo().search([('user_id', '=', user.id)], limit=1)
         a = request.env['heyla.network.applicant'].sudo().create({
             'job_id': job_id,
             'name': data.get('name', user.name if user else ''),
@@ -436,6 +477,10 @@ class NetworkingController(http.Controller):
             'status': 'Applied',
             'applied_date': datetime.now(),
             'notes': data.get('notes', ''),
+            'user_id': user.id if user else False,
+            'profile_id': profile.id if profile else False,
+            'phone': data.get('phone', ''),
+            'cv_url': data.get('cvUrl', ''),
         })
         return http.Response(json.dumps(self._applicant_to_json(a)), content_type='application/json', status=201)
 

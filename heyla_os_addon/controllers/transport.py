@@ -11,7 +11,7 @@ class TransportController(http.Controller):
             'id': str(v.id), 'name': v.name or '', 'plate': v.plate or '',
             'type': v.vehicle_type or 'Car', 'status': v.status or 'Active',
             'driver': v.driver or '', 'mileage': v.mileage,
-            'fuelType': v.fuel_type or 'Diesel',
+            'fuelType': v.fuel_type or 'Diesel', 'tankCapacity': v.tank_capacity or 0.0,
             'lastService': v.last_service.isoformat() if v.last_service else '',
         }
 
@@ -72,6 +72,7 @@ class TransportController(http.Controller):
                 'vehicle_type': data.get('type', 'Car'), 'status': data.get('status', 'Active'),
                 'driver': data.get('driver', ''), 'mileage': data.get('mileage', 0.0),
                 'fuel_type': data.get('fuelType', 'Diesel'),
+                'tank_capacity': data.get('tankCapacity', 0.0),
             })
             return http.Response(json.dumps(self._vehicle_to_json(v)), content_type='application/json', status=201)
         except (json.JSONDecodeError, Exception) as e:
@@ -88,7 +89,7 @@ class TransportController(http.Controller):
         data = json.loads(request.httprequest.data)
         field_map = {'name': 'name', 'plate': 'plate', 'type': 'vehicle_type',
                      'status': 'status', 'driver': 'driver', 'mileage': 'mileage',
-                     'fuelType': 'fuel_type'}
+                     'fuelType': 'fuel_type', 'tankCapacity': 'tank_capacity'}
         vals = {o: data[f] for f, o in field_map.items() if f in data}
         if 'lastService' in data:
             vals['last_service'] = data['lastService'] or False

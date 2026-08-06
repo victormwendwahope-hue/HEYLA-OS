@@ -28,4 +28,5 @@ class HeylaTransportVehicle(models.Model):
         ('Petrol', 'Petrol'),
         ('Electric', 'Electric'),
     ], string='Fuel Type', required=True)
+    tank_capacity = fields.Float(string='Tank Capacity (L)', default=0.0)
     last_service = fields.Date(string='Last Service')

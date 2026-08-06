@@ -252,5 +252,217 @@
             <field name="comments">3</field>
         </record>
 
+        <!-- Demo Network Profile (Skills Passport) -->
+        <record id="heyla_network_profile_admin" model="heyla.network.profile">
+            <field name="user_id" ref="heyla_user_admin"/>
+            <field name="headline">Site Engineer | Project Management | HSE</field>
+            <field name="about">Certified site engineer with 8 years of experience across road and building construction projects in Kenya.</field>
+            <field name="location">Nairobi, Kenya</field>
+            <field name="website">https://heyla-os.dev</field>
+            <field name="phone">+254712345678</field>
+            <field name="trade_category">site_engineer</field>
+            <field name="years_of_experience">8</field>
+            <field name="availability">open_to_work</field>
+            <field name="expected_salary">KES 180,000 - 250,000</field>
+            <field name="notice_period">1 month</field>
+            <field name="languages">English, Swahili</field>
+            <field name="nationality">Kenyan</field>
+            <field name="willing_to_relocate">True</field>
+            <field name="relocation_countries">Kenya, Uganda, Tanzania, Rwanda</field>
+            <field name="passport_status">Valid until 2029</field>
+            <field name="visa_status">None</field>
+            <field name="id_number">12345678</field>
+            <field name="connection_count">142</field>
+        </record>
+
+        <!-- Demo Verified Identity Records -->
+        <record id="heyla_network_verification_1" model="heyla.network.verification">
+            <field name="profile_id" ref="heyla_network_profile_admin"/>
+            <field name="verification_type">government_id</field>
+            <field name="status">verified</field>
+            <field name="issuer_name">Government of Kenya</field>
+            <field name="document_ref">ID 12345678</field>
+            <field name="verified_by" ref="heyla_user_admin"/>
+            <field name="verified_at">2025-01-10 09:00:00</field>
+        </record>
+        <record id="heyla_network_verification_2" model="heyla.network.verification">
+            <field name="profile_id" ref="heyla_network_profile_admin"/>
+            <field name="verification_type">email</field>
+            <field name="status">verified</field>
+            <field name="issuer_name">HEYLA</field>
+            <field name="verified_at">2025-01-10 09:05:00</field>
+        </record>
+        <record id="heyla_network_verification_3" model="heyla.network.verification">
+            <field name="profile_id" ref="heyla_network_profile_admin"/>
+            <field name="verification_type">phone</field>
+            <field name="status">verified</field>
+            <field name="issuer_name">HEYLA</field>
+            <field name="verified_at">2025-01-10 09:10:00</field>
+        </record>
+        <record id="heyla_network_verification_4" model="heyla.network.verification">
+            <field name="profile_id" ref="heyla_network_profile_admin"/>
+            <field name="verification_type">education</field>
+            <field name="status">verified</field>
+            <field name="issuer_name">University of Nairobi</field>
+            <field name="document_ref">BSc Civil Engineering</field>
+            <field name="verified_by" ref="heyla_user_admin"/>
+            <field name="verified_at">2025-02-15 10:00:00</field>
+        </record>
+        <record id="heyla_network_verification_5" model="heyla.network.verification">
+            <field name="profile_id" ref="heyla_network_profile_admin"/>
+            <field name="verification_type">nita</field>
+            <field name="status">verified</field>
+            <field name="issuer_name">NITA</field>
+            <field name="document_ref">Trade Test Grade I</field>
+            <field name="verified_by" ref="heyla_user_admin"/>
+            <field name="verified_at">2025-03-01 09:30:00</field>
+        </record>
+
+        <!-- Demo Work Logbook -->
+        <record id="heyla_network_worklog_1" model="heyla.network.worklog">
+            <field name="profile_id" ref="heyla_network_profile_admin"/>
+            <field name="employer">HEYLA OS</field>
+            <field name="project_name">Nairobi Expressway Maintenance</field>
+            <field name="location">Nairobi, Kenya</field>
+            <field name="role">Site Engineer</field>
+            <field name="start_date">2023-01-15</field>
+            <field name="end_date">2025-06-30</field>
+            <field name="hours_worked">4320</field>
+            <field name="attendance_rating">5</field>
+            <field name="safety_incidents">0</field>
+            <field name="supervisor_review">Reliable engineer with strong site supervision skills.</field>
+            <field name="verified">True</field>
+            <field name="verified_by" ref="heyla_user_manager"/>
+            <field name="verified_at">2025-07-01 14:00:00</field>
+        </record>
+
+        <!-- Demo Verified Reference -->
+        <record id="heyla_network_reference_1" model="heyla.network.reference">
+            <field name="profile_id" ref="heyla_network_profile_admin"/>
+            <field name="reviewer_name">Hydan Manager</field>
+            <field name="reviewer_role">Project Manager</field>
+            <field name="reviewer_email">hydan254@gmail.com</field>
+            <field name="reviewer_id" ref="heyla_user_manager"/>
+            <field name="company">HEYLA OS</field>
+            <field name="relationship">Line Manager</field>
+            <field name="status">verified</field>
+            <field name="rating">5</field>
+            <field name="work_ethic">5</field>
+            <field name="attendance">5</field>
+            <field name="performance">5</field>
+            <field name="leadership">4</field>
+            <field name="safety">5</field>
+            <field name="integrity">5</field>
+            <field name="communication">4</field>
+            <field name="skills">5</field>
+            <field name="comment">Excellent engineer. Delivered all milestones on time and maintained a spotless safety record.</field>
+            <field name="verified_by" ref="heyla_user_admin"/>
+            <field name="verified_at">2025-07-05 10:00:00</field>
+        </record>
+
+        <!-- Demo Trade Portfolio -->
+        <record id="heyla_network_project_1" model="heyla.network.project">
+            <field name="profile_id" ref="heyla_network_profile_admin"/>
+            <field name="title">Thika Superhighway Overpass Structure</field>
+            <field name="description">Site engineering and supervision of a 120m overpass with reinforced concrete deck.</field>
+            <field name="category">Infrastructure</field>
+            <field name="client_name">Kenya National Highways Authority</field>
+            <field name="location">Thika, Kenya</field>
+            <field name="start_date">2024-02-01</field>
+            <field name="end_date">2024-11-30</field>
+            <field name="outcome">Completed 2 weeks ahead of schedule</field>
+            <field name="before_photo">https://images.unsplash.com/photo-1541888946425-d81bb19240f5</field>
+            <field name="after_photo">https://images.unsplash.com/photo-1487958449943-2429e8be8625</field>
+            <field name="testimonial">Professional and reliable. Excellent safety standards throughout the project.</field>
+            <field name="rating">5</field>
+            <field name="verified">True</field>
+            <field name="verified_by" ref="heyla_user_manager"/>
+            <field name="verified_at">2024-12-10 09:00:00</field>
+        </record>
+
+        <!-- Demo Machine Experience -->
+        <record id="heyla_network_machine_1" model="heyla.network.machine">
+            <field name="profile_id" ref="heyla_network_profile_admin"/>
+            <field name="machine_type">excavator</field>
+            <field name="manufacturer">CAT</field>
+            <field name="model">320D2</field>
+            <field name="years_experience">6</field>
+            <field name="operating_hours">8400</field>
+            <field name="fuel_efficiency">16-20 L/hr</field>
+            <field name="maintenance_knowledge">True</field>
+            <field name="safety_record">No incidents in 3 years</field>
+            <field name="incidents">0</field>
+            <field name="training">Plant operator certification, first aid</field>
+            <field name="verified">True</field>
+            <field name="verified_by" ref="heyla_user_manager"/>
+            <field name="verified_at">2025-06-20 14:00:00</field>
+        </record>
+        <record id="heyla_network_machine_2" model="heyla.network.machine">
+            <field name="profile_id" ref="heyla_network_profile_admin"/>
+            <field name="machine_type">backhoe</field>
+            <field name="manufacturer">JCB</field>
+            <field name="model">3CX</field>
+            <field name="years_experience">8</field>
+            <field name="operating_hours">11200</field>
+            <field name="fuel_efficiency">8-12 L/hr</field>
+            <field name="maintenance_knowledge">True</field>
+            <field name="safety_record">Clean record</field>
+            <field name="incidents">0</field>
+        </record>
+
+        <!-- Demo Community -->
+        <record id="heyla_network_community_1" model="heyla.network.community">
+            <field name="name">Kenya Construction Professionals</field>
+            <field name="description">Trade community for site engineers, foremen, operators and construction workers across Kenya.</field>
+            <field name="community_type">industry</field>
+            <field name="category">Construction</field>
+            <field name="created_by" ref="heyla_user_admin"/>
+            <field name="admin_ids" eval="[(6, 0, [ref('heyla_user_admin')])]"/>
+            <field name="member_ids" eval="[(6, 0, [ref('heyla_user_admin'), ref('heyla_user_manager')])]"/>
+        </record>
+        <record id="heyla_network_community_2" model="heyla.network.community">
+            <field name="name">Welders of East Africa</field>
+            <field name="description">Share welding techniques, job leads and safety tips.</field>
+            <field name="community_type">trade</field>
+            <field name="category">Welding</field>
+            <field name="created_by" ref="heyla_user_admin"/>
+            <field name="admin_ids" eval="[(6, 0, [ref('heyla_user_admin')])]"/>
+            <field name="member_ids" eval="[(6, 0, [ref('heyla_user_admin')])]"/>
+        </record>
+
+        <!-- Demo Community Post -->
+        <record id="heyla_network_community_post_1" model="heyla.network.community.post">
+            <field name="community_id" ref="heyla_network_community_1"/>
+            <field name="author_id" ref="heyla_user_admin"/>
+            <field name="content">Welcome to Kenya Construction Professionals. Share opportunities, ask questions and post your project photos!</field>
+        </record>
+
+        <!-- Demo Event -->
+        <record id="heyla_network_event_1" model="heyla.network.event">
+            <field name="name">National Construction Career Fair 2026</field>
+            <field name="description">Meet top construction employers, recruiters and training institutions.</field>
+            <field name="event_type">career_fair</field>
+            <field name="organizer_id" ref="heyla_user_admin"/>
+            <field name="organizer_name">HEYLA Connect</field>
+            <field name="community_id" ref="heyla_network_community_1"/>
+            <field name="location">Sarit Expo Centre, Nairobi</field>
+            <field name="start_time">2026-09-15 08:00:00</field>
+            <field name="end_time">2026-09-17 18:00:00</field>
+            <field name="capacity">2000</field>
+            <field name="certificate_issued">True</field>
+        </record>
+        <record id="heyla_network_event_2" model="heyla.network.event">
+            <field name="name">Welding Trade Test &amp; Certification Drive</field>
+            <field name="description">Free NITA trade testing and certification for welders.</field>
+            <field name="event_type">training</field>
+            <field name="organizer_id" ref="heyla_user_manager"/>
+            <field name="organizer_name">HEYLA Connect</field>
+            <field name="community_id" ref="heyla_network_community_2"/>
+            <field name="location">NITA Nakuru Campus</field>
+            <field name="start_time">2026-10-05 09:00:00</field>
+            <field name="end_time">2026-10-06 16:00:00</field>
+            <field name="capacity">300</field>
+        </record>
+
     </data>
 </odoo>
