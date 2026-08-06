@@ -55,6 +55,24 @@ import AiHubPage from '@/pages/network-tap/AiHubPage';
 import PaymentPage from '@/pages/payment/PaymentPage';
 import TransportPage from '@/pages/transport/TransportPage';
 import FuelPage from '@/pages/fuel/FuelPage';
+import FleetDashboardPage from '@/modules/transport/pages/FleetDashboardPage';
+import VehiclesPage from '@/modules/transport/pages/VehiclesPage';
+import VehicleDetailPage from '@/modules/transport/pages/VehicleDetailPage';
+import FuelManagementPage from '@/modules/transport/pages/FuelManagementPage';
+import FuelAnalyticsPage from '@/modules/transport/pages/FuelAnalyticsPage';
+import TripManagementPage from '@/modules/transport/pages/TripManagementPage';
+import FlexibleCostingPage from '@/modules/transport/pages/FlexibleCostingPage';
+import WorkshopPage from '@/modules/transport/pages/WorkshopPage';
+import PreventiveMaintenancePage from '@/modules/transport/pages/PreventiveMaintenancePage';
+import TyreManagementPage from '@/modules/transport/pages/TyreManagementPage';
+import BreakdownsPage from '@/modules/transport/pages/BreakdownsPage';
+import DriverManagementPage from '@/modules/transport/pages/DriverManagementPage';
+import DriverScorecardsPage from '@/modules/transport/pages/DriverScorecardsPage';
+import ProfitabilityPage from '@/modules/transport/pages/ProfitabilityPage';
+import HeavyEquipmentPage from '@/modules/transport/pages/HeavyEquipmentPage';
+import TelematicsPage from '@/modules/transport/pages/TelematicsPage';
+import ComplianceCenterPage from '@/modules/transport/pages/ComplianceCenterPage';
+import TransportReportsPage from '@/modules/transport/pages/TransportReportsPage';
 import JobsPage from '@/pages/jobs/JobsPage';
 import CareersPage from '@/pages/careers/CareersPage';
 import EHSPage from '@/pages/ehs/EHSPage';
@@ -196,6 +214,24 @@ const accountingPayrollRoute = createRoute({ getParentRoute: () => protectedLayo
 const inventoryRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/inventory', component: InventoryPage });
 const transportRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport', component: TransportPage });
 const fuelRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/fuel', component: FuelPage });
+const ftiDashboardRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/fti', component: FleetDashboardPage });
+const ftiVehiclesRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/vehicles', component: VehiclesPage });
+const ftiVehicleDetailRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/vehicles/$id', component: VehicleDetailPage });
+const ftiFuelRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/fuel', component: FuelManagementPage });
+const ftiFuelAnalyticsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/fuel-analytics', component: FuelAnalyticsPage });
+const ftiTripsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/trips', component: TripManagementPage });
+const ftiCostingRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/costing', component: FlexibleCostingPage });
+const ftiWorkshopRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/workshop', component: WorkshopPage });
+const ftiMaintenanceRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/maintenance', component: PreventiveMaintenancePage });
+const ftiTyresRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/tyres', component: TyreManagementPage });
+const ftiBreakdownsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/breakdowns', component: BreakdownsPage });
+const ftiDriversRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/drivers', component: DriverManagementPage });
+const ftiDriverScoresRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/driver-scores', component: DriverScorecardsPage });
+const ftiProfitabilityRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/profitability', component: ProfitabilityPage });
+const ftiHeavyEquipmentRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/heavy-equipment', component: HeavyEquipmentPage });
+const ftiTelematicsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/telematics', component: TelematicsPage });
+const ftiComplianceRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/compliance', component: ComplianceCenterPage });
+const ftiReportsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/reports', component: TransportReportsPage });
 const networkingRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking', component: NetworkingPage });
 const networkingProfileRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/profile', component: NetworkingProfilePage });
 const networkingUserProfileRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/profile/$userId', component: NetworkingUserProfilePage });
@@ -230,7 +266,13 @@ const protectedChildren = [
   hrPerformanceRoute, hrWibaRoute, hrInjuriesRoute, hrBlacklistRoute,
   hrDocumentsRoute, hrPayrollRoute, jobsRoute, ehsRoute, engineeringRoute,
   crmRoute, accountingRoute, accountingPayrollRoute, inventoryRoute,
-  transportRoute, fuelRoute, networkingRoute, networkingProfileRoute, networkingUserProfileRoute, networkingNetworkRoute, networkingDiscoverRoute, marketplaceRoute,
+  transportRoute, fuelRoute,
+  ftiDashboardRoute, ftiVehiclesRoute, ftiVehicleDetailRoute, ftiFuelRoute,
+  ftiFuelAnalyticsRoute, ftiTripsRoute, ftiCostingRoute, ftiWorkshopRoute,
+  ftiMaintenanceRoute, ftiTyresRoute, ftiBreakdownsRoute, ftiDriversRoute,
+  ftiDriverScoresRoute, ftiProfitabilityRoute, ftiHeavyEquipmentRoute,
+  ftiTelematicsRoute, ftiComplianceRoute, ftiReportsRoute,
+  networkingRoute, networkingProfileRoute, networkingUserProfileRoute, networkingNetworkRoute, networkingDiscoverRoute, marketplaceRoute,
   settingsRoute, adminRoute, manageUsersRoute,
 ];
 
