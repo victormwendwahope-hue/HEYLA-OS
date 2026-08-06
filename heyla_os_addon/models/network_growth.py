@@ -1,4 +1,4 @@
-from odoo import models, fields
+from odoo import models, fields, api
 from datetime import datetime
 
 
@@ -119,7 +119,7 @@ class NetworkCommunity(models.Model):
 
     post_ids = fields.One2many('heyla.network.community.post', 'community_id', string='Posts')
 
-    @fields.depends('member_ids', 'post_ids')
+    @api.depends('member_ids', 'post_ids')
     def _compute_counts(self):
         for rec in self:
             rec.member_count = len(rec.member_ids)
@@ -142,7 +142,7 @@ class NetworkCommunityPost(models.Model):
     like_count = fields.Integer(string='Likes', compute='_compute_likes', store=True)
     like_ids = fields.One2many('heyla.network.community.post.like', 'post_id', string='Likes')
 
-    @fields.depends('like_ids')
+    @api.depends('like_ids')
     def _compute_likes(self):
         for rec in self:
             rec.like_count = len(rec.like_ids)
@@ -191,7 +191,7 @@ class NetworkEvent(models.Model):
     attendee_count = fields.Integer(string='Attendees', compute='_compute_attendees', store=True)
     created_at = fields.Datetime(string='Created At', default=fields.Datetime.now)
 
-    @fields.depends('attendee_ids')
+    @api.depends('attendee_ids')
     def _compute_attendees(self):
         for rec in self:
             rec.attendee_count = len(rec.attendee_ids)
