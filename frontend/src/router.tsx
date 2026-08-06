@@ -23,6 +23,22 @@ import WIBAPage from '@/pages/hr/WIBAPage';
 import InjuryPage from '@/pages/hr/InjuryPage';
 import HRPayrollPage from '@/pages/hr/HRPayrollPage';
 import CRMPage from '@/pages/crm/CRMPage';
+import CrmDashboardPage from '@/modules/crm/pages/CrmDashboardPage';
+import CustomersPage from '@/modules/crm/pages/CustomersPage';
+import CustomerDetailsPage from '@/modules/crm/pages/CustomerDetailsPage';
+import LeadsPage from '@/modules/crm/pages/LeadsPage';
+import LeadDetailsPage from '@/modules/crm/pages/LeadDetailsPage';
+import OpportunitiesPage from '@/modules/crm/pages/OpportunitiesPage';
+import PipelineBoardPage from '@/modules/crm/pages/PipelineBoardPage';
+import QuotationsPage from '@/modules/crm/pages/QuotationsPage';
+import QuotationBuilderPage from '@/modules/crm/pages/QuotationBuilderPage';
+import CommunicationsPage from '@/modules/crm/pages/CommunicationsPage';
+import TicketsPage from '@/modules/crm/pages/TicketsPage';
+import CustomerSuccessPage from '@/modules/crm/pages/CustomerSuccessPage';
+import ForecastingPage from '@/modules/crm/pages/ForecastingPage';
+import SalesTeamPage from '@/modules/crm/pages/SalesTeamPage';
+import AutomationsPage from '@/modules/crm/pages/AutomationsPage';
+import CrmReportsPage from '@/modules/crm/pages/CrmReportsPage';
 import AccountingPage from '@/pages/accounting/AccountingPage';
 import PayrollPage from '@/pages/accounting/PayrollPage';
 import InventoryPage from '@/pages/inventory/InventoryPage';
@@ -208,7 +224,22 @@ const hrPayrollRoute = createRoute({ getParentRoute: () => protectedLayoutRoute,
 const jobsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/jobs', component: JobsPage });
 const ehsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs', component: EHSPage });
 const engineeringRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/engineering', component: EngineeringPage });
-const crmRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm', component: CRMPage });
+const crmRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm', component: CrmDashboardPage });
+const crmCustomersRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/customers', component: CustomersPage });
+const crmCustomerDetailRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/customers/$id', component: CustomerDetailsPage });
+const crmLeadsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/leads', component: LeadsPage });
+const crmLeadDetailRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/leads/$id', component: LeadDetailsPage });
+const crmOpportunitiesRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/opportunities', component: OpportunitiesPage });
+const crmPipelineRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/pipeline', component: PipelineBoardPage });
+const crmQuotationsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/quotations', component: QuotationsPage });
+const crmQuotationBuilderRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/quotations/builder', component: QuotationBuilderPage });
+const crmCommunicationsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/communications', component: CommunicationsPage });
+const crmTicketsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/tickets', component: TicketsPage });
+const crmCustomerSuccessRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/customer-success', component: CustomerSuccessPage });
+const crmForecastingRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/forecasting', component: ForecastingPage });
+const crmSalesTeamRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/sales-team', component: SalesTeamPage });
+const crmAutomationsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/automations', component: AutomationsPage });
+const crmReportsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/reports', component: CrmReportsPage });
 const accountingRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/accounting', component: AccountingPage });
 const accountingPayrollRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/accounting/payroll', component: PayrollPage });
 const inventoryRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/inventory', component: InventoryPage });
@@ -265,7 +296,10 @@ const protectedChildren = [
   dashboardRoute, hrRoute, hrEmployeeRoute, hrAttendanceRoute, hrLeaveRoute,
   hrPerformanceRoute, hrWibaRoute, hrInjuriesRoute, hrBlacklistRoute,
   hrDocumentsRoute, hrPayrollRoute, jobsRoute, ehsRoute, engineeringRoute,
-  crmRoute, accountingRoute, accountingPayrollRoute, inventoryRoute,
+  crmRoute, crmCustomersRoute, crmCustomerDetailRoute, crmLeadsRoute, crmLeadDetailRoute,
+  crmOpportunitiesRoute, crmPipelineRoute, crmQuotationsRoute, crmQuotationBuilderRoute,
+  crmCommunicationsRoute, crmTicketsRoute, crmCustomerSuccessRoute, crmForecastingRoute,
+  crmSalesTeamRoute, crmAutomationsRoute, crmReportsRoute, accountingRoute, accountingPayrollRoute, inventoryRoute,
   transportRoute, fuelRoute,
   ftiDashboardRoute, ftiVehiclesRoute, ftiVehicleDetailRoute, ftiFuelRoute,
   ftiFuelAnalyticsRoute, ftiTripsRoute, ftiCostingRoute, ftiWorkshopRoute,

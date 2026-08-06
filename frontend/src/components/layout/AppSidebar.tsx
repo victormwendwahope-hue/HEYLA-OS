@@ -7,6 +7,7 @@ import {
   Truck, Fuel, Briefcase, Moon, Sun, HeartPulse, Shield, HardHat, ShieldCheck,
   AlertTriangle, ClipboardCheck, Bell, Building2, FileSignature, Scale, Banknote, Gavel, ShieldAlert,
   User, UserPlus, MessageCircle, Activity, Navigation, Wallet, Wrench, CalendarClock, Disc, Satellite,
+  Target, LifeBuoy, Users2, Zap,
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -44,7 +45,21 @@ const mainNav = [
     { title: 'Early Warnings', url: '/engineering', icon: ShieldAlert },
   ] },
   { title: 'Jobs & Recruitment', url: '/jobs', icon: Briefcase },
-  { title: 'CRM', url: '/crm', icon: TrendingUp },
+  { title: 'CRM', url: '/crm', icon: TrendingUp, items: [
+    { title: 'Overview', url: '/crm', icon: LayoutDashboard },
+    { title: 'Customers', url: '/crm/customers', icon: Users },
+    { title: 'Leads', url: '/crm/leads', icon: Target },
+    { title: 'Opportunities', url: '/crm/opportunities', icon: TrendingUp },
+    { title: 'Pipeline Board', url: '/crm/pipeline', icon: Activity },
+    { title: 'Quotations', url: '/crm/quotations', icon: FileText },
+    { title: 'Communications', url: '/crm/communications', icon: MessageCircle },
+    { title: 'Tickets', url: '/crm/tickets', icon: LifeBuoy },
+    { title: 'Customer Success', url: '/crm/customer-success', icon: HeartPulse },
+    { title: 'Forecasting', url: '/crm/forecasting', icon: Target },
+    { title: 'Sales Team', url: '/crm/sales-team', icon: Users2 },
+    { title: 'Automations', url: '/crm/automations', icon: Zap },
+    { title: 'Reports', url: '/crm/reports', icon: ClipboardCheck },
+  ] },
   { title: 'Accounting', url: '/accounting', icon: DollarSign, items: [
     { title: 'Overview', url: '/accounting', icon: DollarSign },
     { title: 'Payroll', url: '/accounting/payroll', icon: Receipt },
