@@ -3,7 +3,6 @@ import { useAuthStore } from '@/store/authStore';
 import { useEmployeeStore } from '@/store/employeeStore';
 import { Bell, Search, ChevronDown, Settings, LogOut, Shield, X, Loader2, FileText, Users, CheckCheck, Trash2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { countries } from '@/utils/countries';
 import { useNavigate } from '@tanstack/react-router';
 import { getToken, apiBaseUrl } from '@/lib/api';
 import { sanitizeUrl } from '@/lib/secure';
@@ -29,25 +28,20 @@ export function TopBar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<{ type: string; label: string; sub: string; to: string }[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState('KE');
-  const [showCountry, setShowCountry] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notifLoading, setNotifLoading] = useState(false);
 
-  const countryRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  const country = countries.find((c) => c.code === selectedCountry) || countries[0];
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (countryRef.current && !countryRef.current.contains(e.target as Node)) setShowCountry(false);
       if (userRef.current && !userRef.current.contains(e.target as Node)) setShowUserMenu(false);
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false);
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) setShowSearchResults(false);
@@ -169,30 +163,6 @@ export function TopBar() {
       </div>
 
       <nav className="flex items-center gap-1 md:gap-2 shrink-0">
-        {/* Country Selector */}
-        <div className="relative" ref={countryRef}>
-          <button onClick={() => setShowCountry(!showCountry)}
-            className="flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-muted/50 text-sm transition-colors">
-            <span className="text-base">{country.flag}</span>
-            <span className="hidden lg:inline text-muted-foreground text-xs">{country.code}</span>
-            <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${showCountry ? 'rotate-180' : ''}`} />
-          </button>
-          {showCountry && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-lg z-50 max-h-72 overflow-y-auto animate-in fade-in slide-in-from-top-2">
-              <div className="p-1">
-                {countries.map((c) => (
-                  <button key={c.code} onClick={() => { setSelectedCountry(c.code); setShowCountry(false); }}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-muted/50 transition-colors ${c.code === selectedCountry ? 'bg-primary/10 text-primary font-medium' : ''}`}>
-                    <span className="text-lg shrink-0">{c.flag}</span>
-                    <span className="flex-1 text-left truncate">{c.name}</span>
-                    <span className="text-muted-foreground text-xs shrink-0">{c.currency}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Notifications */}
         <div className="relative" ref={notifRef}>
           <button onClick={() => { if (!showNotifications) fetchNotifications(); setShowNotifications(!showNotifications); }}
