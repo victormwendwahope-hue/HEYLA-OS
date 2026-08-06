@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PageHeader, StatCard } from '@/components/shared/CommonUI';
-import { Users, Star, IdCard, CalendarCheck, Plus } from 'lucide-react';
+import { Users, Star, IdCard, CalendarCheck, Plus, FileText } from 'lucide-react';
 import { useFleetStore } from '@/modules/transport/store/fleetStore';
 import { Badge, FilterSelect, SearchInput, SectionCard, statusVariantMap } from '@/modules/transport/components/Common';
 import AddDriverDialog from '@/modules/transport/components/AddDriverDialog';
@@ -87,6 +87,20 @@ export default function DriverManagementPage() {
                   <div className="flex justify-between"><span className="text-muted-foreground">Health score</span><span className="font-semibold">{avgScore}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Hired</span><span className="text-muted-foreground">{formatDate(d.hiredDate)}</span></div>
                 </div>
+                {(d.documents && d.documents.length > 0) && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1"><IdCard className="w-3 h-3" /> Documents ({d.documents.length})</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {d.documents.slice(0, 4).map((doc) => (
+                        <a key={doc.id} href={doc.data} download={doc.name}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-xs text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors max-w-[9rem]">
+                          <FileText className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{doc.name}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

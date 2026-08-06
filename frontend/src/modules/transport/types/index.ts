@@ -36,6 +36,7 @@ export interface Driver {
   avatar?: string;
   hiredDate: string;
   assignedVehicleId?: string;
+  documents?: { id: string; name: string; mime: string; size: number; data: string }[];
   scores: { fuelEfficiency: number; maintenance: number; breakdowns: number; tyres: number; behavior: number };
 }
 

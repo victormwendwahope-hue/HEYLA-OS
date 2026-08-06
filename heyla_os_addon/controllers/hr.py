@@ -95,6 +95,7 @@ class HRController(http.Controller):
                 'emergency_phone': data.get('emergencyPhone', ''),
                 'bank_name': data.get('bankName', ''),
                 'bank_account': data.get('bankAccount', ''),
+                'avatar': data.get('avatar', ''),
             }
             emp = request.env['heyla.employee'].sudo().create(vals)
             return http.Response(
@@ -559,6 +560,100 @@ class HRController(http.Controller):
             return http.Response(json.dumps({'error': 'Not found'}), content_type='application/json', status=404)
         doc.sudo().unlink()
         return http.Response(json.dumps({'ok': True}), content_type='application/json', status=200)
+
+    # ---- Employee Photo / Avatar ----
+    @http.route('/api/employees/<int:emp_id>/photo', type='http', auth='none', methods=['POST'], csrf=False)
+    def upload_employee_photo(self, emp_id):
+        return _auth_required(lambda: self._upload_employee_photo(emp_id))()
+
+    def _upload_employee_photo(self, emp_id):
+        try:
+            emp = request.env['heyla.employee'].sudo().browse(emp_id)
+            if not emp.exists():
+                return http.Response(json.dumps({'error': 'Employee not found'}), content_type='application/json', status=404)
+            file = request.httprequest.files.get('file')
+            if not file:
+                return http.Response(json.dumps({'error': 'No file provided'}), content_type='application/json', status=400)
+            mimetype = file.content_type or ''
+            if 'image' not in mimetype:
+                return http.Response(json.dumps({'error': 'Only image files are allowed'}), content_type='application/json', status=400)
+            data = file.read()
+            b32 = base64.b64encode(data).decode('utf-8') if isinstance(data, bytes) else str(data)
+            emp.sudo().write({'avatar': b32})
+            return http.Response(
+                json.dumps({'id': str(emp.id), 'avatar': self._avatar_url(emp)}),
+                content_type='application/json', status=200,
+            )
+        except Exception:
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
+
+    def _avatar_url(self, emp):
+        if not emp.avatar:
+            return ''
+        b32 = emp.avatar
+        import re
+        mime = 'image/png'
+        if b32.startswith('data:'):
+            m = re.match(r'data:([^;,]+);base64,', b32)
+            if m:
+                mime = m.group(1)
+                b32 = b32.split(',', 1)[1]
+        try:
+            import binascii
+            raw = base64.b64decode(b32)
+            b = base64.b64encode(raw).decode('utf-8')
+            return f'data:{mime};base64,{b}'
+        except (binascii.Error, Exception):
+            return b32
+
+    @http.route('/api/employees/<int:emp_id>/avatar', type='http', auth='none', methods=['GET'], csrf=False)
+    def get_employee_avatar(self, emp_id):
+        emp = request.env['heyla.employee'].sudo().browse(emp_id)
+        if not emp.exists() or not emp.avatar:
+            return http.Response(json.dumps({'error': 'Avatar not found'}), content_type='application/json', status=404)
+        import re
+        b32 = emp.avatar
+        mime = 'image/png'
+        if b32.startswith('data:'):
+            m = re.match(r'data:([^;,]+);base64,', b32)
+            if m:
+                mime = m.group(1)
+                b32 = b32.split(',', 1)[1]
+        return http.Response(base64.b64decode(b32), headers=[('Content-Type', mime)], status=200)
+
+    # ---- Payroll number config (prefix + formula) ----
+    @http.route('/api/payroll-number-config', type='http', auth='none', methods=['GET'], csrf=False)
+    def get_payroll_config(self):
+        return _auth_required(lambda: http.Response(
+            json.dumps({
+                'prefix': request.env['ir.config_parameter'].sudo().get_param('heyla.payroll.prefix', default='PAY'),
+                'separator': request.env['ir.config_parameter'].sudo().get_param('heyla.payroll.separator', default='-'),
+                'padding': int(request.env['ir.config_parameter'].sudo().get_param('heyla.payroll.padding', default='5') or '5'),
+            }), content_type='application/json', status=200,
+        ))()
+
+    @http.route('/api/payroll-number-config', type='http', auth='none', methods=['PUT'], csrf=False)
+    def update_payroll_config(self):
+        return _auth_required(lambda: self._update_payroll_config())()
+
+    def _update_payroll_config(self):
+        try:
+            data = json.loads(request.httprequest.data)
+            params = request.env['ir.config_parameter'].sudo()
+            if 'prefix' in data:
+                params.set_param('heyla.payroll.prefix', str(data.get('prefix', 'PAY'))[:20])
+            if 'separator' in data:
+                params.set_param('heyla.payroll.separator', str(data.get('separator', '-'))[:4])
+            if 'padding' in data:
+                pad = max(1, min(12, int(data.get('padding', 5) or 5)))
+                params.set_param('heyla.payroll.padding', str(pad))
+            return http.Response(json.dumps({
+                'prefix': params.get_param('heyla.payroll.prefix', default='PAY'),
+                'separator': params.get_param('heyla.payroll.separator', default='-'),
+                'padding': int(params.get_param('heyla.payroll.padding', default='5') or '5'),
+            }), content_type='application/json', status=200)
+        except (json.JSONDecodeError, ValueError):
+            return http.Response(json.dumps({'error': 'Request failed'}), content_type='application/json', status=400)
 
     # ---- Leave ----
     @http.route('/api/leave', type='http', auth='none', methods=['GET'], csrf=False)

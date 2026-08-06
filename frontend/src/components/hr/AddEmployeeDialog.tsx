@@ -55,6 +55,7 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadedCount, setUploadedCount] = useState(0);
+  const [avatarData, setAvatarData] = useState<string | null>(null);
 
   if (!open) return null;
 
@@ -83,6 +84,15 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
     setCreatedId(null);
     setFiles([]);
     setUploadedCount(0);
+    setAvatarData(null);
+  };
+
+  const onPickPhoto = (file?: File) => {
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { toast.error('Please upload an image file'); return; }
+    const reader = new FileReader();
+    reader.onload = () => setAvatarData(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -96,6 +106,7 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
       ...form,
       id: Date.now().toString(),
       payrollNumber: generatePayrollNumber(),
+      avatar: avatarData || undefined,
       baseSalary: Number(form.baseSalary) || 0,
       hourlyRate: Number(form.hourlyRate) || 0,
       housingAllowance: Number(form.housingAllowance) || 0,
@@ -205,6 +216,21 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-6">
+          {/* Photo */}
+          <div>
+            <h3 className="text-sm font-semibold mb-3 text-primary">Passport Photo</h3>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-dashed border-border flex items-center justify-center shrink-0 bg-muted/40">
+                {avatarData ? <img src={avatarData} alt="Passport" className="w-full h-full object-cover" /> : <Upload className="w-6 h-6 text-muted-foreground" />}
+              </div>
+              <label className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-4 cursor-pointer hover:border-primary/40 transition-colors text-center">
+                <span className="text-sm font-medium text-primary flex items-center gap-1"><Upload className="w-4 h-4" /> Upload photo</span>
+                <span className="text-xs text-muted-foreground mt-1">Used as the employee&apos;s avatar. JPG/PNG.</span>
+                <input type="file" accept="image/*" onChange={(e) => onPickPhoto(e.target.files?.[0])} className="hidden" />
+              </label>
+            </div>
+          </div>
+
           {/* Personal */}
           <div>
             <h3 className="text-sm font-semibold mb-3 text-primary">Personal Information</h3>

@@ -1,9 +1,10 @@
 import { PageHeader } from '@/components/shared/CommonUI';
 import { useAuthStore } from '@/store/authStore';
 import { useState, useRef, useEffect } from 'react';
-import { User, Building2, Bell, Shield, Palette, Check, Camera, Loader2 } from 'lucide-react';
+import { User, Building2, Bell, Shield, Palette, BadgeDollarSign, Check, Camera, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { sanitizeUrl } from '@/lib/secure';
+import { api } from '@/lib/api';
 
 export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
@@ -25,6 +26,13 @@ export default function SettingsPage() {
     return 'light';
   });
 
+  const [payroll, setPayroll] = useState({ prefix: 'PAY', separator: '-', padding: 5 });
+  const [payrollSaving, setPayrollSaving] = useState(false);
+
+  useEffect(() => {
+    api.payrollNumber.get().then((cfg) => setPayroll({ prefix: cfg.prefix, separator: cfg.separator, padding: cfg.padding })).catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (theme === 'dark') document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
@@ -34,6 +42,7 @@ export default function SettingsPage() {
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'company', label: 'Company', icon: Building2 },
+    { id: 'payroll', label: 'Payroll', icon: BadgeDollarSign },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'appearance', label: 'Appearance', icon: Palette },
@@ -57,6 +66,21 @@ export default function SettingsPage() {
       await updateProfile({ name: profile.name, company: profile.company, avatar: avatarPreview || undefined });
     } catch { toast.error('Failed to save profile'); }
     setSaving(false);
+  };
+
+  const handleSavePayroll = async () => {
+    setPayrollSaving(true);
+    try {
+      await api.payrollNumber.update({
+        prefix: payroll.prefix.trim() || 'PAY',
+        separator: payroll.separator,
+        padding: payroll.padding,
+      });
+      toast.success('Payroll number format saved');
+    } catch {
+      toast.error('Failed to save payroll settings');
+    }
+    setPayrollSaving(false);
   };
 
   const handleChangePassword = async () => {
@@ -153,6 +177,45 @@ export default function SettingsPage() {
               </div>
               <button onClick={() => toast.success('Company settings saved')}
                 className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Save</button>
+            </div>
+          )}
+
+          {tab === 'payroll' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold">Payroll Number Configuration</h3>
+              <p className="text-sm text-muted-foreground">
+                Control how employee payroll numbers are auto-generated. Each number is drawn from a sequential counter that is
+                <span className="font-semibold"> never reused</span> — even if a number was assigned to a fired or deceased employee,
+                it will not be handed to anyone else.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Prefix</label>
+                  <input value={payroll.prefix} onChange={(e) => setPayroll({ ...payroll, prefix: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="PAY" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Separator</label>
+                  <input value={payroll.separator} maxLength={2} onChange={(e) => setPayroll({ ...payroll, separator: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm font-mono text-center focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="-"/>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Padding (digits)</label>
+                  <input type="number" min={1} max={12} value={payroll.padding}
+                    onChange={(e) => setPayroll({ ...payroll, padding: Math.max(1, Math.min(12, Number(e.target.value) || 5)) })}
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+              </div>
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Next payroll number preview</p>
+                <p className="text-xl font-bold font-mono tracking-tight">
+                  {payroll.prefix.trim() || 'PAY'}{payroll.separator}{String(1001).padStart(payroll.padding, '0')}
+                </p>
+              </div>
+              <button onClick={handleSavePayroll} disabled={payrollSaving}
+                className="gradient-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity inline-flex items-center gap-2 disabled:opacity-50">
+                {payrollSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : 'Save Payroll Settings'}
+              </button>
             </div>
           )}
 

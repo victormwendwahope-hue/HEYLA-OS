@@ -155,6 +155,20 @@ export const api = {
     return request<{ url: string; filename: string; size: number; mime: string }>('POST', '/upload', fd);
   },
 
+  payrollNumber: {
+    get: () => request<{ prefix: string; separator: string; padding: number }>('GET', '/payroll-number-config'),
+    update: (data: { prefix: string; separator: string; padding: number }) =>
+      request<{ prefix: string; separator: string; padding: number }>('PUT', '/payroll-number-config', data),
+  },
+
+  employeePhoto: {
+    upload: async (empId: string, file: File) => {
+      const fd = new FormData();
+      fd.append('file', file);
+      return request<{ id: string; avatar: string }>('POST', `/employees/${empId}/photo`, fd);
+    },
+  },
+
   auth: {
     login: (email: string, password: string) =>
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/login', { email, password }),

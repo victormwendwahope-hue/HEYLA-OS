@@ -74,14 +74,12 @@ class HeylaEmployee(models.Model):
 
     @api.model
     def _generate_payroll_number(self):
-        last = self.search([], order='id desc', limit=1)
-        num = 1
-        if last and last.payroll_number:
-            try:
-                num = int(last.payroll_number.split('-')[-1]) + 1
-            except (ValueError, IndexError):
-                num = len(self.search([])) + 1
-        return f'PAY-{num:05d}'
+        params = self.env['ir.config_parameter'].sudo()
+        prefix = params.get_param('heyla.payroll.prefix', default='PAY')
+        separator = params.get_param('heyla.payroll.separator', default='-')
+        padding = int(params.get_param('heyla.payroll.padding', default='5') or '5')
+        counter = self.env['ir.sequence'].next_by_code('heyla.employee.payroll')
+        return f'{prefix}{separator}{counter:0{padding}d}' if (prefix or separator) else f'{counter:0{padding}d}'
 
     @api.model_create_multi
     def create(self, vals_list):

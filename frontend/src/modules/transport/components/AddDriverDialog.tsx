@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Upload, Camera, User } from 'lucide-react';
+import { X, Upload, Camera, User, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFleetStore } from '@/modules/transport/store/fleetStore';
 import { Driver } from '@/modules/transport/types';
@@ -19,6 +19,7 @@ export default function AddDriverDialog({ open, onClose }: Props) {
     name: '', phone: '', license: '', licenseExpiry: '', hiredDate: '', days: '',
   });
   const [avatar, setAvatar] = useState<string | null>(null);
+  const [docs, setDocs] = useState<{ id: string; name: string; mime: string; size: number; data: string }[]>([]);
 
   if (!open) return null;
 
@@ -33,6 +34,18 @@ export default function AddDriverDialog({ open, onClose }: Props) {
     const reader = new FileReader();
     reader.onload = () => setAvatar(reader.result as string);
     reader.readAsDataURL(file);
+  };
+
+  const onAddDocs = (files: FileList | null) => {
+    if (!files) return;
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const data = reader.result as string;
+        setDocs((prev) => [...prev, { id: `${Date.now()}-${Math.random()}`, name: file.name, mime: file.type || 'application/octet-stream', size: file.size, data }]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -53,6 +66,7 @@ export default function AddDriverDialog({ open, onClose }: Props) {
       rating: 5,
       avatar: avatar || undefined,
       hiredDate: new Date().toISOString().split('T')[0],
+      documents: docs.length ? docs : undefined,
       scores: { fuelEfficiency: 90, maintenance: 90, breakdowns: 90, tyres: 90, behavior: 90 },
     };
     addDriver(driver);
@@ -87,7 +101,7 @@ export default function AddDriverDialog({ open, onClose }: Props) {
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">JPG/PNG — used as the driver&apos;s avatar</p>
                 <input type="file" accept="image/*" capture="user"
-                  onChange={(e) => onPickPhoto(e.target.files?.[0])}
+                  onChange={(e) => onDropPhoto(e.target.files?.[0])}
                   className="hidden" />
               </label>
             </div>
@@ -95,6 +109,33 @@ export default function AddDriverDialog({ open, onClose }: Props) {
               <button type="button" onClick={() => setAvatar(null)} className="mt-2 text-xs text-destructive hover:underline flex items-center gap-1">
                 <Camera className="w-3 h-3" /> Remove photo
               </button>
+            )}
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold mb-3 text-primary">Documents</h3>
+            <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-4 cursor-pointer hover:border-primary/40 transition-colors text-center">
+              <div className="flex items-center gap-2 text-primary">
+                <Upload className="w-4 h-4" />
+                <span className="text-sm font-medium">Upload driving & ID documents</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">License, National ID, NTSA Certificate, Insurance...</p>
+              <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={(e) => onAddDocs(e.target.files)}
+                className="hidden" />
+            </label>
+            {docs.length > 0 && (
+              <div className="mt-3 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">{docs.length} document(s)</p>
+                {docs.map((d) => (
+                  <div key={d.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted">
+                    <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm truncate flex-1">{d.name}</span>
+                    <span className="text-[10px] text-muted-foreground">{(d.size / 1024).toFixed(0)} KB</span>
+                    <button type="button" onClick={() => setDocs((prev) => prev.filter((x) => x.id !== d.id))} className="text-destructive hover:underline text-xs">Remove</button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
