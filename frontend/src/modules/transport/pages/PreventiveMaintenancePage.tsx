@@ -31,7 +31,7 @@ export default function PreventiveMaintenancePage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Preventive Maintenance" description="Scheduled service intervals to prevent costly breakdowns">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Camera className="w-4 h-4" /> Log Service
           </button>

@@ -3,12 +3,14 @@ import { PageHeader, StatCard } from '@/components/shared/CommonUI';
 import { Users, Star, IdCard, CalendarCheck, Plus } from 'lucide-react';
 import { useFleetStore } from '@/modules/transport/store/fleetStore';
 import { Badge, FilterSelect, SearchInput, SectionCard, statusVariantMap } from '@/modules/transport/components/Common';
+import AddDriverDialog from '@/modules/transport/components/AddDriverDialog';
 import { daysUntil, formatDate, formatKm } from '@/modules/transport/utils/format';
 
 export default function DriverManagementPage() {
   const store = useFleetStore();
   useEffect(() => { store.init(); }, []);
 
+  const [addOpen, setAddOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -31,8 +33,8 @@ export default function DriverManagementPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Driver Management" description="Licenses, availability, and performance profiles">
-        <div className="flex gap-2">
-          <button className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setAddOpen(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Plus className="w-4 h-4" /> Add Driver
           </button>
         </div>
@@ -61,8 +63,12 @@ export default function DriverManagementPage() {
             return (
               <div key={d.id} className="glass rounded-xl p-5 hover:shadow-elevated transition-shadow">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
-                    {(d.name || 'D').charAt(0)}
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg overflow-hidden shrink-0 gradient-primary text-primary-foreground">
+                    {d.avatar ? (
+                      <img src={d.avatar} alt={d.name} className="w-full h-full object-cover" />
+                    ) : (
+                      (d.name || 'D').charAt(0)
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{d.name}</p>
@@ -87,6 +93,8 @@ export default function DriverManagementPage() {
           {!filtered.length && <div className="col-span-full py-8 text-center text-sm text-muted-foreground">No drivers match the filters.</div>}
         </div>
       </SectionCard>
+
+      <AddDriverDialog open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }

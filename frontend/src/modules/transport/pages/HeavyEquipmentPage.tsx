@@ -3,6 +3,7 @@ import { PageHeader, StatCard } from '@/components/shared/CommonUI';
 import { Construction, Gauge, Banknote, Clock, Filter, Wrench } from 'lucide-react';
 import { useFleetStore } from '@/modules/transport/store/fleetStore';
 import { Badge, FilterSelect, SearchInput, SectionCard, EmptyRow, BadgeVariant } from '@/modules/transport/components/Common';
+import AddEquipmentDialog from '@/modules/transport/components/AddEquipmentDialog';
 import { formatCurrency, formatDate } from '@/modules/transport/utils/format';
 
 const eqStatusVariant = (s: string): BadgeVariant => s === 'Available' ? 'success' : s === 'In Use' ? 'info' : s === 'Maintenance' ? 'warning' : 'default';
@@ -11,6 +12,7 @@ export default function HeavyEquipmentPage() {
   const store = useFleetStore();
   useEffect(() => { store.init(); }, []);
 
+  const [addOpen, setAddOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -42,8 +44,8 @@ export default function HeavyEquipmentPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Heavy Equipment" description="Excavators and plant — hours, utilization, and billing">
-        <div className="flex gap-2">
-          <button className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Add Equipment</button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setAddOpen(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">Add Equipment</button>
         </div>
       </PageHeader>
 
@@ -117,6 +119,8 @@ export default function HeavyEquipmentPage() {
           </div>
         </div>
       </div>
+
+      <AddEquipmentDialog open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }

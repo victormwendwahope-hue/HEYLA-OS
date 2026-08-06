@@ -3,6 +3,7 @@ import { PageHeader, StatCard } from '@/components/shared/CommonUI';
 import { Wrench, CircleDollarSign, PackageOpen, Gauge, ChevronRight, AlertCircle } from 'lucide-react';
 import { useFleetStore } from '@/modules/transport/store/fleetStore';
 import { Badge, FilterSelect, SearchInput, EmptyRow, SectionCard, statusVariantMap } from '@/modules/transport/components/Common';
+import AddWorkOrderDialog from '@/modules/transport/components/AddWorkOrderDialog';
 import { formatCurrency, formatDate } from '@/modules/transport/utils/format';
 
 export default function WorkshopPage() {
@@ -13,6 +14,8 @@ export default function WorkshopPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [prioFilter, setPrioFilter] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [noteDraft, setNoteDraft] = useState('');
 
   const wos = useMemo(() => [...store.workOrders].sort((a, b) => b.createdDate.localeCompare(a.createdDate)), [store.workOrders]);
 
@@ -40,8 +43,8 @@ export default function WorkshopPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Workshop & Work Orders" description="Repair lifecycle, part usage, and technician workload">
-        <div className="flex gap-2">
-          <button className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">New Work Order</button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setAddOpen(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">New Work Order</button>
         </div>
       </PageHeader>
 
@@ -133,9 +136,40 @@ export default function WorkshopPage() {
                     <div className="flex justify-between"><span className="text-muted-foreground">Created</span><span>{formatDate(selected.createdDate)}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Scheduled</span><span>{formatDate(selected.scheduledDate)}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Completed</span><span>{selected.completedDate ? formatDate(selected.completedDate) : '—'}</span></div>
-                    <div className="pt-2 border-t border-border flex gap-2">
-                      {selected.status !== 'Completed' && <button className="px-3 py-1.5 rounded-lg bg-success/10 text-success text-xs font-medium hover:bg-success/20">Mark Complete</button>}
-                      <button className="px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted">Add Note</button>
+                    <div className="pt-2 border-t border-border space-y-2">
+                      <div className="flex gap-2">
+                        {selected.status !== 'Completed' && (
+                          <button
+                            onClick={() => store.updateWorkOrder({ ...selected, status: 'Completed', completedDate: new Date().toISOString().split('T')[0] })}
+                            className="px-3 py-1.5 rounded-lg bg-success/10 text-success text-xs font-medium hover:bg-success/20">
+                            Mark Complete
+                          </button>
+                        )}
+                        {selected.status === 'Completed' && (
+                          <button
+                            onClick={() => store.updateWorkOrder({ ...selected, status: 'Open', completedDate: undefined })}
+                            className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-medium hover:bg-muted/60">
+                            Reopen
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <input value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)}
+                          placeholder="Add a note..."
+                          className="flex-1 px-3 py-1.5 rounded-lg border border-input bg-background text-xs focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                        <button
+                          onClick={() => {
+                            if (!noteDraft.trim()) return;
+                            store.updateWorkOrder({ ...selected, notes: [selected.notes, noteDraft.trim()].filter(Boolean).join('\n') });
+                            setNoteDraft('');
+                          }}
+                          className="px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted">
+                          Add Note
+                        </button>
+                      </div>
+                      {selected.notes && (
+                        <p className="text-xs text-muted-foreground whitespace-pre-wrap border-t border-border pt-2">{selected.notes}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -179,6 +213,8 @@ export default function WorkshopPage() {
           </SectionCard>
         </div>
       </div>
+
+      <AddWorkOrderDialog open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }

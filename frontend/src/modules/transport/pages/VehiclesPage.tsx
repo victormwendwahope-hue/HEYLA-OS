@@ -4,6 +4,7 @@ import { PageHeader, StatCard } from '@/components/shared/CommonUI';
 import { Truck, Plus, ChevronRight, Fuel, Activity } from 'lucide-react';
 import { useFleetStore } from '@/modules/transport/store/fleetStore';
 import { HealthBadge, Badge, FilterSelect, SearchInput } from '@/modules/transport/components/Common';
+import AddVehicleDialog from '@/modules/transport/components/AddVehicleDialog';
 import { formatKm, formatKpl } from '@/modules/transport/utils/format';
 
 export default function VehiclesPage() {
@@ -11,6 +12,7 @@ export default function VehiclesPage() {
   const navigate = useNavigate();
   useEffect(() => { store.init(); }, []);
 
+  const [addOpen, setAddOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -45,8 +47,8 @@ export default function VehiclesPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Fleet Vehicles" description="Hover a vehicle to open its full health profile">
-        <div className="flex gap-2">
-          <button className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setAddOpen(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Plus className="w-4 h-4" /> Add Vehicle
           </button>
         </div>
@@ -104,6 +106,8 @@ export default function VehiclesPage() {
           </table>
         </div>
       </div>
+
+      <AddVehicleDialog open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }
