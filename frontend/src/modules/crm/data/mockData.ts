@@ -430,7 +430,7 @@ export function generateMockData() {
   }
 
   return {
-    companies, contacts, leads, opps, quotations, communications, tickets,
+    companies, contacts, leads, opportunities: opps, quotations, communications, tickets,
     contracts, activities, revenue, reps: REP_POOL,
   };
 }
