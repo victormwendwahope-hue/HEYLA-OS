@@ -91,7 +91,24 @@ import ComplianceCenterPage from '@/modules/transport/pages/ComplianceCenterPage
 import TransportReportsPage from '@/modules/transport/pages/TransportReportsPage';
 import JobsPage from '@/pages/jobs/JobsPage';
 import CareersPage from '@/pages/careers/CareersPage';
-import EHSPage from '@/pages/ehs/EHSPage';
+import EhsDashboard from '@/modules/ehs/pages/DashboardPage';
+import EhsIncidents from '@/modules/ehs/pages/IncidentsPage';
+import EhsIncidentDetails from '@/modules/ehs/pages/IncidentDetailsPage';
+import EhsInvestigations from '@/modules/ehs/pages/InvestigationsPage';
+import EhsHazards from '@/modules/ehs/pages/HazardRegisterPage';
+import EhsRiskAssessments from '@/modules/ehs/pages/RiskAssessmentsPage';
+import EhsPPE from '@/modules/ehs/pages/PPEManagementPage';
+import EhsInspections from '@/modules/ehs/pages/InspectionsPage';
+import EhsAudits from '@/modules/ehs/pages/AuditCenterPage';
+import EhsPermits from '@/modules/ehs/pages/PermitsToWorkPage';
+import EhsTraining from '@/modules/ehs/pages/SafetyTrainingPage';
+import EhsEnvironmental from '@/modules/ehs/pages/EnvironmentalManagementPage';
+import EhsFleet from '@/modules/ehs/pages/FleetSafetyPage';
+import EhsOccupationalHealth from '@/modules/ehs/pages/OccupationalHealthPage';
+import EhsCompliance from '@/modules/ehs/pages/ComplianceCenterPage';
+import EhsCorrectiveActions from '@/modules/ehs/pages/CorrectiveActionsPage';
+import EhsToolboxTalks from '@/modules/ehs/pages/ToolboxTalksPage';
+import EhsReports from '@/modules/ehs/pages/EHSReportsPage';
 import EngineeringPage from '@/pages/engineering/EngineeringPage';
 import NotFound from '@/pages/NotFound';
 import GeoLanding from '@/components/landing-pages/GeoLanding';
@@ -222,7 +239,24 @@ const hrBlacklistRoute = createRoute({ getParentRoute: () => protectedLayoutRout
 const hrDocumentsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/hr/documents', component: DocumentsPage });
 const hrPayrollRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/hr/payroll', component: HRPayrollPage });
 const jobsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/jobs', component: JobsPage });
-const ehsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs', component: EHSPage });
+const ehsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs', component: EhsDashboard });
+const ehsIncidentsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/incidents', component: EhsIncidents });
+const ehsIncidentDetailRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/incidents/$id', component: EhsIncidentDetails });
+const ehsInvestigationsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/investigations', component: EhsInvestigations });
+const ehsHazardsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/hazards', component: EhsHazards });
+const ehsRiskAssessmentsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/risk-assessments', component: EhsRiskAssessments });
+const ehsPpeRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/ppe', component: EhsPPE });
+const ehsInspectionsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/inspections', component: EhsInspections });
+const ehsAuditsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/audits', component: EhsAudits });
+const ehsPermitsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/permits', component: EhsPermits });
+const ehsTrainingRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/training', component: EhsTraining });
+const ehsEnvironmentalRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/environmental', component: EhsEnvironmental });
+const ehsFleetRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/fleet', component: EhsFleet });
+const ehsOccupationalHealthRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/occupational-health', component: EhsOccupationalHealth });
+const ehsComplianceRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/compliance', component: EhsCompliance });
+const ehsCorrectiveActionsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/corrective-actions', component: EhsCorrectiveActions });
+const ehsToolboxTalksRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/toolbox-talks', component: EhsToolboxTalks });
+const ehsReportsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/ehs/reports', component: EhsReports });
 const engineeringRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/engineering', component: EngineeringPage });
 const crmRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm', component: CrmDashboardPage });
 const crmCustomersRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/crm/customers', component: CustomersPage });
@@ -295,7 +329,12 @@ const notFoundRoute = createRoute({ getParentRoute: () => rootRoute, path: '/$',
 const protectedChildren = [
   dashboardRoute, hrRoute, hrEmployeeRoute, hrAttendanceRoute, hrLeaveRoute,
   hrPerformanceRoute, hrWibaRoute, hrInjuriesRoute, hrBlacklistRoute,
-  hrDocumentsRoute, hrPayrollRoute, jobsRoute, ehsRoute, engineeringRoute,
+  hrDocumentsRoute, hrPayrollRoute, jobsRoute, ehsRoute,
+  ehsIncidentsRoute, ehsIncidentDetailRoute, ehsInvestigationsRoute, ehsHazardsRoute,
+  ehsRiskAssessmentsRoute, ehsPpeRoute, ehsInspectionsRoute, ehsAuditsRoute, ehsPermitsRoute,
+  ehsTrainingRoute, ehsEnvironmentalRoute, ehsFleetRoute, ehsOccupationalHealthRoute,
+  ehsComplianceRoute, ehsCorrectiveActionsRoute, ehsToolboxTalksRoute, ehsReportsRoute,
+  engineeringRoute,
   crmRoute, crmCustomersRoute, crmCustomerDetailRoute, crmLeadsRoute, crmLeadDetailRoute,
   crmOpportunitiesRoute, crmPipelineRoute, crmQuotationsRoute, crmQuotationBuilderRoute,
   crmCommunicationsRoute, crmTicketsRoute, crmCustomerSuccessRoute, crmForecastingRoute,
