@@ -18,7 +18,7 @@ export default function EHSDashboard() {
 
   const { incidents, hazards, inspections, permits, training, ppe, correctiveActions, vehicleSafety, hoursWorked } = store;
 
-  const openIncidents = incidents.filter((i) => i.status === 'Reported' || i.status === 'Investigating');
+  const openIncidents = incidents.filter((i) => i.status === 'Reported' || i.status === 'Investigating').length;
   const ltid = incidents.filter((i) => i.type === 'Lost Time Injury').length;
   const recordable = incidents.filter((i) => ['Lost Time Injury', 'Medical Treatment Injury'].includes(i.type)).length;
   const nearMisses = incidents.filter((i) => i.type === 'Near Miss').length;
