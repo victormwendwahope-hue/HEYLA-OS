@@ -27,7 +27,7 @@ export default function CrmDashboardPage() {
   const criticalTickets = tickets.filter((t) => t.priority === 'Critical' && ['Open', 'In Progress'].includes(t.status));
   const activeCustomers = companies.filter((c) => ['Active', 'VIP'].includes(c.status)).length;
   const atRisk = companies.filter((c) => c.healthBand === 'risk' || c.healthBand === 'attention');
-  const activeContracts = contracts.filter((c) => ['Active', 'Expiring'].includes(c.status));
+  const activeContracts = contracts.filter((c) => ['Active', 'Expiring'].includes(c.status)).length;
 
   const leadScores = useMemo(() => {
     const buckets = { Hot: 0, Warm: 0, Cool: 0, Cold: 0 };
