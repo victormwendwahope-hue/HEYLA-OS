@@ -73,7 +73,7 @@ export default function SalesTeamPage() {
                       <p className="text-sm font-medium">{r.name}</p>
                       <p className="text-xs text-muted-foreground">{r.role} · {r.region}</p>
                     </div>
-                    <Badge text={`${pct}%`} variant={quotaVariant(pct)} />
+                    <Badge text={`${pct}%`} variant={quotaV(pct)} />
                   </div>
                   <div className="mt-3">
                     <div className="flex justify-between text-xs mb-1">
