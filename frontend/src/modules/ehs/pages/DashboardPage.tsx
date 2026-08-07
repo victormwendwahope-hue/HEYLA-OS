@@ -25,7 +25,7 @@ export default function EHSDashboard() {
   const criticalHazards = hazards.filter((h) => h.band === 'critical' || h.band === 'high').length;
 
   const openHazards = hazards.filter((h) => h.status !== 'Closed').length;
-  const trainingValid = pct(training.filter((t) => t.status === 'Valid').length, training.length);
+  const trainingPct = pct(training.filter((t) => t.status === 'Valid').length, training.length);
   const inspectionPct = pct(inspections.filter((i) => i.result === 'Pass').length, inspections.length);
   const ppePct = pct(ppe.filter((p) => p.compliance === 'Compliant').length, ppe.length);
   const caPct = pct(correctiveActions.filter((c) => c.status === 'Completed' || c.status === 'Verified').length, correctiveActions.length);
