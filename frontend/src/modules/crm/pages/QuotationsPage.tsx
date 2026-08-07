@@ -5,7 +5,7 @@ import { Plus, FileText, ChevronRight, CheckCircle2, XCircle, Clock } from 'luci
 import { useCrmStore } from '@/modules/crm/store/crmStore';
 import { SectionCard, Badge, Avatar, FilterSelect, SearchInput, EmptyRow, Money } from '@/modules/crm/components/Common';
 import AddQuotationDialog from '@/modules/crm/components/AddQuotationDialog';
-import { formatDate } from '@/modules/crm/utils/format';
+import { formatDate, formatMoney } from '@/modules/crm/utils/format';
 
 const qv: Record<string, 'success' | 'warning' | 'info' | 'default' | 'destructive'> = {
   Accepted: 'success', Approved: 'success', Sent: 'info', Draft: 'default', Expired: 'warning', Rejected: 'destructive',
