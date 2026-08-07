@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { PageHeader, StatCard } from '@/components/shared/CommonUI';
 import {
   Users, Target, FileText, Ticket as TicketIcon, TrendingUp, Trophy, AlertTriangle,
-  Sparkles, ArrowUpRight, DollarSign, CheckCircle2,
+  Sparkles, ArrowRight, DollarSign, CheckCircle2,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { useCrmStore } from '@/modules/crm/store/crmStore';
