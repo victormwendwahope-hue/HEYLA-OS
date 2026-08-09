@@ -303,7 +303,14 @@ const networkingUserProfileRoute = createRoute({ getParentRoute: () => protected
 const networkingNetworkRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/network', component: NetworkingNetworkPage });
 const networkingDiscoverRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/discover', component: NetworkingDiscoverPage });
 const marketplaceRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/marketplace', component: MarketplacePage });
-const settingsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/settings', component: SettingsPage });
+const settingsRoute = createRoute({
+  getParentRoute: () => protectedLayoutRoute,
+  path: '/settings',
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: typeof search.tab === 'string' ? search.tab : undefined,
+  }),
+  component: SettingsPage,
+});
 const adminRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/admin', component: AdminPage });
 const manageUsersRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/manage-users', component: ManageUsersPage });
 

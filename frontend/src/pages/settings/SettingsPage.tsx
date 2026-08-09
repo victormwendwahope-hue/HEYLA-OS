@@ -1,6 +1,7 @@
 import { PageHeader } from '@/components/shared/CommonUI';
 import { useAuthStore } from '@/store/authStore';
 import { useState, useRef, useEffect } from 'react';
+import { useLocation } from '@tanstack/react-router';
 import { User, Building2, Bell, Shield, Palette, BadgeDollarSign, Check, Camera, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { sanitizeUrl } from '@/lib/secure';
@@ -11,7 +12,9 @@ export default function SettingsPage() {
   const updateUser = useAuthStore((s) => s.updateUser);
   const updateProfile = useAuthStore((s) => s.updateProfile);
   const changePassword = useAuthStore((s) => s.changePassword);
-  const [tab, setTab] = useState('profile');
+  const location = useLocation();
+  const requestedTab = (location.search as { tab?: string }).tab;
+  const [tab, setTab] = useState<string>(requestedTab || 'profile');
   const [profile, setProfile] = useState({ name: user?.name || '', email: user?.email || '', company: user?.company || '', phone: '' });
   const [notifications, setNotifications] = useState({ email: true, push: true, sms: false, weeklyReport: true });
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +50,11 @@ export default function SettingsPage() {
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'appearance', label: 'Appearance', icon: Palette },
   ];
+
+  useEffect(() => {
+    const valid = tabs.some((t) => t.id === requestedTab);
+    if (valid) setTab(requestedTab!);
+  }, [requestedTab]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];

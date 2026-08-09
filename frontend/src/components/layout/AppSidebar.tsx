@@ -8,7 +8,7 @@ import {
   AlertTriangle, ClipboardCheck, Bell, Building2, FileSignature, Scale, Banknote, Gavel, ShieldAlert,
   Search, Compass, FileCheck2, GraduationCap, Leaf, CheckCircle2, MessagesSquare, TriangleAlert,
   User, UserPlus, MessageCircle, Activity, Navigation, Wallet, Wrench, CalendarClock, Disc, Satellite,
-  Target, LifeBuoy, Users2, Zap,
+  Target, LifeBuoy, Users2, Zap, Lock,
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -230,6 +230,12 @@ export function AppSidebar() {
                 <Settings className="w-5 h-5 shrink-0" />
                 {!collapsed && <span>Settings</span>}
               </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={() => navigate({ to: '/settings', search: { tab: 'security' } })} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors cursor-pointer w-full">
+              <Lock className="w-5 h-5 shrink-0" />
+              {!collapsed && <span>Change Password</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>

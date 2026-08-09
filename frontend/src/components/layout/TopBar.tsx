@@ -1,7 +1,7 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/store/authStore';
 import { useEmployeeStore } from '@/store/employeeStore';
-import { Bell, Search, ChevronDown, Settings, LogOut, Shield, X, Loader2, FileText, Users, CheckCheck, Trash2 } from 'lucide-react';
+import { Bell, Search, ChevronDown, Settings, LogOut, Shield, X, Loader2, FileText, Users, CheckCheck, Trash2, Lock } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { getToken, apiBaseUrl } from '@/lib/api';
@@ -39,6 +39,10 @@ export function TopBar() {
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const nameParts = (user?.name || user?.company || user?.facilityName || 'User').split(/\s+/).filter(Boolean);
+  const avatarInitials = (nameParts[0]?.[0] || '') + (nameParts[1]?.[0] || nameParts[0]?.[1] || '');
+  const showInitials = (avatarInitials || 'U').toUpperCase();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -223,7 +227,9 @@ export function TopBar() {
               {user?.avatar ? (
                 <img src={sanitizeUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                <img src={sanitizeUrl(user?.facilityLogo || '/logo.png?v=3')} alt="HEYLA" className="w-full h-full object-cover" />
+                <div className="w-full h-full gradient-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground">
+                  {showInitials}
+                </div>
               )}
             </div>
             <div className="hidden md:block text-left max-w-[100px]">
@@ -234,15 +240,19 @@ export function TopBar() {
           </button>
 
           {showUserMenu && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-lg z-50 animate-in fade-in slide-in-from-top-2">
+            <div className="absolute right-0 top-full mt-2 w-56 max-w-[calc(100vw-1rem)] bg-card border border-border rounded-xl shadow-lg z-50 animate-in fade-in slide-in-from-top-2">
               <div className="p-3 border-b border-border">
                 <p className="font-medium text-sm truncate">{user?.name || 'User'}</p>
                 <p className="text-xs text-muted-foreground truncate">{user?.email || 'user@heyla.co'}</p>
               </div>
               <div className="p-1">
-                <button onClick={() => { setShowUserMenu(false); navigate({ to: '/settings' }); }}
+                <button onClick={() => { setShowUserMenu(false); navigate({ to: '/settings', search: { tab: 'profile' } }); }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted/50 transition-colors text-left">
-                  <Settings className="w-4 h-4 text-muted-foreground shrink-0" /> Settings
+                  <Settings className="w-4 h-4 text-muted-foreground shrink-0" /> My Profile
+                </button>
+                <button onClick={() => { setShowUserMenu(false); navigate({ to: '/settings', search: { tab: 'security' } }); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted/50 transition-colors text-left">
+                  <Lock className="w-4 h-4 text-muted-foreground shrink-0" /> Change Password
                 </button>
                 {useAuthStore.getState().isSuperAdmin() ? (
                   <button onClick={() => { setShowUserMenu(false); navigate({ to: '/admin' }); }}

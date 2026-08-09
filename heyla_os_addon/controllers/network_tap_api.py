@@ -680,3 +680,55 @@ class NtvController(http.Controller):
         user = request.heyla_user
         count = request.env['ntv.notification'].sudo().search_count([('user_id', '=', user.id), ('is_read', '=', False)])
         return http.Response(json.dumps({'count': count}), content_type='application/json')
+
+
+class PublicNtvController(http.Controller):
+    """Read-only public browse endpoints used by the public Network Tap landing page.
+
+    Anyone can view trending/recent posts, projects, jobs and skills. Liking,
+    commenting and applying stay behind /login (or /register) — those actions
+    are only available in the authenticated app.
+    """
+
+    @http.route('/api/public/ntv/feed', type='http', auth='none', methods=['GET'], csrf=False)
+    def public_ntv_feed(self):
+        args = request.httprequest.args
+        sort = args.get('sort', 'trending')
+        limit = min(int(args.get('limit', 12)), 60)
+        offset = int(args.get('offset', 0))
+        if sort == 'recent':
+            posts = request.env['ntv.post'].sudo().search([], order='created_at desc, id desc', limit=limit, offset=offset)
+        else:
+            posts = request.env['ntv.post'].sudo().search([], order='likes_count desc, comments_count desc, id desc', limit=limit, offset=offset)
+        return http.Response(json.dumps([_post_json(p) for p in posts]), content_type='application/json')
+
+    @http.route('/api/public/ntv/projects', type='http', auth='none', methods=['GET'], csrf=False)
+    def public_ntv_projects(self):
+        limit = min(int(request.httprequest.args.get('limit', 9)), 30)
+        projects = request.env['ntv.project'].sudo().search([], order='created_at desc, id desc', limit=limit)
+        return http.Response(json.dumps([{
+            'id': p.id, 'title': p.title, 'description': p.description,
+            'thumbnail': p.thumbnail, 'video': p.video, 'mediaType': p.media_type,
+            'technologies': p.technologies, 'githubUrl': p.github_url, 'liveUrl': p.live_url,
+            'authorName': p.author_name, 'likes': p.likes_count, 'comments': p.comments_count,
+            'createdAt': p.created_at.isoformat() if p.created_at else None,
+        } for p in projects]), content_type='application/json')
+
+    @http.route('/api/public/ntv/jobs', type='http', auth='none', methods=['GET'], csrf=False)
+    def public_ntv_jobs(self):
+        limit = min(int(request.httprequest.args.get('limit', 12)), 50)
+        jobs = request.env['ntv.job'].sudo().search([('is_active', '=', True)], order='posted_date desc, id desc', limit=limit)
+        return http.Response(json.dumps([_job_json(j) for j in jobs]), content_type='application/json')
+
+    @http.route('/api/public/ntv/skills', type='http', auth='none', methods=['GET'], csrf=False)
+    def public_ntv_skills(self):
+        limit = min(int(request.httprequest.args.get('limit', 18)), 60)
+        skills = request.env['ntv.profile.skill'].sudo().search([], limit=400)
+        counts = {}
+        for s in skills:
+            name = (s.name or '').strip()
+            if not name:
+                continue
+            counts[name] = counts.get(name, 0) + 1
+        ranked = sorted(counts.items(), key=lambda kv: kv[1], reverse=True)[:limit]
+        return http.Response(json.dumps([{'name': n, 'count': c, 'level': c} for n, c in ranked]), content_type='application/json')

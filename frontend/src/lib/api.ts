@@ -232,6 +232,16 @@ export const api = {
       const qs = params.toString();
       return request<CareerJob[]>('GET', `/public/vacancies${qs ? `?${qs}` : ''}`);
     },
+    ntv: {
+      feed: (sort: 'trending' | 'recent' = 'trending', limit = 12, offset = 0) =>
+        request<any[]>('GET', `/public/ntv/feed?sort=${sort}&limit=${limit}&offset=${offset}`),
+      projects: (limit = 9) =>
+        request<any[]>('GET', `/public/ntv/projects?limit=${limit}`),
+      jobs: (limit = 12) =>
+        request<any[]>('GET', `/public/ntv/jobs?limit=${limit}`),
+      skills: (limit = 18) =>
+        request<any[]>('GET', `/public/ntv/skills?limit=${limit}`),
+    },
   },
 
   ntv: {
