@@ -78,7 +78,7 @@ class HeylaEmployee(models.Model):
         prefix = params.get_param('heyla.payroll.prefix', default='PAY')
         separator = params.get_param('heyla.payroll.separator', default='-')
         padding = int(params.get_param('heyla.payroll.padding', default='5') or '5')
-        counter = self.env['ir.sequence'].next_by_code('heyla.employee.payroll')
+        counter = int(self.env['ir.sequence'].next_by_code('heyla.employee.payroll') or 0)
         return f'{prefix}{separator}{counter:0{padding}d}' if (prefix or separator) else f'{counter:0{padding}d}'
 
     @api.model_create_multi
