@@ -299,7 +299,7 @@ const ftiComplianceRoute = createRoute({ getParentRoute: () => protectedLayoutRo
 const ftiReportsRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/transport/reports', component: TransportReportsPage });
 const networkingRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking', component: NetworkingPage });
 const networkingProfileRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/profile', component: NetworkingProfilePage });
-const networkingUserProfileRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/profile/$userId', component: NetworkingUserProfilePage });
+const networkingUserProfileRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/profile/$slug', component: NetworkingUserProfilePage });
 const networkingNetworkRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/network', component: NetworkingNetworkPage });
 const networkingDiscoverRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/networking/discover', component: NetworkingDiscoverPage });
 const marketplaceRoute = createRoute({ getParentRoute: () => protectedLayoutRoute, path: '/marketplace', component: MarketplacePage });

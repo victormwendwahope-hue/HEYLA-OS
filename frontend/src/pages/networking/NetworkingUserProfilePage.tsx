@@ -7,7 +7,7 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function NetworkingUserProfilePage() {
-  const { userId } = useParams({ from: '/networking/profile/$userId' });
+  const { slug: userId } = useParams({ from: '/protected/networking/profile/$slug' });
   const { sendConnectionRequest, connections, fetchConnections } = useNetworkStore();
   const [profile, setProfile] = useState<NetworkProfile | null>(null);
   const [loading, setLoading] = useState(true);

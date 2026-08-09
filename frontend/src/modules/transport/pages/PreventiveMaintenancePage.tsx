@@ -4,7 +4,7 @@ import { CalendarClock, CheckCircle2, AlertTriangle, FileText, CalendarDays, Cam
 import { useFleetStore } from '@/modules/transport/store/fleetStore';
 import { Badge, FilterSelect, EmptyRow, SectionCard, BadgeVariant } from '@/modules/transport/components/Common';
 import AddMaintenanceDialog from '@/modules/transport/components/AddMaintenanceDialog';
-import { formatDate, daysUntil, formatKm } from '@/modules/transport/utils/format';
+import { formatDate, daysUntil, formatKm, formatCurrency } from '@/modules/transport/utils/format';
 import { daysAgo } from '@/modules/transport/utils/health';
 
 const mStatusVariant = (s: string): BadgeVariant => s === 'Overdue' ? 'destructive' : s === 'Due Soon' ? 'warning' : 'info';

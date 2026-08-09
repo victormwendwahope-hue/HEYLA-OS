@@ -1,7 +1,7 @@
 import {
   Company, Contact, Lead, Opportunity, Quotation, QuotationLine, Communication,
   Ticket, Contract, ContractItem, ServiceLevelMetric, SalesRep, AutomationRule,
-  Activity, LeadScoreParts, PipelineStage, CompanyStatus,
+  Activity, LeadScoreParts, PipelineStage, CompanyStatus, RevenueRecord,
 } from '@/modules/crm/types';
 import { seeded, iso, addMonths, addDays, monthKey } from '@/modules/crm/utils/format';
 import { leadScoreOf, healthOf, emptyLeadParts } from '@/modules/crm/utils/scoring';

@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/shared/CommonUI';
 import {
   ShieldAlert, ClipboardList, HardHat, FileCheck2, Activity, TrendingDown, Target, Sparkles, AlertTriangle, ArrowRight, CheckCircle2,
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { BarChart, Bar as RechartsBar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { useEhsStore } from '@/modules/ehs/store/ehsStore';
 import { SectionCard, Badge, RiskBadge, Avatar, Bar } from '@/modules/ehs/components/Common';
 import { ltifr, trifr, nearMissRatio, complianceScore, pct, daysUntil, formatCompact } from '@/modules/ehs/utils/format';
@@ -188,7 +188,7 @@ export default function EHSDashboard() {
               <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} interval={0} angle={-20} textAnchor="end" height={50} />
               <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="value" fill="#0A66FF" radius={[4, 4, 0, 0]} barSize={18} />
+              <RechartsBar dataKey="value" fill="#0A66FF" radius={[4, 4, 0, 0]} barSize={18} />
             </BarChart>
           </ResponsiveContainer>
         </SectionCard>

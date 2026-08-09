@@ -148,7 +148,7 @@ export interface EmployeeDocument {
 
 export interface SubscriptionInfo {
   plan: 'starter' | 'growth' | 'professional' | 'enterprise';
-  status: 'trial' | 'active' | 'expired' | 'cancelled';
+  status: 'trial' | 'active' | 'expired' | 'cancelled' | 'premium';
   trialStartedAt: string | null;
   trialEndAt: string | null;
   trialRemainingDays: number;
@@ -167,6 +167,7 @@ export interface User {
   name: string;
   company: string;
   role: 'admin' | 'manager' | 'employee' | 'individual';
+  accountType?: 'individual' | 'company' | 'premium';
   avatar?: string;
   facilityName?: string;
   facilityLogo?: string;

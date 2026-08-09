@@ -13,7 +13,7 @@ export default function VehicleDetailPage() {
   useEffect(() => { store.init(); }, []);
 
   const vehicle = store.vehicles.find((v) => v.id === id);
-  const health = store.health[id];
+  const health = id ? store.health[id] : undefined;
   const driver = vehicle ? store.drivers.find((d) => d.id === vehicle.driverId) : null;
 
   const fuels = useMemo(() => store.fuelTransactions.filter((f) => f.vehicleId === id).sort((a, b) => b.date.localeCompare(a.date)), [store.fuelTransactions, id]);

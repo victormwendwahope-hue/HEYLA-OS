@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useCrmStore } from '@/modules/crm/store/crmStore';
+import { AutomationRule } from '@/modules/crm/types';
 
 const ACTIONS = ['Send Email', 'Assign', 'Create Task', 'Send SMS', 'Notify Team', 'Change Stage'];
 
@@ -23,7 +24,7 @@ export default function AddAutomationDialog({ open, onClose }: { open: boolean; 
       triggerField: form.triggerField,
       triggerCondition: form.triggerCondition,
       triggerValue: form.triggerValue,
-      actionType: form.actionType,
+      actionType: form.actionType as AutomationRule['actionType'],
       actionPayload: form.actionPayload,
       enabled: true,
       lastRunAt: '',

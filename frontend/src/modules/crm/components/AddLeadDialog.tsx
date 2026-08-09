@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useCrmStore } from '@/modules/crm/store/crmStore';
+import { Industry, CompanySize, LeadSource } from '@/modules/crm/types';
 
 const SOURCES = ['Website', 'Referral', 'Cold Call', 'Trade Show', 'Social Media', 'Partner', 'Inbound Email', 'Advertisement'];
 const INDUSTRIES = ['Retail', 'Telecom', 'Banking', 'Logistics', 'Agriculture', 'Manufacturing', 'Healthcare', 'Construction', 'Technology', 'Hospitality', 'Energy', 'Government'];
@@ -25,9 +26,9 @@ export default function AddLeadDialog({ open, onClose }: { open: boolean; onClos
       email: form.email.trim(),
       phone: form.phone,
       companyName: form.companyName.trim(),
-      industry: form.industry,
-      companySize: form.size,
-      source: form.source,
+      industry: form.industry as Industry,
+      companySize: form.companySize as CompanySize,
+      source: form.source as LeadSource,
       status: 'New',
       rating: 'Cold',
       value: form.value,
@@ -84,7 +85,7 @@ export default function AddLeadDialog({ open, onClose }: { open: boolean; onClos
             </div>
             <div>
               <label className="text-xs font-medium mb-1 block">Size</label>
-              <select value={form.size} onChange={(e) => set('size', e.target.value)} className="w-full px-2 py-2 rounded-lg border border-input bg-white text-sm">
+              <select value={form.companySize} onChange={(e) => set('companySize', e.target.value)} className="w-full px-2 py-2 rounded-lg border border-input bg-white text-sm">
                 {SIZES.map((s) => <option key={s}>{s}</option>)}
               </select>
             </div>

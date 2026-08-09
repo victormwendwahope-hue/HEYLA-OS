@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useCrmStore } from '@/modules/crm/store/crmStore';
+import { Industry, CompanySize } from '@/modules/crm/types';
 
 const INDUSTRIES = ['Retail', 'Telecom', 'Banking', 'Logistics', 'Agriculture', 'Manufacturing', 'Healthcare', 'Construction', 'Technology', 'Hospitality', 'Energy', 'Government'];
 const SIZES = ['1-10', '11-50', '51-200', '201-500', '500+'];
@@ -26,8 +27,8 @@ export default function AddCustomerDialog({ open, onClose }: { open: boolean; on
     }
     store.addCompany({
       name: form.name.trim(),
-      industry: form.industry,
-      size: form.size,
+      industry: form.industry as Industry,
+      size: form.size as CompanySize,
       status: form.status,
       email: form.email,
       phone: form.phone,

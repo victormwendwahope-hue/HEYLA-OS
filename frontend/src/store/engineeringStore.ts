@@ -24,7 +24,7 @@ export interface Claim {
   type: 'EOT' | 'Payment' | 'Both';
   dateOfEvent: string; description: string; amount?: number; daysRequested?: number;
   status: 'Notice Sent' | 'Submitted' | 'Under Review' | 'Approved' | 'Rejected';
-  timeBarDays: number; noticeDate: string; documents: string;
+  timeBarDays: number; noticeDate: string; documents: string[];
 }
 
 export interface Variation {
@@ -64,6 +64,16 @@ interface EngStore {
   fetchPayments: () => Promise<void>;
   fetchDisputes: () => Promise<void>;
   fetchEarlyWarnings: () => Promise<void>;
+  addContract: (c: Omit<Contract, 'id'>) => void;
+  addClaim: (c: Omit<Claim, 'id'>) => void;
+  addVariation: (v: Omit<Variation, 'id'>) => void;
+  addPayment: (p: Omit<PaymentCertificate, 'id'>) => void;
+  addDispute: (d: Omit<Dispute, 'id'>) => void;
+  addEarlyWarning: (w: Omit<EarlyWarning, 'id'>) => void;
+  updateClaim: (id: string, data: Partial<Claim>) => void;
+  updateVariation: (id: string, data: Partial<Variation>) => void;
+  updatePayment: (id: string, data: Partial<PaymentCertificate>) => void;
+  updateEarlyWarning: (id: string, data: Partial<EarlyWarning>) => void;
   clearError: () => void;
 }
 
@@ -102,4 +112,15 @@ export const useEngineeringStore = create<EngStore>((set) => ({
     try { set({ earlyWarnings: await api.get<EarlyWarning[]>('/engineering-early-warnings') }); }
     catch { toast.error('Failed to fetch early warnings'); }
   },
+
+  addContract: (c) => { set((s) => ({ contracts: [{ ...c, id: `CTR-${Date.now()}` }, ...s.contracts] })); },
+  addClaim: (c) => { set((s) => ({ claims: [{ ...c, id: `CLM-${Date.now()}` }, ...s.claims] })); },
+  addVariation: (v) => { set((s) => ({ variations: [{ ...v, id: `VAR-${Date.now()}` }, ...s.variations] })); },
+  addPayment: (p) => { set((s) => ({ payments: [{ ...p, id: `IPC-${Date.now()}` }, ...s.payments] })); },
+  addDispute: (d) => { set((s) => ({ disputes: [{ ...d, id: `DSP-${Date.now()}` }, ...s.disputes] })); },
+  addEarlyWarning: (w) => { set((s) => ({ earlyWarnings: [{ ...w, id: `EW-${Date.now()}` }, ...s.earlyWarnings] })); },
+  updateClaim: (id, data) => { set((s) => ({ claims: s.claims.map((c) => (c.id === id ? { ...c, ...data } : c)) })); },
+  updateVariation: (id, data) => { set((s) => ({ variations: s.variations.map((v) => (v.id === id ? { ...v, ...data } : v)) })); },
+  updatePayment: (id, data) => { set((s) => ({ payments: s.payments.map((p) => (p.id === id ? { ...p, ...data } : p)) })); },
+  updateEarlyWarning: (id, data) => { set((s) => ({ earlyWarnings: s.earlyWarnings.map((w) => (w.id === id ? { ...w, ...data } : w)) })); },
 }));

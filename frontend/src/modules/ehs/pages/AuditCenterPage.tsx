@@ -32,7 +32,7 @@ export default function AuditCenterPage() {
         </div>
         <div className="glass rounded-xl px-5 py-4 flex items-center gap-3">
           <CheckCircle2 className="w-5 h-5 text-success" />
-          <div><p className="text-xs text-muted-foreground">Passed</p><p className="text-lg font-bold">{passed.length}</p></div>
+          <div><p className="text-xs text-muted-foreground">Passed</p><p className="text-lg font-bold">{passed}</p></div>
         </div>
         <div className="glass rounded-xl px-5 py-4 flex items-center gap-3">
           <TriangleAlert className="w-5 h-5 text-destructive" />
@@ -44,7 +44,7 @@ export default function AuditCenterPage() {
         </div>
       </div>
 
-      <SectionCard title="Audit Records" subtitle={`${rows.length} audits · ${pct(passed.length, audits.length)}% pass`} actions={
+      <SectionCard title="Audit Records" subtitle={`${rows.length} audits · ${pct(passed, audits.length)}% pass`} actions={
         <FilterSelect value={type} onChange={setType} options={types.map((t) => ({ value: t, label: t }))} label="Audit type" />
       }>
         <div className="overflow-x-auto">

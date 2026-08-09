@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { PageHeader, StatCard } from '@/components/shared/CommonUI';
 import { Users, Trophy, Target, TrendingUp } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar as RechartsBar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useCrmStore } from '@/modules/crm/store/crmStore';
 import { SectionCard, Badge, Avatar, Bar } from '@/modules/crm/components/Common';
 import { formatMoney, formatCompact } from '@/modules/crm/utils/format';
@@ -55,8 +55,8 @@ export default function SalesTeamPage() {
               <YAxis tickFormatter={(v: number) => `${Math.round(v / 1000000)}M`} stroke="hsl(var(--muted-foreground))" fontSize={12} />
               <Tooltip formatter={(v: number) => formatMoney(v)} />
               <Legend />
-              <Bar dataKey="Achieved" fill="#16A34A" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Target" fill="#0A66FF" radius={[4, 4, 0, 0]} />
+              <RechartsBar dataKey="Achieved" fill="#16A34A" radius={[4, 4, 0, 0]} />
+              <RechartsBar dataKey="Target" fill="#0A66FF" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </SectionCard>

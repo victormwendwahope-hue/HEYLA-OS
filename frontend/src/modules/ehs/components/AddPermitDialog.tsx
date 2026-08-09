@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useEhsStore } from '@/modules/ehs/store/ehsStore';
 import { SITES, NAMES } from '@/modules/ehs/data/mockData';
 import { iso, addDays } from '@/modules/ehs/utils/format';
+import type { PermitType } from '@/modules/ehs/types';
 
 const TYPES = ['Hot Work', 'Confined Space', 'Working at Height', 'Excavation', 'Electrical Isolation', 'Lifting', 'Radiation Work', 'Chemical Handling', 'Environmental Discharge'];
 const CONTROLS = ['Isolate energy', 'Gas test', 'Standby person', 'Full PPE'];
@@ -32,7 +33,7 @@ export default function AddPermitDialog({ open, onClose }: { open: boolean; onCl
       toast.error('Task description is required');
       return;
     }
-    store.addPermit(form);
+    store.addPermit({ ...form, type: form.type as PermitType });
     toast.success('Permit request submitted');
     setForm(empty);
     onClose();

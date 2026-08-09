@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useEhsStore } from '@/modules/ehs/store/ehsStore';
 import { SITES, NAMES } from '@/modules/ehs/data/mockData';
+import type { InspectionType } from '@/modules/ehs/types';
 
 const TYPES = ['Daily Site', 'Vehicle', 'Workshop', 'Warehouse', 'Office', 'Environmental', 'Fire Safety', 'Electrical', 'Lifting Equipment', 'Contractor', 'ISO 45001 Audit', 'DOSH Compliance'];
 const CHECKLIST = ['PPE worn correctly', 'Housekeeping clear', 'Fire extinguisher charged', 'Emergency exit accessible', 'Guarding in place', 'Electrical cables safe', 'Permit valid', 'Spill kit available'];
@@ -29,6 +30,7 @@ export default function AddInspectionDialog({ open, onClose }: { open: boolean; 
     const passed = form.checklist.filter((c) => c.result === 'Pass').length;
     store.addInspection({
       ...form,
+      type: form.type as InspectionType,
       result: fails === 0 ? 'Pass' : fails <= 1 ? 'Conditional' : 'Fail',
       score: Math.max(20, Math.round((passed / form.checklist.length) * 100)),
     });

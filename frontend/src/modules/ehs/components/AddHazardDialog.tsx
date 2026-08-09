@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useEhsStore } from '@/modules/ehs/store/ehsStore';
 import { SITES, NAMES } from '@/modules/ehs/data/mockData';
+import type { HazardCategory } from '@/modules/ehs/types';
 
 const CATS = ['Physical', 'Chemical', 'Biological', 'Ergonomic', 'Electrical', 'Mechanical', 'Fire & Explosion', 'Environmental', 'Psychosocial', 'Traffic & Transport', 'Working at Height', 'Confined Space', 'Excavation', 'Lifting Operations'];
 
@@ -29,7 +30,7 @@ export default function AddHazardDialog({ open, onClose }: { open: boolean; onCl
       toast.error('Hazard title is required');
       return;
     }
-    store.addHazard(form);
+    store.addHazard({ ...form, category: form.category as HazardCategory });
     toast.success('Hazard registered');
     setForm(empty);
     onClose();

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { seedFleetData, FleetDatabase } from '@/modules/transport/data/mockData';
-import { buildVehicleHealth, VehicleHealth } from '@/modules/transport/utils/health';
-import { Vehicle, Driver, HeavyEquipment, WorkOrder, Breakdown, MaintenanceSchedule, Trip, Tyre, ComplianceAlert } from '@/modules/transport/types';
+import { buildVehicleHealth } from '@/modules/transport/utils/health';
+import { Vehicle, Driver, HeavyEquipment, WorkOrder, Breakdown, MaintenanceSchedule, Trip, Tyre, ComplianceAlert, VehicleHealth } from '@/modules/transport/types';
 
 interface FleetState extends FleetDatabase {
   health: Record<string, VehicleHealth>;

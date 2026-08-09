@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useCrmStore } from '@/modules/crm/store/crmStore';
+import { CommChannel, CommDirection } from '@/modules/crm/types';
 
 export default function AddCommunicationDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const store = useCrmStore();
@@ -16,8 +17,8 @@ export default function AddCommunicationDialog({ open, onClose }: { open: boolea
     }
     store.addCommunication({
       companyId: form.companyId,
-      channel: form.channel,
-      direction: form.direction,
+      channel: form.channel as CommChannel,
+      direction: form.direction as CommDirection,
       status: 'Sent',
       type: 'email',
       subject: form.subject.trim(),

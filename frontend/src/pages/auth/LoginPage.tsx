@@ -3,19 +3,7 @@ import { useNavigate, Link } from '@tanstack/react-router';
 import { useAuthStore } from '@/store/authStore';
 import { Eye, EyeOff, ArrowRight, Linkedin } from 'lucide-react';
 import { toast } from 'sonner';
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: { client_id: string; callback: (response: { credential: string }) => void; auto_select?: boolean; cancel_on_tap_outside?: boolean }) => void;
-          renderButton: (element: HTMLElement, options: { theme?: string; size?: string; text?: string; width?: string }) => void;
-        };
-      };
-    };
-  }
-}
+import { setOAuthToken } from '@/lib/oauthPubsub';
 
 let gsiScriptLoaded = false;
 let gsiInitialized = false;
@@ -53,7 +41,8 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string };
       if (e?.status === 404 || e?.message?.toLowerCase().includes('not found')) {
-        navigate({ to: '/register', search: { google: '1' }, state: { googleCredential: credential } });
+        setOAuthToken(credential);
+        navigate({ to: '/register' });
       } else {
         toast.error(e?.message || 'Google sign-in failed');
       }
@@ -85,7 +74,8 @@ export default function LoginPage() {
           navigate({ to: role === 'individual' ? '/network-tap/dashboard' : '/dashboard' });
         } catch (err: any) {
           if (err?.status === 404) {
-            navigate({ to: '/register/individual', search: { linkedin: '1' }, state: { linkedinToken: accessToken } });
+            setOAuthToken(accessToken);
+            navigate({ to: '/register/individual' });
           } else {
             toast.error(err?.message || 'LinkedIn sign-in failed');
           }
@@ -121,7 +111,7 @@ export default function LoginPage() {
     clearError();
     await login(email, password);
     const role = useAuthStore.getState().user?.role;
-    navigate(role === 'individual' ? '/network-tap/dashboard' : '/dashboard');
+    navigate({ to: role === 'individual' ? '/network-tap/dashboard' : '/dashboard' });
   };
 
   return (

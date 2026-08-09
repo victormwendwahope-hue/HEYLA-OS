@@ -4,22 +4,24 @@ import { LucideIcon } from 'lucide-react';
 interface StatCardProps {
   title: string;
   value: string;
+  description?: string;
   change?: string;
-  changeType?: 'positive' | 'negative' | 'neutral';
+  changeType?: 'positive' | 'negative' | 'neutral' | 'warning';
   icon: LucideIcon;
   iconColor?: string;
 }
 
-export function StatCard({ title, value, change, changeType = 'positive', icon: Icon, iconColor }: StatCardProps) {
+export function StatCard({ title, value, description, change, changeType = 'positive', icon: Icon, iconColor }: StatCardProps) {
   return (
     <div className="glass rounded-xl p-5 animate-fade-in hover:shadow-elevated transition-shadow duration-300">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground font-medium">{title}</p>
           <p className="text-2xl font-bold tracking-tight">{value}</p>
+          {description && <p className="text-xs text-muted-foreground">{description}</p>}
           {change && (
             <p className={`text-xs font-medium ${
-              changeType === 'positive' ? 'text-success' : changeType === 'negative' ? 'text-destructive' : 'text-muted-foreground'
+              changeType === 'positive' ? 'text-success' : changeType === 'negative' ? 'text-destructive' : changeType === 'warning' ? 'text-warning' : 'text-muted-foreground'
             }`}>
               {change}
             </p>
@@ -36,17 +38,19 @@ export function StatCard({ title, value, change, changeType = 'positive', icon: 
 interface PageHeaderProps {
   title: string;
   description?: string;
+  icon?: LucideIcon;
+  actions?: ReactNode;
   children?: ReactNode;
 }
 
-export function PageHeader({ title, description, children }: PageHeaderProps) {
+export function PageHeader({ title, description, icon: Icon, actions, children }: PageHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         {description && <p className="text-muted-foreground mt-1">{description}</p>}
       </div>
-      {children && <div className="flex flex-wrap items-center gap-3">{children}</div>}
+      {(actions || children) && <div className="flex flex-wrap items-center gap-3">{actions}{children}</div>}
     </div>
   );
 }

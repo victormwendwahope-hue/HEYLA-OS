@@ -3,6 +3,6 @@ export {
   Outlet,
   useParams,
   useLocation,
-  useSearchParams,
+  useSearch,
   useNavigate,
 } from '@tanstack/react-router';

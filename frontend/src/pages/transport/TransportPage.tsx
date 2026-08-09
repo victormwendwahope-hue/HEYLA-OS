@@ -1,5 +1,5 @@
 import { PageHeader, StatCard, StatusBadge } from '@/components/shared/CommonUI';
-import { useTransportStore } from '@/store/transportStore';
+import { useTransportStore, type Vehicle, type Driver, type Shipment } from '@/store/transportStore';
 import { useFuelStore } from '@/store/fuelStore';
 import { formatCurrency } from '@/utils/countries';
 import { Truck, Users, Package, MapPin, Plus, X, AlertTriangle, Fuel, BarChart3, Trash2, Edit3, Search, Loader2, ExternalLink } from 'lucide-react';
@@ -94,16 +94,16 @@ export default function TransportPage() {
     e.preventDefault();
     if (!vForm.name || !vForm.plate) { toast.error('Name and plate required'); return; }
     try {
-      if (editVehicleId) await updateVehicle(editVehicleId, vForm);
-      else await addVehicle(vForm);
+      if (editVehicleId) await updateVehicle(editVehicleId, { ...vForm, type: vForm.type as Vehicle['type'], status: vForm.status as Vehicle['status'], fuelType: vForm.fuelType as Vehicle['fuelType'] });
+      else await addVehicle({ ...vForm, type: vForm.type as Vehicle['type'], status: vForm.status as Vehicle['status'], fuelType: vForm.fuelType as Vehicle['fuelType'] });
       setShowVehicleForm(false);
     } catch { }
   };  const handleDriverSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!dForm.name) { toast.error('Driver name required'); return; }
     try {
-      if (editDriverId) await updateDriver(editDriverId, dForm);
-      else await addDriver(dForm);
+      if (editDriverId) await updateDriver(editDriverId, { ...dForm, status: dForm.status as Driver['status'] });
+      else await addDriver({ ...dForm, status: dForm.status as Driver['status'] });
       setShowDriverForm(false);
     } catch { }
   };
@@ -111,8 +111,8 @@ export default function TransportPage() {
     e.preventDefault();
     if (!sForm.origin || !sForm.destination) { toast.error('Origin and destination required'); return; }
     try {
-      if (editingShip) await updateShipment(editingShip, sForm);
-      else await addShipment(sForm);
+      if (editingShip) await updateShipment(editingShip, { ...sForm, status: sForm.status as Shipment['status'] });
+      else await addShipment({ ...sForm, status: sForm.status as Shipment['status'] });
       setShowShipmentForm(false);
     } catch { }
   };

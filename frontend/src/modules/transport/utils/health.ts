@@ -58,6 +58,7 @@ export function daysAgo(dateStr: string): number {
 }
 
 export interface FleetHealthContext {
+  vehicles: Vehicle[];
   fuelTransactions: FuelTransaction[];
   maintenance: MaintenanceSchedule[];
   workOrders: WorkOrder[];

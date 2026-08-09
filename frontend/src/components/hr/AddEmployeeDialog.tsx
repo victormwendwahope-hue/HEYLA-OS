@@ -104,6 +104,9 @@ export default function AddEmployeeDialog({ open, onClose }: Props) {
       transportAllowance: Number(form.transportAllowance) || 0,
       medicalAllowance: Number(form.medicalAllowance) || 0,
       otherAllowances: Number(form.otherAllowances) || 0,
+      paidLeaveDays: 21,
+      unpaidLeaveDays: 10,
+      sickLeaveDays: 14,
       status: 'Active' as const,
       startDate: new Date().toISOString().split('T')[0],
     };

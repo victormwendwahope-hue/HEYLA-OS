@@ -371,7 +371,7 @@ for (let i = 0; i < 25; i++) {
 const COMPLIANCE_ALERTS: ComplianceAlert[] = [];
 for (let i = 0; i < 8; i++) {
   const vehicle = VEHICLES[i % VEHICLES.length];
-  const severity: ComplianceAlert['severity'] = (['Critical', 'High', 'High', 'Medium', 'Medium', 'Low', 'Low', 'Critical'][i]);
+  const severity = (['Critical', 'High', 'High', 'Medium', 'Medium', 'Low', 'Low', 'Critical'][i]) as ComplianceAlert['severity'];
   const types = ['Road License', 'Insurance', 'Fitness Test', 'Driver License', 'Speed Governor', 'NTSA'];
   const type = types[i % types.length];
   COMPLIANCE_ALERTS.push({

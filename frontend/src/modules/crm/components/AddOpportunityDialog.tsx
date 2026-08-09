@@ -32,6 +32,7 @@ const submit = (e: React.FormEvent) => {
       probability: probs[form.stage],
       ownerId: 'rep-1',
       expectedCloseDate: form.expectedCloseDate,
+      forecastMonth: '2026-03',
       forecastable: true,
       amountTotal: 0,
       isClosedWon: false,

@@ -81,7 +81,7 @@ export default function CRMPage() {
     e.preventDefault();
     if (!form.name || !form.company) { toast.error('Name and company required'); return; }
     if (editId) { updateLead(editId, form); toast.success('Lead updated'); }
-    else { addLead({ ...form, id: Date.now().toString(), createdAt: new Date().toISOString().split('T')[0] }); toast.success('Lead added'); }
+    else { addLead({ ...form }); toast.success('Lead added'); }
     setShowForm(false);
   };
 

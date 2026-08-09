@@ -23,7 +23,7 @@ interface CrmState {
 
   init: () => void;
 
-  addCompany: (c: Omit<Company, 'id' | 'createdAt'>) => void;
+  addCompany: (c: Partial<Company> & { name: string }) => void;
   updateCompany: (id: string, patch: Partial<Company>) => void;
   removeCompany: (id: string) => void;
 
@@ -136,7 +136,7 @@ export const useCrmStore = create<CrmState>((set, get) => ({
   updateQuotation: (id, patch) => set((s) => ({ quotations: s.quotations.map((q) => (q.id === id ? { ...q, ...patch } : q)) })),
   removeQuotation: (id) => set((s) => ({ quotations: s.quotations.filter((q) => q.id !== id) })),
 
-  addTicket: (t) => set((s) => ({ tickets: [{ ...t, id: uid('tic'), number: `TK-${7000 + s.tickets.length + 1}`, createdAt: iso(new Date()), updatedAt: iso(new Date()) }, ...s.tickets] })),
+  addTicket: (t) => set((s) => ({ tickets: [{ ...t, id: uid('tic'), number: `TK-${7000 + s.tickets.length + 1}`, createdAt: iso(new Date()), updatedAt: iso(new Date()), slaBreached: false }, ...s.tickets] })),
   updateTicket: (id, patch) => set((s) => ({ tickets: s.tickets.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
 
   acknowledgeRule: (id) => set((s) => ({ automationRules: s.automationRules.map((r) => (r.id === id ? { ...r, runCount: r.runCount + 1, runsToday: r.runsToday + 1, lastRunAt: iso(new Date()) } : r)) })),

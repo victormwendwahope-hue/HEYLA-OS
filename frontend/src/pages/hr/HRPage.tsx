@@ -108,7 +108,7 @@ export default function HRPage() {
                     <td className="px-4 py-3 text-right hidden lg:table-cell font-medium">{formatCurrency(gross)}</td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <Link to={`/hr/employee/${e.id}`} className="inline-flex items-center gap-1 text-primary text-xs font-medium hover:underline">
+                        <Link to="/hr/employee/$id" params={{ id: e.id }} className="inline-flex items-center gap-1 text-primary text-xs font-medium hover:underline">
                           <Eye className="w-3.5 h-3.5" /> View
                         </Link>
                         <AlertDialog>

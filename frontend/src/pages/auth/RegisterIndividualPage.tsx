@@ -4,19 +4,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Eye, EyeOff, ArrowRight, Linkedin } from 'lucide-react';
 import { toast } from 'sonner';
 import { sanitizeError } from '@/lib/secure';
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: { client_id: string; callback: (response: { credential: string }) => void; auto_select?: boolean; cancel_on_tap_outside?: boolean }) => void;
-          renderButton: (element: HTMLElement, options: { theme?: string; size?: string; text?: string; width?: string }) => void;
-        };
-      };
-    };
-  }
-}
+import { consumeOAuthToken } from '@/lib/oauthPubsub';
 
 function loadGoogleScript(): Promise<void> {
   return new Promise((resolve) => {
@@ -45,7 +33,7 @@ export default function RegisterIndividualPage() {
   const handleGoogleCredential = useCallback(async (credential: string) => {
     try {
       clearError();
-      await googleRegister({ credential, accountType: 'individual', password: '' });
+      await googleRegister({ credential, accountType: 'individual' });
       navigate({ to: '/network-tap/dashboard' });
     } catch (err: unknown) {
       toast.error(sanitizeError(err, 'Google sign-up failed'));
@@ -82,6 +70,19 @@ export default function RegisterIndividualPage() {
   }, []);
 
   useEffect(() => {
+    const pending = consumeOAuthToken();
+    if (!pending) return;
+    (async () => {
+      try {
+        await linkedinRegister(pending);
+        navigate({ to: '/network-tap/dashboard' });
+      } catch (err: any) {
+        toast.error(err?.message || 'LinkedIn sign-up failed');
+      }
+    })();
+  }, [linkedinRegister, navigate]);
+
+  useEffect(() => {
     if (!googleClientId) return;
     loadGoogleScript().then(() => setGoogleLoaded(true));
   }, [googleClientId]);
@@ -104,7 +105,7 @@ export default function RegisterIndividualPage() {
     if (!name || !email || !password) { toast.error('Please fill in all fields'); return; }
     if (password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     clearError();
-    await register({ email, password, name, accountType: 'individual' });
+    await register({ email, password, name, company: '', accountType: 'individual' });
     navigate({ to: '/network-tap/dashboard' });
   };
 

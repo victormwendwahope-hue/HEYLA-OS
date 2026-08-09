@@ -5,7 +5,7 @@ import {
   Users, Target, FileText, Ticket as TicketIcon, TrendingUp, Trophy, AlertTriangle,
   Sparkles, ArrowRight, DollarSign, CheckCircle2,
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { BarChart, Bar as RechartsBar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { useCrmStore } from '@/modules/crm/store/crmStore';
 import { SectionCard, Badge, HealthBadge, Avatar, Bar } from '@/modules/crm/components/Common';
 import { formatCompact, formatMoney } from '@/modules/crm/utils/format';
@@ -90,7 +90,7 @@ export default function CrmDashboardPage() {
               <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
               <YAxis type="category" dataKey="name" width={110} stroke="hsl(var(--muted-foreground))" fontSize={12} />
               <Tooltip />
-              <Bar dataKey="value" fill="#0A66FF" radius={[0, 4, 4, 0]} barSize={18} />
+              <RechartsBar dataKey="value" fill="#0A66FF" radius={[0, 4, 4, 0]} barSize={18} />
             </BarChart>
           </ResponsiveContainer>
         </SectionCard>

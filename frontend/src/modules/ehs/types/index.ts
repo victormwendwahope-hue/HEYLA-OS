@@ -139,7 +139,7 @@ export interface Inspection {
   status: 'Scheduled' | 'In Progress' | 'Completed';
   result: 'Pass' | 'Fail' | 'Conditional';
   score: number;
-  checklist: InspectionItem[];
+  checklist: ChecklistAnswer[];
   signature: string;
   createdAt: string;
 }

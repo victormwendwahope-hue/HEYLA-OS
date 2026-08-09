@@ -15,7 +15,7 @@ export default function LeavePage() {
   const employees = useEmployeeStore((s) => s.employees);
   const { leaves, loading, fetchLeaves, addLeave, updateLeave, removeLeave } = useLeaveStore();
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ employeeId: '', type: 'Annual' as LeaveRequest['leaveType'], startDate: '', endDate: '', reason: '' });
+  const [form, setForm] = useState({ employeeId: '', leaveType: 'Annual' as LeaveRequest['leaveType'], startDate: '', endDate: '', reason: '' });
 
   const fetchEmployees = useEmployeeStore((s) => s.fetchEmployees);
 
@@ -29,7 +29,7 @@ export default function LeavePage() {
     if (!form.employeeId || !form.startDate || !form.endDate) { toast.error('Fill all fields'); return; }
     addLeave(form);
     setShowAdd(false);
-    setForm({ employeeId: '', type: 'Annual', startDate: '', endDate: '', reason: '' });
+    setForm({ employeeId: '', leaveType: 'Annual', startDate: '', endDate: '', reason: '' });
   };
 
   const pending = leaves.filter((l) => l.status === 'Pending').length;
@@ -101,7 +101,7 @@ export default function LeavePage() {
                 <option value="">Select employee</option>
                 {employees.map((e) => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}
               </select>
-              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as any })} className="w-full rounded-lg border p-2.5 text-sm bg-background">
+              <select value={form.leaveType} onChange={(e) => setForm({ ...form, leaveType: e.target.value as LeaveRequest['leaveType'] })} className="w-full rounded-lg border p-2.5 text-sm bg-background">
                 {['Annual', 'Sick', 'Maternity', 'Paternity', 'Compassionate', 'Study'].map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
               <div className="grid grid-cols-2 gap-3">

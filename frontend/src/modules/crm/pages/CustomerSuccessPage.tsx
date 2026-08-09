@@ -110,10 +110,10 @@ export default function CustomerSuccessPage() {
 
         <SectionCard title="Health Drivers" subtitle="What moves the score">
           <div className="space-y-4 text-sm">
-            <Row label="Revenue (25%)" pct={companies.length ? Math.round(companies.filter((c) => c.healthScore >= 70).length / companies.length * 100) : 0} />
-            <Row label="Support resolution" pct={csat} />
-            <Row label="Open tickets ratio" pct={100 - open * 4} />
-            <Row label="Contract tenure" pct={companies.reduce((s, c) => s + (c.healthBand === 'excellent' ? 1 : 0), 0) / Math.max(1, companies.length) * 100} />
+            <Row label="Revenue (25%)" p={companies.length ? Math.round(companies.filter((c) => c.healthScore >= 70).length / companies.length * 100) : 0} />
+            <Row label="Support resolution" p={csat} />
+            <Row label="Open tickets ratio" p={100 - open * 4} />
+            <Row label="Contract tenure" p={companies.reduce((s, c) => s + (c.healthBand === 'excellent' ? 1 : 0), 0) / Math.max(1, companies.length) * 100} />
           </div>
           <div className="mt-5 rounded-xl p-4 bg-gradient-to-br from-primary/10 to-transparent">
             <div className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="w-4 h-4 text-primary" /> AI Insight</div>

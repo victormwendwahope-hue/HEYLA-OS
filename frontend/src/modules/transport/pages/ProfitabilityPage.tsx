@@ -18,7 +18,7 @@ export default function ProfitabilityPage() {
 
   const rows = useMemo(() => {
     const data = store.profitability.filter((p) => p.period === currentPeriod);
-    const sorted = [...data].sort((a, b) => b[sortKey as keyof typeof b] - a[sortKey as keyof typeof a]);
+    const sorted = [...data].sort((a, b) => Number(b[sortKey as keyof typeof b]) - Number(a[sortKey as keyof typeof a]));
     return sorted;
   }, [store.profitability, currentPeriod, sortKey]);
 
@@ -47,7 +47,7 @@ export default function ProfitabilityPage() {
     const labels = ['fuelCost', 'maintenanceCost', 'tyresCost', 'insuranceCost', 'driverCost', 'depreciationCost', 'otherCost'];
     return labels.map((k) => ({
       name: k.replace('Cost', '').replace(/^\w/, (c) => c.toUpperCase()),
-      value: rows.reduce((a, p) => a + p[k as keyof typeof p], 0),
+      value: rows.reduce((a, p) => a + Number(p[k as keyof typeof p]), 0),
     })).sort((a, b) => b.value - a.value);
   }, [rows]);
 

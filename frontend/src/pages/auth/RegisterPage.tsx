@@ -1,14 +1,15 @@
 import { useNavigate, Link } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { Building2, User, ArrowRight } from 'lucide-react';
+import { getOAuthToken } from '@/lib/oauthPubsub';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('google') === '1') {
-      navigate({ to: '/register/company', search: { google: '1' }, state: location.state });
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('google') === '1' || getOAuthToken()) {
+      navigate({ to: '/register/company' });
     }
   }, [navigate]);
 

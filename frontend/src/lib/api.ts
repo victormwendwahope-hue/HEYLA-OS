@@ -1,6 +1,7 @@
 // Thin fetch wrapper with refresh-token rotation, 401 auto-retry and 403 toast.
 import { toast } from 'sonner';
 import { isSafeRedirectUrl } from '@/lib/secure';
+import type { CareerJob } from '@/types';
 
 const runtimeBase =
   (typeof window !== 'undefined' ? (window as any).__VITE_API_URL__ : undefined) as string | undefined;
@@ -172,7 +173,7 @@ export const api = {
   auth: {
     login: (email: string, password: string) =>
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/login', { email, password }),
-    register: (data: { email: string; password: string; name: string; company?: string; accountType?: 'company' | 'individual' }) =>
+    register: (data: { email: string; password: string; name: string; company?: string; accountType?: 'company' | 'individual'; facilityName?: string; facilityLogo?: string }) =>
       request<{ token: string; refreshToken: string; user: any }>('POST', '/auth/register', data),
     me: () => request<{ user: any }>('GET', '/auth/me'),
     refresh: (refreshToken: string) =>

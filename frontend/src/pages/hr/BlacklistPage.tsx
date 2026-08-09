@@ -2,6 +2,7 @@ import { PageHeader, StatusBadge } from '@/components/shared/CommonUI';
 import { useBlacklistStore, type BlacklistEntry } from '@/store/blacklistStore';
 import { useEffect, useState } from 'react';
 import { Plus, X, AlertTriangle, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -18,7 +19,7 @@ export default function BlacklistPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.reason) { toast.error('Fill required fields'); return; }
-    addEntry(form);
+    addEntry({ ...form, addedBy: 'Admin' });
     setShowAdd(false);
     setForm({ name: '', email: '', reason: '', severity: 'Medium' });
   };

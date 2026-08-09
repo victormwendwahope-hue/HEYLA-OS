@@ -4,20 +4,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Eye, EyeOff, ArrowRight, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { sanitizeUrl } from '@/lib/secure';
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: { client_id: string; callback: (response: { credential: string }) => void; auto_select?: boolean; cancel_on_tap_outside?: boolean }) => void;
-          renderButton: (element: HTMLElement, options: { theme?: string; size?: string; text?: string; width?: number }) => void;
-          cancel: () => void;
-        };
-      };
-    };
-  }
-}
+import { consumeOAuthToken } from '@/lib/oauthPubsub';
 
 let gsiScriptLoaded = false;
 
@@ -56,6 +43,7 @@ export default function RegisterCompanyPage() {
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const gcb = useRef<((credential: string) => void) | null>(null);
+  const credentialRef = useRef<string | null>(null);
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
@@ -78,11 +66,23 @@ export default function RegisterCompanyPage() {
       if (typeof profile.name === 'string') setName(profile.name);
       if (typeof profile.email === 'string') setEmail(profile.email);
     }
-    gcb._credential = credential;
+    credentialRef.current = credential;
     setGoogleStep('credential');
   }, [googleLogin, navigate, clearError]);
 
   gcb.current = handleGoogleCredential;
+
+  useEffect(() => {
+    const pending = consumeOAuthToken();
+    if (!pending) return;
+    const profile = decodeJwt(pending);
+    if (profile) {
+      if (typeof profile.name === 'string') setName(profile.name);
+      if (typeof profile.email === 'string') setEmail(profile.email);
+    }
+    credentialRef.current = pending;
+    setGoogleStep('credential');
+  }, []);
 
   useEffect(() => {
     if (!googleClientId) return;
@@ -119,7 +119,7 @@ export default function RegisterCompanyPage() {
     if (googleStep === 'credential') {
       if (!facilityName) { toast.error('Please enter your facility name'); return; }
       clearError();
-      const cred = (gcb as any)._credential;
+      const cred = credentialRef.current;
       if (!cred) { toast.error('Missing Google credential, please try again'); return; }
       await googleRegister({ credential: cred, facilityName, facilityLogo: facilityLogo || undefined });
       navigate({ to: '/dashboard' });

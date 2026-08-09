@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useEhsStore } from '@/modules/ehs/store/ehsStore';
 import { SITES, NAMES } from '@/modules/ehs/data/mockData';
 import { iso } from '@/modules/ehs/utils/format';
+import type { IncidentType } from '@/modules/ehs/types';
 
 const TYPES = ['Fatality', 'Lost Time Injury', 'Medical Treatment Injury', 'First Aid Case', 'Near Miss', 'Unsafe Condition', 'Unsafe Act', 'Property Damage', 'Vehicle Accident', 'Environmental Spill', 'Fire Incident', 'Security Incident', 'Occupational Illness'];
 
@@ -38,7 +39,7 @@ export default function AddIncidentDialog({ open, onClose, onCreated }: { open: 
       return;
     }
     const id = `inc-${Date.now()}`;
-    store.addIncident({ ...form, id, involved: form.involved.filter(Boolean), witnesses: form.witnesses.filter(Boolean) });
+    store.addIncident({ ...form, type: form.type as IncidentType, involved: form.involved.filter(Boolean), witnesses: form.witnesses.filter(Boolean) });
     toast.success('Incident reported');
     setForm(empty);
     onCreated(id);

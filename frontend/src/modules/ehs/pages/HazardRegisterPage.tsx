@@ -41,6 +41,7 @@ export default function HazardRegisterPage() {
       site: h.location,
       assessor: NAMES[idx % NAMES.length],
       date: h.createdAt,
+      hazards: [h],
       overallScore: h.score,
       band: h.band,
       status: 'Approved' as const,

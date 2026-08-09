@@ -31,7 +31,7 @@ export default function InventoryPage() {
       updateProduct(editId, { ...form, status });
       toast.success('Product updated');
     } else {
-      addProduct({ ...form, id: Date.now().toString(), status });
+      addProduct({ ...form });
       toast.success('Product added');
     }
     setShowForm(false);
